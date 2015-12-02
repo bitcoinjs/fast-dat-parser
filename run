@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat ~/.bitcoin/blocks/blk*.dat | ./parser
