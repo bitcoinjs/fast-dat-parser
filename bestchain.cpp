@@ -166,7 +166,7 @@ int main () {
 	for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) genesis.hash[i];
 	std::cerr << std::endl << "- Tip: ";
 	for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) tip.hash[i];
-	std::cerr << std::endl;
+	std::cerr << std::endl << std::dec;
 
 	for(auto it = bestBlockChain.rbegin(); it != bestBlockChain.rend(); ++it) {
 		fwrite(&it->hash[0], 32, 1, stdout);

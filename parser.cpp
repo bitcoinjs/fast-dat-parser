@@ -137,7 +137,7 @@ int main (int argc, char** argv) {
 		while (slice.length() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
 			if (slice.peek<uint32_t>() != 0xd9b4bef9) {
-				slice.popFrontN(4);
+				slice.popFrontN(1);
 				dirty = true;
 
 				continue;
@@ -147,7 +147,7 @@ int main (int argc, char** argv) {
 			const auto header = slice.drop(8).take(80);
 			if (dirty) {
 				if (!Block(header).verify()) {
-					slice.popFrontN(4);
+					slice.popFrontN(1);
 
 					continue;
 				}
