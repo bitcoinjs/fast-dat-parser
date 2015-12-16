@@ -75,20 +75,21 @@ auto& findChains(std::map<hash_t, Chain>& chains, const std::map<hash_t, Block>&
 	return chains[root.hash];
 }
 
+// find all chains who are not parents to any other blocks (aka, a chain tip)
 auto findChainTips(std::map<hash_t, Chain>& chains) {
-	std::map<hash_t, bool> children;
+	std::map<hash_t, bool> parents;
 
 	for (auto& chainIter : chains) {
 		auto&& chain = chainIter.second;
 		if (chain.previous == nullptr) continue;
 
-		children[chain.previous->block.hash] = true;
+		parents[chain.previous->block.hash] = true;
 	}
 
 	std::vector<Chain> tips;
 	for (auto& chainIter : chains) {
 		auto&& chain = chainIter.second;
-		if (children.find(chain.block.hash) != children.end()) continue;
+		if (parents.find(chain.block.hash) != parents.end()) continue;
 
 		tips.push_back(chain);
 	}
