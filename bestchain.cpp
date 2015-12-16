@@ -1,6 +1,7 @@
 #include <array>
 #include <cassert>
 #include <cstring>
+#include <iomanip>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -129,10 +130,19 @@ int main () {
 	}
 
 	// now find the best
-	auto bestBlockChain = findBest(chains);
+	const auto bestBlockChain = findBest(chains);
+	const auto genesis = bestBlockChain.back();
+	const auto tip = bestBlockChain.front();
 
 	// output
-	std::cerr << "Found best chain with height: " << bestBlockChain.size() << std::endl;
+	std::cerr << "Found best chain" << std::endl;
+	std::cerr << "- Height: " << bestBlockChain.size() - 1 << std::endl;
+	std::cerr << std::hex;
+	std::cerr << "- Genesis: ";
+	for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) genesis.hash[i];
+	std::cerr << std::endl << "- Tip: ";
+	for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) tip.hash[i];
+	std::cerr << std::endl;
 
 	for(auto it = bestBlockChain.rbegin(); it != bestBlockChain.rend(); ++it) {
 		fwrite(&it->hash[0], 32, 1, stdout);
