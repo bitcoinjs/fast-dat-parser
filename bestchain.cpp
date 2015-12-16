@@ -131,7 +131,9 @@ int main () {
 	// now find the best
 	auto bestBlockChain = findBest(chains);
 
-	// print it out
+	// output
+	std::cerr << "Found best chain with height: " << bestBlockChain.size() << std::endl;
+
 	for(auto it = bestBlockChain.rbegin(); it != bestBlockChain.rend(); ++it) {
 		fwrite(&it->hash[0], 32, 1, stdout);
 	}
