@@ -74,13 +74,32 @@ auto& findChains(std::map<hash_t, Chain>& chains, const std::map<hash_t, Block*>
 	return chains[root->hash];
 }
 
-// TODO: change this to findBest using most-work over best
-auto findBest(std::map<hash_t, Chain>& chains) {
-	auto bestChain = chains.begin()->second;
-	size_t mostWork = 0;
+auto findChainTips(std::map<hash_t, Chain>& chains) {
+	std::map<hash_t, bool> children;
 
 	for (auto& chainIter : chains) {
 		auto&& chain = chainIter.second;
+		if (chain.previous == nullptr) continue;
+
+		children[chain.previous->block->hash] = true;
+	}
+
+	std::vector<Chain> tips;
+	for (auto& chainIter : chains) {
+		auto&& chain = chainIter.second;
+		if (children.find(chain.block->hash) != children.end()) continue;
+
+		tips.push_back(chain);
+	}
+
+	return tips;
+}
+
+auto findBest(std::vector<Chain> chains) {
+	auto bestChain = *chains.begin();
+	size_t mostWork = 0;
+
+	for (auto&& chain : chains) {
 		auto work = chain.determineAggregateWork();
 
 		if (work > mostWork) {
@@ -129,8 +148,11 @@ int main () {
 		findChains(chains, hashMap, &block);
 	}
 
+	const auto chainTips = findChainTips(chains);
+	std::cerr << "Found " << chainTips.size() << " chain tips" << std::endl;
+
 	// now find the best
-	const auto bestBlockChain = findBest(chains);
+	const auto bestBlockChain = findBest(chainTips);
 	const auto genesis = bestBlockChain.back();
 	const auto tip = bestBlockChain.front();
 
