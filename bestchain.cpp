@@ -21,7 +21,7 @@ struct Block {
 
 struct Chain {
 	Block block;
-	Chain* previous;
+	Chain* previous = nullptr;
 	size_t work = 0;
 
 	Chain () {}
