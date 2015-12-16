@@ -50,17 +50,17 @@ struct Chain {
 	}
 };
 
-auto& findChains(std::map<hash_t, Chain>& chains, const std::map<hash_t, Block>& hashMap, const Block& root) {
+auto& findChains(std::map<hash_t, Chain>& chains, const std::map<hash_t, Block>& blockMap, const Block& root) {
 	const auto blockChainIter = chains.find(root.hash);
 
 	// already built this?
 	if (blockChainIter != chains.end()) return blockChainIter->second;
 
 	// not yet built, what about the previous block?
-	const auto prevBlockIter = hashMap.find(root.prevBlockHash);
+	const auto prevBlockIter = blockMap.find(root.prevBlockHash);
 
 	// if prevBlock is unknown, it must be a genesis block
-	if (prevBlockIter == hashMap.end()) {
+	if (prevBlockIter == blockMap.end()) {
 		chains[root.hash] = Chain(root, nullptr);
 
 		return chains[root.hash];
@@ -68,7 +68,7 @@ auto& findChains(std::map<hash_t, Chain>& chains, const std::map<hash_t, Block>&
 
 	// otherwise, recurse down to the genesis block, finding the chain on the way back
 	const auto prevBlock = prevBlockIter->second;
-	auto& prevBlockChain = findChains(chains, hashMap, prevBlock);
+	auto& prevBlockChain = findChains(chains, blockMap, prevBlock);
 
 	chains[root.hash] = Chain(root, &prevBlockChain);
 
@@ -138,15 +138,15 @@ int main () {
 	} while (true);
 
 	// build a hash map for easy referencing
-	std::map<hash_t, Block> hashMap;
+	std::map<hash_t, Block> blockMap;
 	for (auto& block : blocks) {
-		hashMap[block.hash] = block;
+		blockMap[block.hash] = block;
 	}
 
 	// find all possible chains
 	std::map<hash_t, Chain> chains;
 	for (auto& block : blocks) {
-		findChains(chains, hashMap, block);
+		findChains(chains, blockMap, block);
 	}
 
 	const auto chainTips = findChainTips(chains);
