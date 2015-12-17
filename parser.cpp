@@ -117,7 +117,6 @@ int main (int argc, char** argv) {
 	std::cerr << "Initialized " << nThreads << " threads in the thread pool" << std::endl;
 
 	uint64_t remainder = 0;
-	bool dirty = false;
 	size_t count = 0;
 
 	while (true) {
@@ -138,21 +137,14 @@ int main (int argc, char** argv) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
 			if (slice.peek<uint32_t>() != 0xd9b4bef9) {
 				slice.popFrontN(1);
-				dirty = true;
-
 				continue;
 			}
 
-			// skip bad data cont. (verify if dirty)
+			// skip bad data cont.
 			const auto header = slice.drop(8).take(80);
-			if (dirty) {
-				if (!Block(header).verify()) {
-					slice.popFrontN(1);
-
-					continue;
-				}
-
-				dirty = false;
+			if (!Block(header).verify()) {
+				slice.popFrontN(1);
+				continue;
 			}
 
 			// do we have enough data?
