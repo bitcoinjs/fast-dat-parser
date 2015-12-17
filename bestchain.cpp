@@ -17,23 +17,6 @@ struct Block {
 
 	Block () {}
 	Block (const hash_t& hash, const hash_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits) {}
-
-	auto getBlockChain (const std::map<hash_t, Block>& blocks) const {
-		std::vector<Block> blockchain;
-		Block current = *this;
-
-		// walk the chain, backwards
-		while (true) {
-			blockchain.push_back(current);
-
-			const auto previous = blocks.find(current.prevBlockHash);
-			if (previous == blocks.end()) break;
-
-			current = previous->second;
-		}
-
-		return blockchain;
-	}
 };
 
 // find all blocks who are not parents to any other blocks (aka, a chain tip)
@@ -127,7 +110,20 @@ auto findBest(const std::map<hash_t, Block>& blocks) {
 
 	std::cerr << "fBE" << std::endl;
 
-	return bestBlock.getBlockChain(blocks);
+	auto visitor = bestBlock;
+	std::vector<Block> blockchain;
+	blockchain.push_back(visitor);
+
+	// walk the chain
+	while (true) {
+		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
+		if (prevBlockIter == blocks.end()) break;
+
+		visitor = prevBlockIter->second;
+		blockchain.push_back(visitor);
+	}
+
+	return blockchain;
 }
 
 int main () {
