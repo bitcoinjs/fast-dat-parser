@@ -42,50 +42,27 @@ auto findChainTips(const std::map<hash_t, Block>& blocks) {
 }
 
 auto determineWork(std::map<hash_t, size_t>& workCache, const std::map<hash_t, Block>& blocks, const Block source) {
-	// maybe already done?
-	const auto workPair = workCache.find(source.hash);
-	if (workPair != workCache.end()) return workPair->second;
-
-	// nope, shit
 	auto visitor = source;
-	std::vector<Block> todo;
-	todo.push_back(visitor);
+	size_t totalWork = source.bits;
 
-	// walk the chain until a pre-calculated ancestor or the root is found
+	// naively walk the chain
 	while (true) {
-		const auto visitorPrevWorkIter = workCache.find(visitor.prevBlockHash);
-		if (visitorPrevWorkIter != workCache.end()) break;
+		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
+		if (prevBlockIter == blocks.end()) break;
 
-		const auto visitorPrevBlockIter = blocks.find(visitor.prevBlockHash);
-
-		// is this visitor a genesis block? (no previous block)
-		if (visitorPrevBlockIter == blocks.end()) break;
-
-		visitor = visitorPrevBlockIter->second;
-		todo.push_back(visitor);
-	}
-
-	size_t chainWork = 0;
-
-	// iterated in reverse, genesis blocks will appear first
-	for (auto it = todo.rbegin(); it != todo.rend(); ++it) {
-		const auto todoBlock = *it;
-		const auto todoBlockWork = static_cast<size_t>(todoBlock.bits);
-		const auto todoPrevBlockWorkIter = workCache.find(todoBlock.prevBlockHash);
-
-		// is this todo block a genesis block? (no previous block)
-		if (todoPrevBlockWorkIter == workCache.end()) {
-			chainWork += todoBlockWork;
-			workCache.emplace(todoBlock.hash, todoBlockWork);
-			continue;
+		const auto prevBlockWorkCacheIter = workCache.find(visitor.prevBlockHash);
+		if (prevBlockWorkCacheIter != workCache.end()) {
+			totalWork += prevBlockWorkCacheIter->second;
+			break;
 		}
 
-		const auto todoPrevBlockWork = todoPrevBlockWorkIter->second;
-		chainWork += todoPrevBlockWork + todoBlockWork;
-		workCache.emplace(todoBlock.hash, todoPrevBlockWork + todoBlockWork);
+		visitor = prevBlockIter->second;
+		totalWork += visitor.bits;
 	}
 
-	return chainWork;
+	workCache.emplace(source.hash, totalWork);
+
+	return totalWork;
 }
 
 auto findBest(const std::map<hash_t, Block>& blocks) {
