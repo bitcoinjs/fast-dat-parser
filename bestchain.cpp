@@ -69,23 +69,17 @@ auto findBest(const std::map<hash_t, Block>& blocks) {
 	auto bestBlock = Block();
 	size_t mostWork = 0;
 
-	std::cerr << "fB" << std::endl;
-
 	std::map<hash_t, size_t> workCache;
 
 	for (auto& blockIter : blocks) {
 		const auto block = blockIter.second;
 		const auto work = determineWork(workCache, blocks, block);
 
-		std::cerr << "fBcmp" << std::endl;
-
 		if (work > mostWork) {
 			bestBlock = block;
 			mostWork = work;
 		}
 	}
-
-	std::cerr << "fBE" << std::endl;
 
 	auto visitor = bestBlock;
 	std::vector<Block> blockchain;
