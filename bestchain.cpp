@@ -11,165 +11,174 @@
 typedef std::array<uint8_t, 32> hash_t;
 
 struct Block {
-	hash_t hash;
-	hash_t prevBlockHash;
+	hash_t hash = {};
+	hash_t prevBlockHash = {};
 	uint32_t bits;
 
 	Block () {}
 	Block (const hash_t& hash, const hash_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits) {}
-};
 
-struct Chain {
-	Block block;
-	Chain* previous = nullptr;
-	size_t work = 0;
+	auto getBlockChain (const std::map<hash_t, Block>& blocks) const {
+		std::vector<Block> blockchain;
+		Block current = *this;
 
-	Chain () {}
-	Chain (Block block, Chain* previous) : block(block), previous(previous) {}
+		// walk the chain, backwards
+		while (true) {
+			blockchain.push_back(current);
 
-	size_t determineAggregateWork () {
-		if (this->work != 0) return this->work;
-		this->work = this->block.bits;
+			const auto previous = blocks.find(current.prevBlockHash);
+			if (previous == blocks.end()) break;
 
-		if (this->previous != nullptr) {
-			this->work += this->previous->determineAggregateWork();
+			current = previous->second;
 		}
 
-		return this->work;
-	}
-
-	template <typename F>
-	void forEach (const F f) const {
-		auto link = this;
-
-		while (link != nullptr) {
-			f(*link);
-
-			link = (*link).previous;
-		}
+		return blockchain;
 	}
 };
 
-auto& findChains(std::map<hash_t, Chain>& chains, const std::map<hash_t, Block>& blockMap, const Block& root) {
-	const auto blockChainIter = chains.find(root.hash);
-
-	// already built this?
-	if (blockChainIter != chains.end()) return blockChainIter->second;
-
-	// not yet built, what about the previous block?
-	const auto prevBlockIter = blockMap.find(root.prevBlockHash);
-
-	// if prevBlock is unknown, it must be a genesis block
-	if (prevBlockIter == blockMap.end()) {
-		chains[root.hash] = Chain(root, nullptr);
-
-		return chains[root.hash];
-	}
-
-	// otherwise, recurse down to the genesis block, finding the chain on the way back
-	const auto prevBlock = prevBlockIter->second;
-	auto& prevBlockChain = findChains(chains, blockMap, prevBlock);
-
-	chains[root.hash] = Chain(root, &prevBlockChain);
-
-	return chains[root.hash];
-}
-
-// find all chains who are not parents to any other blocks (aka, a chain tip)
-auto findChainTips(std::map<hash_t, Chain>& chains) {
+// find all blocks who are not parents to any other blocks (aka, a chain tip)
+auto findChainTips(const std::map<hash_t, Block>& blocks) {
 	std::map<hash_t, bool> parents;
 
-	for (auto& chainIter : chains) {
-		auto&& chain = chainIter.second;
-		if (chain.previous == nullptr) continue;
+	for (auto& blockIter : blocks) {
+		const auto block = blockIter.second;
+		if (blocks.count(block.prevBlockHash) == 0) continue;
 
-		parents[chain.previous->block.hash] = true;
+		parents[block.prevBlockHash] = true;
 	}
 
-	std::vector<Chain> tips;
-	for (auto& chainIter : chains) {
-		auto&& chain = chainIter.second;
-		if (parents.find(chain.block.hash) != parents.end()) continue;
+	std::vector<Block> tips;
+	for (auto& blockIter : blocks) {
+		const auto block = blockIter.second;
+		if (parents.find(block.hash) != parents.end()) continue;
 
-		tips.push_back(chain);
+		tips.push_back(block);
 	}
 
 	return tips;
 }
 
-auto findBest(std::vector<Chain> chains) {
-	auto bestChain = *chains.begin();
+auto determineWork(std::map<hash_t, size_t>& workCache, const std::map<hash_t, Block>& blocks, const Block source) {
+	// maybe already done?
+	const auto workPair = workCache.find(source.hash);
+	if (workPair != workCache.end()) return workPair->second;
+
+	// nope, shit
+	auto visitor = source;
+	std::vector<Block> todo;
+	todo.push_back(visitor);
+
+	// walk the chain until a pre-calculated ancestor or the root is found
+	while (true) {
+		const auto visitorPrevWorkIter = workCache.find(visitor.prevBlockHash);
+		if (visitorPrevWorkIter != workCache.end()) break;
+
+		const auto visitorPrevBlockIter = blocks.find(visitor.prevBlockHash);
+
+		// is this visitor a genesis block? (no previous block)
+		if (visitorPrevBlockIter == blocks.end()) break;
+
+		visitor = visitorPrevBlockIter->second;
+		todo.push_back(visitor);
+	}
+
+	size_t chainWork = 0;
+
+	// iterated in reverse, genesis blocks will appear first
+	for (auto it = todo.rbegin(); it != todo.rend(); ++it) {
+		const auto todoBlock = *it;
+		const auto todoBlockWork = static_cast<size_t>(todoBlock.bits);
+		const auto todoPrevBlockWorkIter = workCache.find(todoBlock.prevBlockHash);
+
+		// is this todo block a genesis block? (no previous block)
+		if (todoPrevBlockWorkIter == workCache.end()) {
+			chainWork += todoBlockWork;
+			workCache.emplace(todoBlock.hash, todoBlockWork);
+			continue;
+		}
+
+		const auto todoPrevBlockWork = todoPrevBlockWorkIter->second;
+		chainWork += todoPrevBlockWork + todoBlockWork;
+		workCache.emplace(todoBlock.hash, todoPrevBlockWork + todoBlockWork);
+	}
+
+	return chainWork;
+}
+
+auto findBest(const std::map<hash_t, Block>& blocks) {
+	auto bestBlock = Block();
 	size_t mostWork = 0;
 
-	for (auto&& chain : chains) {
-		auto work = chain.determineAggregateWork();
+	std::cerr << "fB" << std::endl;
+
+	std::map<hash_t, size_t> workCache;
+
+	for (auto& blockIter : blocks) {
+		const auto block = blockIter.second;
+		const auto work = determineWork(workCache, blocks, block);
+
+		std::cerr << "fBcmp" << std::endl;
 
 		if (work > mostWork) {
-			bestChain = chain;
+			bestBlock = block;
 			mostWork = work;
 		}
 	}
 
-	std::vector<Block> blockchain;
-	bestChain.forEach([&](const Chain& chain) {
-		blockchain.push_back(chain.block);
-	});
+	std::cerr << "fBE" << std::endl;
 
-	return blockchain;
+	return bestBlock.getBlockChain(blocks);
 }
 
 int main () {
-	std::vector<Block> blocks;
+	std::map<hash_t, Block> blocks;
 
-	do {
-		uint8_t buffer[80];
-		const auto read = fread(&buffer[0], sizeof(buffer), 1, stdin);
+	{
+		do {
+			uint8_t buffer[80];
+			const auto read = fread(&buffer[0], sizeof(buffer), 1, stdin);
 
-		// EOF?
-		if (read == 0) break;
+			// EOF?
+			if (read == 0) break;
 
-		hash_t hash, prevBlockHash;
-		uint32_t bits;
+			hash_t hash, prevBlockHash;
+			uint32_t bits;
 
-		hash256(&hash[0], &buffer[0], 80);
-		memcpy(&prevBlockHash[0], &buffer[4], 32);
-		memcpy(&bits, &buffer[72], 4);
+			hash256(&hash[0], &buffer[0], 80);
+			memcpy(&prevBlockHash[0], &buffer[4], 32);
+			memcpy(&bits, &buffer[72], 4);
 
-		blocks.push_back(Block(hash, prevBlockHash, bits));
-	} while (true);
+			blocks[hash] = Block(hash, prevBlockHash, bits);
+		} while (true);
 
-	// build a hash map for easy referencing
-	std::map<hash_t, Block> blockMap;
-	for (auto& block : blocks) {
-		blockMap[block.hash] = block;
+		std::cerr << "Read " << blocks.size() << " headers" << std::endl;
 	}
 
-	// find all possible chains
-	std::map<hash_t, Chain> chains;
-	for (auto& block : blocks) {
-		findChains(chains, blockMap, block);
+	// how many tips exist?
+	{
+		const auto chainTips = findChainTips(blocks);
+		std::cerr << "Found " << chainTips.size() << " chain tips" << std::endl;
 	}
 
-	const auto chainTips = findChainTips(chains);
-	std::cerr << "Found " << chainTips.size() << " chain tips" << std::endl;
+	// what is the best?
+	{
+		const auto bestBlockChain = findBest(blocks);
+		const auto genesis = bestBlockChain.back();
+		const auto tip = bestBlockChain.front();
 
-	// now find the best
-	const auto bestBlockChain = findBest(chainTips);
-	const auto genesis = bestBlockChain.back();
-	const auto tip = bestBlockChain.front();
+		// output
+		std::cerr << "Best chain" << std::endl;
+		std::cerr << "- Height: " << bestBlockChain.size() - 1 << std::endl;
+		std::cerr << std::hex;
+		std::cerr << "- Genesis: ";
+		for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) genesis.hash[i];
+		std::cerr << std::endl << "- Tip: ";
+		for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) tip.hash[i];
+		std::cerr << std::endl << std::dec;
 
-	// output
-	std::cerr << "Found best chain" << std::endl;
-	std::cerr << "- Height: " << bestBlockChain.size() - 1 << std::endl;
-	std::cerr << std::hex;
-	std::cerr << "- Genesis: ";
-	for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) genesis.hash[i];
-	std::cerr << std::endl << "- Tip: ";
-	for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) tip.hash[i];
-	std::cerr << std::endl << std::dec;
-
-	for(auto it = bestBlockChain.rbegin(); it != bestBlockChain.rend(); ++it) {
-		fwrite(&it->hash[0], 32, 1, stdout);
+		for (auto it = bestBlockChain.rbegin(); it != bestBlockChain.rend(); ++it) {
+			fwrite(&it->hash[0], 32, 1, stdout);
+		}
 	}
 
 	return 0;
