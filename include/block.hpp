@@ -171,10 +171,9 @@ struct Block {
 	}
 
 	auto transactions () const {
-		auto tdata = this->data;
-		auto n = readVI(tdata);
+		auto n = readVI(this->data);
 
-		return TransactionRange(n, tdata);
+		return TransactionRange(n, this->data);
 	}
 
 	auto verify () const {
