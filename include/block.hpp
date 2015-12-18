@@ -171,9 +171,10 @@ struct Block {
 	}
 
 	auto transactions () const {
-		auto n = readVI(this->data);
+		auto _data = Slice(this->data);
+		auto n = readVI(_data);
 
-		return TransactionRange(n, this->data);
+		return TransactionRange(n, _data);
 	}
 
 	auto verify () const {
