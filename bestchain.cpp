@@ -23,7 +23,7 @@ struct Block {
 auto findChainTips(const std::map<hash_t, Block>& blocks) {
 	std::map<hash_t, bool> parents;
 
-	for (auto& blockIter : blocks) {
+	for (const auto& blockIter : blocks) {
 		const auto block = blockIter.second;
 		if (blocks.count(block.prevBlockHash) == 0) continue;
 
@@ -31,7 +31,7 @@ auto findChainTips(const std::map<hash_t, Block>& blocks) {
 	}
 
 	std::vector<Block> tips;
-	for (auto& blockIter : blocks) {
+	for (const auto& blockIter : blocks) {
 		const auto block = blockIter.second;
 		if (parents.find(block.hash) != parents.end()) continue;
 
@@ -71,7 +71,7 @@ auto findBest(const std::map<hash_t, Block>& blocks) {
 
 	std::map<hash_t, size_t> workCache;
 
-	for (auto& blockIter : blocks) {
+	for (const auto& blockIter : blocks) {
 		const auto block = blockIter.second;
 		const auto work = determineWork(workCache, blocks, block);
 
@@ -103,7 +103,7 @@ int main () {
 	{
 		do {
 			uint8_t buffer[80];
-			const auto read = fread(&buffer[0], sizeof(buffer), 1, stdin);
+			const auto read = fread(buffer, sizeof(buffer), 1, stdin);
 
 			// EOF?
 			if (read == 0) break;
@@ -111,9 +111,9 @@ int main () {
 			hash_t hash, prevBlockHash;
 			uint32_t bits;
 
-			hash256(&hash[0], &buffer[0], 80);
-			memcpy(&prevBlockHash[0], &buffer[4], 32);
-			memcpy(&bits, &buffer[72], 4);
+			hash256(&hash[0], buffer, 80);
+			memcpy(&prevBlockHash[0], buffer + 4, 32);
+			memcpy(&bits, buffer + 72, 4);
 
 			blocks[hash] = Block(hash, prevBlockHash, bits);
 		} while (true);
@@ -143,7 +143,7 @@ int main () {
 		for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) tip.hash[i];
 		std::cerr << std::endl << std::dec;
 
-		for (auto it = bestBlockChain.rbegin(); it != bestBlockChain.rend(); ++it) {
+		for (auto it = bestBlockChain.crbegin(); it != bestBlockChain.crend(); ++it) {
 			fwrite(&it->hash[0], 32, 1, stdout);
 		}
 	}

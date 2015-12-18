@@ -20,23 +20,23 @@ void dumpScriptShas (Slice data) {
 	const auto block = Block(data.take(80), data.drop(80));
 	uint8_t wbuf[32 + 32 + 20] = {};
 
-	hash256(&wbuf[0], block.header);
+	hash256(wbuf, block.header);
 
 	auto transactions = block.transactions();
 	while (!transactions.empty()) {
 		const auto& transaction = transactions.front();
 
-		hash256(&wbuf[32], transaction.data);
+		hash256(wbuf + 32, transaction.data);
 
 		for (const auto& input : transaction.inputs) {
-			sha1(&wbuf[64], input.script);
+			sha1(wbuf + 64, input.script);
 
 			// no locking, 84 bytes < PIPE_BUF (4096 bytes)
 			fwrite(wbuf, sizeof(wbuf), 1, stdout);
 		}
 
 		for (const auto& output : transaction.outputs) {
-			sha1(&wbuf[64], output.script);
+			sha1(wbuf + 64, output.script);
 
 			// no locking, 84 bytes < PIPE_BUF (4096 bytes)
 			fwrite(wbuf, sizeof(wbuf), 1, stdout);
@@ -114,7 +114,7 @@ auto parseArg (char* argv) {
 	if (sscanf(argv, "-m%lu", &memoryAlloc) == 1) return true;
 	if (sscanf(argv, "-n%lu", &nThreads) == 1) return true;
 	if (strncmp(argv, "-w", 2) == 0) {
-		whitelistFileName = std::string(&argv[2]);
+		whitelistFileName = std::string(argv + 2);
 		return true;
 	}
 
@@ -209,7 +209,7 @@ int main (int argc, char** argv) {
 
 		// assign remainder to front of iobuffer (rdbuf is offset to avoid overwrite on rawRead)
 		remainder = data.length();
-		memcpy(&iobuffer[0], &data[0], remainder);
+		memcpy(iobuffer.begin, data.begin, remainder);
 	}
 
 	return 0;
