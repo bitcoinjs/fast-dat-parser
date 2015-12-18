@@ -160,27 +160,27 @@ int main (int argc, char** argv) {
 		// swap the buffers
 		std::swap(buffer, iobuffer);
 
-		auto slice = buffer.take(remainder + read);
-		std::cerr << "-- " << count << " Blocks (processing " << slice.length() / 1024 << " KiB)" << std::endl;
+		auto data = buffer.take(remainder + read);
+		std::cerr << "-- " << count << " Blocks (processing " << data.length() / 1024 << " KiB)" << std::endl;
 
-		while (slice.length() >= 88) {
+		while (data.length() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
-			if (slice.peek<uint32_t>() != 0xd9b4bef9) {
-				slice.popFrontN(1);
+			if (data.peek<uint32_t>() != 0xd9b4bef9) {
+				data.popFrontN(1);
 				continue;
 			}
 
 			// skip bad data cont.
-			const auto header = slice.drop(8).take(80);
+			const auto header = data.drop(8).take(80);
 			if (!Block(header).verify()) {
-				slice.popFrontN(1);
+				data.popFrontN(1);
 				continue;
 			}
 
 			// do we have enough data?
-			const auto length = slice.drop(4).peek<uint32_t>();
+			const auto length = data.drop(4).peek<uint32_t>();
 			const auto total = 8 + length;
-			if (total > slice.length()) break;
+			if (total > data.length()) break;
 
 			// is whitelisting in effect?
 			if (doWhitelist) {
@@ -189,27 +189,27 @@ int main (int argc, char** argv) {
 
 				// skip if not found
 				if (whitelist.find(hash) == whitelist.end()) {
-					slice.popFrontN(total);
+					data.popFrontN(total);
 
 					std::cerr << "--- Skipped block" << std::endl;
 					continue;
 				}
 			}
 
-			// lets do it, send the data to the threadpool
-			const auto data = slice.drop(8).take(length);
+			// lets do it, send the block data to the threadpool
+			const auto block = data.drop(8).take(length);
 
-			pool.push([data, delegate]() { delegate(data); });
+			pool.push([block, delegate]() { delegate(block); });
 			count++;
 
-			slice.popFrontN(total);
+			data.popFrontN(total);
 		}
 
 		if (eof) break;
 
 		// assign remainder to front of iobuffer (rdbuf is offset to avoid overwrite on rawRead)
-		remainder = slice.length();
-		memcpy(&iobuffer[0], &slice[0], remainder);
+		remainder = data.length();
+		memcpy(&iobuffer[0], &data[0], remainder);
 	}
 
 	return 0;
