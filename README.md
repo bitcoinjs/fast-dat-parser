@@ -36,13 +36,11 @@ A best-chain filter for block headers.
 Accepts 80-byte block headers until EOF, finds the best-chain then outputs the resultant list of block hashes.
 
 
-## Example
+## Examples
 
 ``` bash
 # parse the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 -n4 > _headers.dat
-cat _headers.dat | ./bestchain > headers.dat
-rm _headers.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 -n4 | ./bestchain > headers.dat
 
 # parse only blocks who's hash is found in headers.dat (from above)
 cat ~/.bitcoin/blocks/blk*.dat | ./parser -f1 -n4 -wheaders.dat > scripts.dat

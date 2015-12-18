@@ -8,8 +8,8 @@
 #include "hash.hpp"
 #include "slice.hpp"
 
-uint64_t readVI (Slice<uint8_t>& data) {
-	const auto i = data.front();
+uint64_t readVI (Slice& data) {
+	const auto i = data.peek();
 	data.popFront();
 
 	if (i < 253) return static_cast<uint64_t>(i);
@@ -20,16 +20,16 @@ uint64_t readVI (Slice<uint8_t>& data) {
 
 struct Transaction {
 	struct Input {
-		Slice<uint8_t> hash;
+		Slice hash;
 		uint32_t vout;
-		Slice<uint8_t> script;
+		Slice script;
 		uint32_t sequence;
 
 		Input () {}
 		Input (
-			Slice<uint8_t> hash,
+			Slice hash,
 			uint32_t vout,
-			Slice<uint8_t> script,
+			Slice script,
 			uint32_t sequence
 		) :
 			hash(hash),
@@ -39,19 +39,19 @@ struct Transaction {
 	};
 
 	struct Output {
-		Slice<uint8_t> script;
+		Slice script;
 		uint64_t value;
 
 		Output () {}
 		Output (
-			Slice<uint8_t> script,
+			Slice script,
 			uint64_t value
 		) :
 			script(script),
 			value(value) {}
 	};
 
-	Slice<uint8_t> data;
+	Slice data;
 	uint32_t version;
 
 	std::vector<Input> inputs;
@@ -61,7 +61,7 @@ struct Transaction {
 
 	Transaction () {}
 	Transaction (
-		Slice<uint8_t> data,
+		Slice data,
 		uint32_t version,
 		std::vector<Input> inputs,
 		std::vector<Output> outputs,
@@ -75,10 +75,9 @@ struct Transaction {
 };
 
 namespace {
-	template <typename T>
-	auto readSlice (Slice<T>& data, uint64_t length) {
-		auto slice = data.take(length);
-		data.popFrontN(length);
+	auto readSlice (Slice& data, uint64_t n) {
+		auto slice = data.take(n);
+		data.popFrontN(n);
 		return slice;
 	}
 }
@@ -86,7 +85,7 @@ namespace {
 struct TransactionRange {
 private:
 	uint64_t n;
-	Slice<uint8_t> data;
+	Slice data;
 
 	Transaction current;
 	bool lazy = true;
@@ -125,7 +124,7 @@ private:
 	}
 
 public:
-	TransactionRange(size_t n, Slice<uint8_t> data) : n(n), data(data) {}
+	TransactionRange(size_t n, Slice data) : n(n), data(data) {}
 
 	auto empty () const { return this->n == 0; }
 	auto length () const { return this->n; }
@@ -147,23 +146,19 @@ public:
 };
 
 struct Block {
-	struct Header {
-		uint32_t version;
-		uint8_t prevHash[32];
-		uint8_t merkleRoot[32];
-		uint32_t timestamp;
-		uint32_t bits;
-		uint32_t nonce;
-	};
+	Slice header;
+	Slice data;
 
-	Slice<uint8_t> header;
-	Slice<uint8_t> data;
+	Block(Slice header) : header(header) {
+		assert(header.length() == 80);
+	}
 
-	Block(Slice<uint8_t> header) : header(header) {}
-	Block(Slice<uint8_t> header, Slice<uint8_t> data) : header(header), data(data) {}
+	Block(Slice header, Slice data) : header(header), data(data) {
+		assert(header.length() == 80);
+	}
 
 	void target (uint8_t buffer[32]) const {
-		const auto bits = reinterpret_cast<const Header*>(&this->header[0])->bits;
+		const auto bits = *(reinterpret_cast<uint32_t*>(this->header.begin + 72));
 		const uint32_t exponent = ((bits & 0xff000000) >> 24) - 3;
 		const uint32_t mantissa = bits & 0x007fffff;
 		const size_t i = static_cast<size_t>(31 - exponent);

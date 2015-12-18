@@ -11,12 +11,12 @@
 #include "threadpool.hpp"
 
 // BLOCK_HEADER
-void dumpHeaders (Slice<uint8_t> data) {
+void dumpHeaders (Slice data) {
 	fwrite(data.begin, 80, 1, stdout);
 }
 
 // BLOCK_HASH | TX_HASH | SCRIPT_HASH
-void dumpScriptShas (Slice<uint8_t> data) {
+void dumpScriptShas (Slice data) {
 	const auto block = Block(data.take(80), data.drop(80));
 	uint8_t wbuf[32 + 32 + 20] = {};
 
@@ -108,9 +108,8 @@ int main (int argc, char** argv) {
 	}
 
 	// pre-allocate buffers
-	std::vector<uint8_t> backbuffer(memoryAlloc);
-	auto iobuffer = Slice<uint8_t>(&backbuffer[0], &backbuffer[0] + memoryAlloc / 2);
-	auto buffer = Slice<uint8_t>(&backbuffer[0] + memoryAlloc / 2, &backbuffer[0] + memoryAlloc);
+	HeapSlice iobuffer(memoryAlloc / 2);
+	HeapSlice buffer(memoryAlloc / 2);
 	ThreadPool<std::function<void(void)>> pool(nThreads);
 
 	std::cerr << "Initialized buffers (2 * " << memoryAlloc / 2 << " bytes)" << std::endl;
@@ -155,7 +154,7 @@ int main (int argc, char** argv) {
 			// is whitelisting in effect?
 			if (doWhitelist) {
 				hash_t hash;
-				hash256(&hash[0], &header[0], 80);
+				hash256(&hash[0], header);
 
 				// skip if not found
 				if (whitelist.find(hash) == whitelist.end()) {

@@ -21,10 +21,10 @@ void hash256 (uint8_t* dest, const uint8_t* src, size_t n) {
 // Slice wrappers
 #include "slice.hpp"
 
-void sha1 (uint8_t* dest, const Slice<uint8_t> src) {
+void sha1 (uint8_t* dest, const Slice src) {
 	sha1(dest, src.begin, src.length());
 }
 
-void hash256 (uint8_t* dest, const Slice<uint8_t> src) {
+void hash256 (uint8_t* dest, const Slice src) {
 	hash256(dest, src.begin, src.length());
 }
