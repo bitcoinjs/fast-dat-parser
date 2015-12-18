@@ -48,7 +48,7 @@ void dumpScriptShas (Slice data) {
 
 void dumpScripts (Slice data) {
 	const auto block = Block(data.take(80), data.drop(80));
-	StackSlice<4096> wbuf;
+	uint8_t wbuf[4096];
 
 	auto transactions = block.transactions();
 	while (!transactions.empty()) {
@@ -58,18 +58,18 @@ void dumpScripts (Slice data) {
 			if (input.script.length() > sizeof(wbuf) - 2) continue;
 			const auto scriptLength = static_cast<uint16_t>(input.script.length());
 
-			wbuf.put<uint16_t>(scriptLength, 0);
-			memcpy(wbuf.begin + 2, input.script.begin, scriptLength);
-			fwrite(wbuf.begin, 2 + scriptLength, 1, stdout);
+			Slice(wbuf, wbuf + 2).put<uint16_t>(scriptLength, 0);
+			memcpy(wbuf + 2, input.script.begin, scriptLength);
+			fwrite(wbuf, 2 + scriptLength, 1, stdout);
 		}
 
 		for (const auto& output : transaction.outputs) {
 			if (output.script.length() > sizeof(wbuf) - 2) continue;
 			const auto scriptLength = static_cast<uint16_t>(output.script.length());
 
-			wbuf.put<uint16_t>(scriptLength, 0);
-			memcpy(wbuf.begin + 2, output.script.begin, scriptLength);
-			fwrite(wbuf.begin, 2 + scriptLength, 1, stdout);
+			Slice(wbuf, wbuf + 2).put<uint16_t>(scriptLength, 0);
+			memcpy(wbuf + 2, output.script.begin, scriptLength);
+			fwrite(wbuf, 2 + scriptLength, 1, stdout);
 		}
 
 		transactions.popFront();
