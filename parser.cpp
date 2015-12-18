@@ -55,21 +55,21 @@ void dumpScripts (Slice data) {
 		const auto& transaction = transactions.front();
 
 		for (const auto& input : transaction.inputs) {
-			if (input.script.length() > sizeof(wbuf) - 2) continue;
+			if (input.script.length() > sizeof(wbuf) - sizeof(uint16_t)) continue;
 			const auto scriptLength = static_cast<uint16_t>(input.script.length());
 
-			Slice(wbuf, wbuf + 2).put<uint16_t>(scriptLength, 0);
-			memcpy(wbuf + 2, input.script.begin, scriptLength);
-			fwrite(wbuf, 2 + scriptLength, 1, stdout);
+			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength, 0);
+			memcpy(wbuf + sizeof(uint16_t), input.script.begin, scriptLength);
+			fwrite(wbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
 		}
 
 		for (const auto& output : transaction.outputs) {
-			if (output.script.length() > sizeof(wbuf) - 2) continue;
+			if (output.script.length() > sizeof(wbuf) - sizeof(uint16_t)) continue;
 			const auto scriptLength = static_cast<uint16_t>(output.script.length());
 
-			Slice(wbuf, wbuf + 2).put<uint16_t>(scriptLength, 0);
-			memcpy(wbuf + 2, output.script.begin, scriptLength);
-			fwrite(wbuf, 2 + scriptLength, 1, stdout);
+			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength, 0);
+			memcpy(wbuf + sizeof(uint16_t), output.script.begin, scriptLength);
+			fwrite(wbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
 		}
 
 		transactions.popFront();

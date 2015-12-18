@@ -92,16 +92,6 @@ struct Slice {
 		assert(this->length() >= i);
 		return this->begin[i];
 	}
-
-	auto operator>(const Slice b) const {
-		const auto result = memcmp(this->begin, b.begin, std::min(this->length(), b.length()));
-		return (result == 0) ? (this->length() > b.length()) : result > 0;
-	}
-
-	auto operator<(const Slice b) const {
-		const auto result = memcmp(this->begin, b.begin, std::min(this->length(), b.length()));
-		return (result == 0) ? (this->length() < b.length()) : result < 0;
-	}
 };
 
 template <size_t N>
