@@ -5,7 +5,7 @@
 
 For fastest performance, pre-process the *.dat files to exclude orphans and remove zero-byte gaps, probably.
 
-Parses the blockchain about as fast as your IO can pipe it out.
+Parses the blockchain about as fast as your IO can pipe it out.  For a typical SSD, this can be around ~450 MiB/s.
 
 All memory is allocated up front.
 
