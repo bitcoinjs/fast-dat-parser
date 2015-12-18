@@ -10,7 +10,7 @@
 int main () {
 	uint32_t height = 0;
 
-	std::cout << "COPY blocks (id, height) FROM STDIN BINARY" << std::endl;
+	fputs("COPY blocks (id, height) FROM STDIN BINARY\r\n", stdout);
 	fwrite(PG_BINARY_HEADER, sizeof(PG_BINARY_HEADER), 1, stdout);
 
 	while (true) {
@@ -33,6 +33,7 @@ int main () {
 
 		pslice.write<int32_t, true>(4);
 		pslice.write<int32_t, true>(height);
+		fwrite(pbuffer, sizeof(pbuffer), 1, stdout);
 
 		++height;
 	}

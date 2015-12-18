@@ -38,7 +38,7 @@ int main (int argc, char** argv) {
 	const auto chainHeightMap = importChainHeightMap(headersFileName);
 	if (chainHeightMap.empty()) return 1;
 
-	std::cout << "COPY scripts (id, txid, height) FROM STDIN BINARY" << std::endl;
+	fputs("COPY scripts (id, txid, height) FROM STDIN BINARY\r\n", stdout);
 	fwrite(PG_BINARY_HEADER, sizeof(PG_BINARY_HEADER), 1, stdout);
 
 	while (true) {
@@ -70,6 +70,8 @@ int main (int argc, char** argv) {
 
 		pslice.write<int32_t, true>(4);
 		pslice.write<int32_t>(heightPair->second);
+
+		fwrite(pbuffer, sizeof(pbuffer), 1, stdout);
 	}
 
 	fwrite(PG_BINARY_TAIL, sizeof(PG_BINARY_TAIL), 1, stdout);
