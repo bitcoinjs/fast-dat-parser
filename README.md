@@ -26,6 +26,7 @@ A fast `blk*.dat` parser for bitcoin blockchain analysis.
 
 - `0` - Outputs solely the *unordered* 80-byte block headers, may include orphans (binary, not hex)
 - `1` - Outputs every script hash, for every transaction, in every block, ~`BLOCK_HASH | TX_HASH | SCRIPT_HASH` (binary, not hex)
+- `2` - Outputs every script, prefixed with a `uint16_t` length (binary, not hex)
 
 Use `-w` to avoid orphan data being included. (see example for best chain filtering)
 

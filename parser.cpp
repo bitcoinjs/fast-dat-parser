@@ -46,10 +46,41 @@ void dumpScriptShas (Slice data) {
 	}
 }
 
-typedef void(*processFunction_t)(Slice<uint8_t>);
+void dumpScripts (Slice data) {
+	const auto block = Block(data.take(80), data.drop(80));
+	StackSlice<4096> wbuf;
+
+	auto transactions = block.transactions();
+	while (!transactions.empty()) {
+		const auto& transaction = transactions.front();
+
+		for (const auto& input : transaction.inputs) {
+			if (input.script.length() > sizeof(wbuf) - 2) continue;
+			const auto scriptLength = static_cast<uint16_t>(input.script.length());
+
+			wbuf.put<uint16_t>(scriptLength, 0);
+			memcpy(wbuf.begin + 2, input.script.begin, scriptLength);
+			fwrite(wbuf.begin, 2 + scriptLength, 1, stdout);
+		}
+
+		for (const auto& output : transaction.outputs) {
+			if (output.script.length() > sizeof(wbuf) - 2) continue;
+			const auto scriptLength = static_cast<uint16_t>(output.script.length());
+
+			wbuf.put<uint16_t>(scriptLength, 0);
+			memcpy(wbuf.begin + 2, output.script.begin, scriptLength);
+			fwrite(wbuf.begin, 2 + scriptLength, 1, stdout);
+		}
+
+		transactions.popFront();
+	}
+}
+
+typedef void(*processFunction_t)(Slice);
 processFunction_t FUNCTIONS[] = {
 	&dumpHeaders,
-	&dumpScriptShas
+	&dumpScriptShas,
+	&dumpScripts
 };
 
 typedef std::array<uint8_t, 32> hash_t;
