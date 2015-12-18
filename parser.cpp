@@ -139,8 +139,8 @@ int main (int argc, char** argv) {
 	}
 
 	// pre-allocate buffers
-	HeapSlice iobuffer(memoryAlloc / 2);
-	HeapSlice buffer(memoryAlloc / 2);
+	UniqueSlice iobuffer(memoryAlloc / 2);
+	UniqueSlice buffer(memoryAlloc / 2);
 	ThreadPool<std::function<void(void)>> pool(nThreads);
 
 	std::cerr << "Initialized buffers (2 * " << memoryAlloc / 2 << " bytes)" << std::endl;

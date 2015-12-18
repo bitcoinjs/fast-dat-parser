@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cassert>
-#include <memory>
 
 namespace {
 	template <typename T>
@@ -94,20 +93,13 @@ struct Slice {
 	}
 };
 
-template <size_t N>
-struct StackSlice : Slice {
-	uint8_t data[N];
-
-	StackSlice() : Slice(this->data, this->data + N) {}
-};
-
-struct HeapSlice : Slice {
-	HeapSlice(size_t n) {
+struct UniqueSlice : Slice {
+	UniqueSlice(size_t n) {
 		this->begin = new uint8_t[n];
 		this->end = this->begin + n;
 	}
 
-	~HeapSlice() {
+	~UniqueSlice() {
 		delete[] this->begin;
 	}
 };
