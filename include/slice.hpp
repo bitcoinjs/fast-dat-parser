@@ -60,9 +60,13 @@ struct Slice {
 		if (swap) swapEndian(ptr);
 	}
 
+	void put (uint8_t* value, size_t n, size_t offset = 0) {
+		assert(this->length() >= offset + n);
+		memcpy(this->begin + offset, value, n);
+	}
+
 	void put (Slice value, size_t offset = 0) {
-		assert(this->length() >= offset + value.length());
-		memcpy(this->begin + offset, value.begin, value.length());
+		this->put(value.begin, value.length(), offset);
 	}
 
 	template <typename Y = uint8_t>
@@ -81,6 +85,11 @@ struct Slice {
 	void write (Slice value) {
 		this->put(value);
 		this->popFrontN(value.length());
+	}
+
+	void write (uint8_t* value, size_t n) {
+		this->put(value, n);
+		this->popFrontN(n);
 	}
 
 	uint8_t& operator[](const size_t i) {
