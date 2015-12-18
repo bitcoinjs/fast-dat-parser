@@ -101,7 +101,7 @@ int main () {
 	std::map<hash_t, Block> blocks;
 
 	{
-		do {
+		while (true) {
 			uint8_t buffer[80];
 			const auto read = fread(buffer, sizeof(buffer), 1, stdin);
 
@@ -116,7 +116,7 @@ int main () {
 			memcpy(&bits, buffer + 72, 4);
 
 			blocks[hash] = Block(hash, prevBlockHash, bits);
-		} while (true);
+		}
 
 		std::cerr << "Read " << blocks.size() << " headers" << std::endl;
 	}

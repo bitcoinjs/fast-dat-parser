@@ -46,6 +46,7 @@ void dumpScriptShas (Slice data) {
 	}
 }
 
+// SCRIPT_LENGTH | SCRIPT
 void dumpScripts (Slice data) {
 	const auto block = Block(data.take(80), data.drop(80));
 	uint8_t wbuf[4096];
@@ -91,7 +92,7 @@ auto importWhitelist (const std::string& fileName) {
 	auto file = fopen(fileName.c_str(), "r");
 	if (file == nullptr) return set;
 
-	do {
+	while (true) {
 		hash_t hash;
 		const auto read = fread(&hash[0], 32, 1, file);
 
@@ -99,7 +100,7 @@ auto importWhitelist (const std::string& fileName) {
 		if (read == 0) break;
 
 		set.emplace(hash);
-	} while (true);
+	}
 
 	return set;
 }
