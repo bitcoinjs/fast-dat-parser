@@ -10,7 +10,7 @@
 
 typedef std::array<uint8_t, 32> hash_t;
 
-auto importChainHeightMap (const std::string& fileName) {
+auto importHeightMap (const std::string& fileName) {
 	std::map<hash_t, uint32_t> map;
 
 	auto file = fopen(fileName.c_str(), "r");
@@ -35,10 +35,9 @@ int main (int argc, char** argv) {
 	if (argc < 2) return 1;
 
 	const auto headersFileName = std::string(argv[1]);
-	const auto chainHeightMap = importChainHeightMap(headersFileName);
+	const auto chainHeightMap = importHeightMap(headersFileName);
 	if (chainHeightMap.empty()) return 1;
 
-	fputs("COPY scripts (id, txid, height) FROM STDIN BINARY\r\n", stdout);
 	fwrite(PG_BINARY_HEADER, sizeof(PG_BINARY_HEADER), 1, stdout);
 
 	while (true) {

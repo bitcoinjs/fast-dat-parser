@@ -10,7 +10,6 @@
 int main () {
 	uint32_t height = 0;
 
-	fputs("COPY blocks (id, height) FROM STDIN BINARY\r\n", stdout);
 	fwrite(PG_BINARY_HEADER, sizeof(PG_BINARY_HEADER), 1, stdout);
 
 	while (true) {
