@@ -1,9 +1,6 @@
 #include <algorithm>
 #include <cstdio>
 
-#include <iostream>
-#include <iomanip>
-
 #include "pg.hpp"
 #include "slice.hpp"
 
