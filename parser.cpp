@@ -52,7 +52,7 @@ void dumpScripts (Slice data) {
 			if (input.script.length() > sizeof(wbuf) - sizeof(uint16_t)) continue;
 			const auto scriptLength = static_cast<uint16_t>(input.script.length());
 
-			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength, 0);
+			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength);
 			memcpy(wbuf + sizeof(uint16_t), input.script.begin, scriptLength);
 			fwrite(wbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
 		}
@@ -61,7 +61,7 @@ void dumpScripts (Slice data) {
 			if (output.script.length() > sizeof(wbuf) - sizeof(uint16_t)) continue;
 			const auto scriptLength = static_cast<uint16_t>(output.script.length());
 
-			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength, 0);
+			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength);
 			memcpy(wbuf + sizeof(uint16_t), output.script.begin, scriptLength);
 			fwrite(wbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
 		}
