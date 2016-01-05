@@ -10,6 +10,8 @@
 #include "slice.hpp"
 #include "threadpool.hpp"
 
+// XXX: no locking for fwrite if sizeof(wbuf) < PIPE_BUF (4096 bytes)
+
 // BLOCK_HEADER
 void dumpHeaders (Slice data) {
 	fwrite(data.begin, 80, 1, stdout);
@@ -30,8 +32,6 @@ void dumpOutputHashs (Slice data) {
 
 		for (const auto& output : transaction.outputs) {
 			sha1(wbuf + 64, output.script);
-
-			// no locking, 84 bytes < PIPE_BUF (4096 bytes)
 			fwrite(wbuf, sizeof(wbuf), 1, stdout);
 		}
 
