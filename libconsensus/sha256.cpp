@@ -9,11 +9,6 @@
 namespace
 {
 
-uint32_t static inline ReadBE32(const unsigned char* ptr)
-{
-    return be32toh(*((uint32_t*)ptr));
-}
-
 /// Internal SHA-256 implementation.
 namespace sha256
 {
@@ -44,6 +39,11 @@ void inline Initialize(uint32_t* s)
     s[5] = 0x9b05688cul;
     s[6] = 0x1f83d9abul;
     s[7] = 0x5be0cd19ul;
+}
+
+uint32_t static inline ReadBE32(const unsigned char* ptr)
+{
+    return be32toh(*((uint32_t*)ptr));
 }
 
 /** Perform one SHA-256 transformation, processing a 64-byte chunk. */

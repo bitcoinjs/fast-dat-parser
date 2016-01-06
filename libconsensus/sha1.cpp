@@ -12,11 +12,6 @@ namespace
 namespace sha1
 {
 
-uint32_t static inline ReadBE32(const unsigned char* ptr)
-{
-    return be32toh(*((uint32_t*)ptr));
-}
-
 /** One round of SHA-1. */
 void inline Round(uint32_t a, uint32_t& b, uint32_t c, uint32_t d, uint32_t& e, uint32_t f, uint32_t k, uint32_t w)
 {
@@ -44,6 +39,11 @@ const uint32_t k1 = 0x5A827999ul;
 const uint32_t k2 = 0x6ED9EBA1ul;
 const uint32_t k3 = 0x8F1BBCDCul;
 const uint32_t k4 = 0xCA62C1D6ul;
+
+uint32_t static inline ReadBE32(const unsigned char* ptr)
+{
+    return be32toh(*((uint32_t*)ptr));
+}
 
 /** Perform a SHA-1 transformation, processing a 64-byte chunk. */
 void Transform(uint32_t* s, const unsigned char* chunk)
