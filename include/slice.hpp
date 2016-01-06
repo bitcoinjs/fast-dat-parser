@@ -102,14 +102,3 @@ struct Slice {
 		return this->begin[i];
 	}
 };
-
-struct UniqueSlice : Slice {
-	UniqueSlice(size_t n) {
-		this->begin = new uint8_t[n];
-		this->end = this->begin + n;
-	}
-
-	~UniqueSlice() {
-		delete[] this->begin;
-	}
-};

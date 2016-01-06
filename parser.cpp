@@ -109,12 +109,17 @@ int main (int argc, char** argv) {
 		std::cerr << "Initialized whitelist (" << whitelist.size() << " entries)" << std::endl;
 	}
 
-	// pre-allocate buffers
-	UniqueSlice iobuffer(memoryAlloc / 2);
-	UniqueSlice buffer(memoryAlloc / 2);
-	ThreadPool<std::function<void(void)>> pool(nThreads);
+	// pre-allocate back buffer
+	const auto halfMemoryAlloc = memoryAlloc / 2;
+	auto _buffer = new uint8_t[halfMemoryAlloc];
+	Slice buffer(_buffer, _buffer + halfMemoryAlloc);
+	std::cerr << "Initialized compute buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
 
-	std::cerr << "Initialized buffers (2 * " << memoryAlloc / 2 << " bytes)" << std::endl;
+	auto _iobuffer = new uint8_t[halfMemoryAlloc];
+	Slice iobuffer(_iobuffer, _iobuffer + halfMemoryAlloc);
+	std::cerr << "Initialized IO buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
+
+	ThreadPool<std::function<void(void)>> pool(nThreads);
 	std::cerr << "Initialized " << nThreads << " threads in the thread pool" << std::endl;
 
 	uint64_t remainder = 0;
@@ -132,7 +137,7 @@ int main (int argc, char** argv) {
 		std::swap(buffer, iobuffer);
 
 		auto data = buffer.take(remainder + read);
-		std::cerr << "-- " << count << " Blocks (processing " << data.length() / 1024 << " KiB)" << std::endl;
+		std::cerr << "-- " << count << " Blocks (processing " << data.length() / 1024 << " KiB)" << (eof ? " EOF" : "") << std::endl;
 
 		while (data.length() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
@@ -182,6 +187,9 @@ int main (int argc, char** argv) {
 		remainder = data.length();
 		memcpy(iobuffer.begin, data.begin, remainder);
 	}
+
+	delete[] _buffer;
+	delete[] _iobuffer;
 
 	return 0;
 }
