@@ -17,8 +17,8 @@ Output goes to `stdout`, `stderr` is used for logging.
 A fast `blk*.dat` parser for bitcoin blockchain analysis.
 
 - `-f` - parse function (default `0`, see pre-packaged parse functions below)
+- `-j` - N threads for parallel computation (default `1`)
 - `-m` - memory usage (default `104857600` bytes, ~100 MiB)
-- `-n` - N threads for parallel computation (default `1`)
 - `-w` - whitelist file, for omitting blocks from parsing
 
 
@@ -42,8 +42,8 @@ Accepts 80-byte block headers until EOF, finds the best-chain then outputs the r
 
 ``` bash
 # parse the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 -n4 | ./bestchain > ~/.bitcoin/headers.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 -j4 | ./bestchain > ~/.bitcoin/headers.dat
 
 # parse only blocks who's hash is found in headers.dat (from above)
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -f1 -n4 -wheaders.dat > ~/.bitcoin/scripts.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f1 -j4 -wheaders.dat > ~/.bitcoin/scripts.dat
 ```

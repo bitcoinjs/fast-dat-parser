@@ -80,8 +80,8 @@ static std::string whitelistFileName;
 
 auto parseArg (char* argv) {
 	if (sscanf(argv, "-f%lu", &functionIndex) == 1) return true;
+	if (sscanf(argv, "-j%lu", &nThreads) == 1) return true;
 	if (sscanf(argv, "-m%lu", &memoryAlloc) == 1) return true;
-	if (sscanf(argv, "-n%lu", &nThreads) == 1) return true;
 	if (strncmp(argv, "-w", 2) == 0) {
 		whitelistFileName = std::string(argv + 2);
 		return true;
