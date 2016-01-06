@@ -1,8 +1,12 @@
 #pragma once
 
+#include <array>
 #include "libconsensus/ripemd160.h"
 #include "libconsensus/sha1.h"
 #include "libconsensus/sha256.h"
+
+typedef std::array<uint8_t, 20> hash160_t;
+typedef std::array<uint8_t, 32> hash256_t;
 
 void hash160 (uint8_t* dest, const uint8_t* src, size_t n) {
 	CSHA256 hash;

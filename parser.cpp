@@ -54,16 +54,14 @@ processFunction_t FUNCTIONS[] = {
 	&dumpScripts
 };
 
-typedef std::array<uint8_t, 32> hash_t;
-
 auto importWhitelist (const std::string& fileName) {
-	std::set<hash_t> set;
+	std::set<hash256_t> set;
 
 	auto file = fopen(fileName.c_str(), "r");
 	if (file == nullptr) return set;
 
 	while (true) {
-		hash_t hash;
+		hash256_t hash;
 		const auto read = fread(&hash[0], 32, 1, file);
 
 		// EOF?
@@ -101,7 +99,7 @@ int main (int argc, char** argv) {
 
 	// if specified, import the whitelist
 	const auto doWhitelist = !whitelistFileName.empty();
-	std::set<hash_t> whitelist;
+	std::set<hash256_t> whitelist;
 	if (doWhitelist) {
 		whitelist = importWhitelist(whitelistFileName);
 		if (whitelist.empty()) return 1;
@@ -160,7 +158,7 @@ int main (int argc, char** argv) {
 
 			// is whitelisting in effect?
 			if (doWhitelist) {
-				hash_t hash;
+				hash256_t hash;
 				hash256(&hash[0], header);
 
 				// skip if not found

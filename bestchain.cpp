@@ -8,20 +8,18 @@
 
 #include "hash.hpp"
 
-typedef std::array<uint8_t, 32> hash_t;
-
 struct Block {
-	hash_t hash = {};
-	hash_t prevBlockHash = {};
+	hash256_t hash = {};
+	hash256_t prevBlockHash = {};
 	uint32_t bits;
 
 	Block () {}
-	Block (const hash_t& hash, const hash_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits) {}
+	Block (const hash256_t& hash, const hash256_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits) {}
 };
 
 // find all blocks who are not parents to any other blocks (aka, a chain tip)
-auto findChainTips(const std::map<hash_t, Block>& blocks) {
-	std::map<hash_t, bool> parents;
+auto findChainTips(const std::map<hash256_t, Block>& blocks) {
+	std::map<hash256_t, bool> parents;
 
 	for (const auto& blockIter : blocks) {
 		const auto block = blockIter.second;
@@ -41,7 +39,7 @@ auto findChainTips(const std::map<hash_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork(std::map<hash_t, size_t>& workCache, const std::map<hash_t, Block>& blocks, const Block source) {
+auto determineWork(std::map<hash256_t, size_t>& workCache, const std::map<hash256_t, Block>& blocks, const Block source) {
 	auto visitor = source;
 	size_t totalWork = source.bits;
 
@@ -65,11 +63,11 @@ auto determineWork(std::map<hash_t, size_t>& workCache, const std::map<hash_t, B
 	return totalWork;
 }
 
-auto findBest(const std::map<hash_t, Block>& blocks) {
+auto findBest(const std::map<hash256_t, Block>& blocks) {
 	auto bestBlock = Block();
 	size_t mostWork = 0;
 
-	std::map<hash_t, size_t> workCache;
+	std::map<hash256_t, size_t> workCache;
 
 	for (const auto& blockIter : blocks) {
 		const auto block = blockIter.second;
@@ -98,7 +96,7 @@ auto findBest(const std::map<hash_t, Block>& blocks) {
 }
 
 int main () {
-	std::map<hash_t, Block> blocks;
+	std::map<hash256_t, Block> blocks;
 
 	// read block headers from stdin until EOF
 	{
@@ -109,7 +107,7 @@ int main () {
 			// EOF?
 			if (read == 0) break;
 
-			hash_t hash, prevBlockHash;
+			hash256_t hash, prevBlockHash;
 			uint32_t bits;
 
 			hash256(&hash[0], rbuf, 80);
