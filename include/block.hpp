@@ -116,7 +116,7 @@ private:
 			output = Transaction::Output(script, value);
 		}
 
-		auto locktime = this->data.read<uint32_t>();
+		const auto locktime = this->data.read<uint32_t>();
 		auto tdata = source.take(source.length() - this->data.length());
 
 		this->current = Transaction(tdata, version, std::move(inputs), std::move(outputs), locktime);
