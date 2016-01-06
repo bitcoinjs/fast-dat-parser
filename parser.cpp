@@ -151,7 +151,7 @@ int main (int argc, char** argv) {
 		// wait for all workers before overwrite
 		pool.wait();
 
-		// swap the buffers
+		// swap the buffers (maintains memory safety across threads)
 		std::swap(buffer, iobuffer);
 
 		auto data = buffer.take(remainder + read);
