@@ -103,8 +103,8 @@ int main () {
 	// read block headers from stdin until EOF
 	{
 		while (true) {
-			uint8_t buffer[80];
-			const auto read = fread(buffer, sizeof(buffer), 1, stdin);
+			uint8_t rbuf[80];
+			const auto read = fread(rbuf, sizeof(rbuf), 1, stdin);
 
 			// EOF?
 			if (read == 0) break;
@@ -112,9 +112,9 @@ int main () {
 			hash_t hash, prevBlockHash;
 			uint32_t bits;
 
-			hash256(&hash[0], buffer, 80);
-			memcpy(&prevBlockHash[0], buffer + 4, 32);
-			memcpy(&bits, buffer + 72, 4);
+			hash256(&hash[0], rbuf, 80);
+			memcpy(&prevBlockHash[0], rbuf + 4, 32);
+			memcpy(&bits, rbuf + 72, 4);
 
 			blocks[hash] = Block(hash, prevBlockHash, bits);
 		}

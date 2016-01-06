@@ -121,9 +121,9 @@ int main (int argc, char** argv) {
 	size_t count = 0;
 
 	while (true) {
-		const auto rdbuf = iobuffer.drop(remainder);
-		const auto read = fread(rdbuf.begin, 1, rdbuf.length(), stdin);
-		const auto eof = static_cast<size_t>(read) < rdbuf.length();
+		const auto rbuf = iobuffer.drop(remainder);
+		const auto read = fread(rbuf.begin, 1, rbuf.length(), stdin);
+		const auto eof = static_cast<size_t>(read) < rbuf.length();
 
 		// wait for all workers before overwrite
 		pool.wait();
@@ -178,7 +178,7 @@ int main (int argc, char** argv) {
 
 		if (eof) break;
 
-		// assign remainder to front of iobuffer (rdbuf is offset to avoid overwrite on rawRead)
+		// assign remainder to front of iobuffer (rbuf is offset to avoid overwrite on rawRead)
 		remainder = data.length();
 		memcpy(iobuffer.begin, data.begin, remainder);
 	}
