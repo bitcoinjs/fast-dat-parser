@@ -17,28 +17,6 @@ void dumpHeaders (Slice data) {
 	fwrite(data.begin, 80, 1, stdout);
 }
 
-// BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT)
-void dumpOutputHashs (Slice data) {
-	const auto block = Block(data.take(80), data.drop(80));
-	uint8_t wbuf[32 + 32 + 20] = {};
-
-	hash256(wbuf, block.header);
-
-	auto transactions = block.transactions();
-	while (!transactions.empty()) {
-		const auto& transaction = transactions.front();
-
-		hash256(wbuf + 32, transaction.data);
-
-		for (const auto& output : transaction.outputs) {
-			sha1(wbuf + 64, output.script);
-			fwrite(wbuf, sizeof(wbuf), 1, stdout);
-		}
-
-		transactions.popFront();
-	}
-}
-
 // SCRIPT_LENGTH | SCRIPT
 void dumpScripts (Slice data) {
 	const auto block = Block(data.take(80), data.drop(80));
@@ -73,7 +51,6 @@ void dumpScripts (Slice data) {
 typedef void(*processFunction_t)(Slice);
 processFunction_t FUNCTIONS[] = {
 	&dumpHeaders,
-	&dumpOutputHashs,
 	&dumpScripts
 };
 
