@@ -100,6 +100,7 @@ auto findBest(const std::map<hash_t, Block>& blocks) {
 int main () {
 	std::map<hash_t, Block> blocks;
 
+	// read block headers from stdin until EOF
 	{
 		while (true) {
 			uint8_t buffer[80];
