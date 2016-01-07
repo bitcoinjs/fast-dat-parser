@@ -95,6 +95,7 @@ int main (int argc, char** argv) {
 		if (!parseArg(argv[i])) return 1;
 	}
 
+	if (functionIndex > sizeof(FUNCTIONS)) return 1;
 	const auto delegate = FUNCTIONS[functionIndex];
 
 	// if specified, import the whitelist
