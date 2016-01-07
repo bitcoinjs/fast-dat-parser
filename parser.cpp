@@ -79,7 +79,10 @@ static size_t functionIndex = 0;
 static std::string whitelistFileName;
 
 auto parseArg (char* argv) {
-	if (sscanf(argv, "-f%lu", &functionIndex) == 1) return true;
+	if (sscanf(argv, "-f%lu", &functionIndex) == 1) {
+		assert(functionIndex < sizeof(FUNCTIONS));
+		return true;
+	}
 	if (sscanf(argv, "-j%lu", &nThreads) == 1) return true;
 	if (sscanf(argv, "-m%lu", &memoryAlloc) == 1) return true;
 	if (strncmp(argv, "-w", 2) == 0) {
@@ -95,7 +98,6 @@ int main (int argc, char** argv) {
 		if (!parseArg(argv[i])) return 1;
 	}
 
-	if (functionIndex > sizeof(FUNCTIONS)) return 1;
 	const auto delegate = FUNCTIONS[functionIndex];
 
 	// if specified, import the whitelist
