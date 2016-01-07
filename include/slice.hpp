@@ -48,6 +48,7 @@ struct Slice {
 
 	template <typename Y = uint8_t>
 	Y peek (size_t offset = 0) const {
+		assert(offset + sizeof(Y) <= this->length());
 		return *(reinterpret_cast<Y*>(this->begin + offset));
 	}
 
@@ -58,15 +59,6 @@ struct Slice {
 		*ptr = value;
 
 		if (swap) swapEndian(ptr);
-	}
-
-	void put (uint8_t* value, size_t n, size_t offset = 0) {
-		assert(offset + n <= this->length());
-		memcpy(this->begin + offset, value, n);
-	}
-
-	void put (Slice value, size_t offset = 0) {
-		this->put(value.begin, value.length(), offset);
 	}
 
 	template <typename Y = uint8_t>
@@ -82,23 +74,13 @@ struct Slice {
 		this->popFrontN(sizeof(Y));
 	}
 
-	void write (Slice value) {
-		this->put(value);
-		this->popFrontN(value.length());
-	}
-
-	void write (uint8_t* value, size_t n) {
-		this->put(value, n);
-		this->popFrontN(n);
-	}
-
 	uint8_t& operator[](const size_t i) {
-		assert(i <= this->length());
+		assert(i < this->length());
 		return this->begin[i];
 	}
 
 	const uint8_t& operator[](const size_t i) const {
-		assert(i <= this->length());
+		assert(i < this->length());
 		return this->begin[i];
 	}
 };
