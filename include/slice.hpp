@@ -24,7 +24,7 @@ struct Slice {
 	}
 
 	void popFrontN (size_t n) {
-		assert(n < this->length());
+		assert(n <= this->length());
 		begin += n;
 	}
 
@@ -33,12 +33,12 @@ struct Slice {
 	}
 
 	auto drop (size_t n) const {
-		assert(n < this->length());
+		assert(n <= this->length());
 		return Slice(this->begin + n, this->end);
 	}
 
 	auto take (size_t n) const {
-		assert(n < this->length());
+		assert(n <= this->length());
 		return Slice(this->begin, this->begin + n);
 	}
 
@@ -53,7 +53,7 @@ struct Slice {
 
 	template <typename Y, bool swap = false>
 	void put (Y value, size_t offset = 0) {
-		assert(offset + sizeof(Y) < this->length());
+		assert(offset + sizeof(Y) <= this->length());
 		auto ptr = reinterpret_cast<Y*>(this->begin + offset);
 		*ptr = value;
 
@@ -61,7 +61,7 @@ struct Slice {
 	}
 
 	void put (uint8_t* value, size_t n, size_t offset = 0) {
-		assert(offset + n < this->length());
+		assert(offset + n <= this->length());
 		memcpy(this->begin + offset, value, n);
 	}
 
@@ -93,12 +93,12 @@ struct Slice {
 	}
 
 	uint8_t& operator[](const size_t i) {
-		assert(i < this->length());
+		assert(i <= this->length());
 		return this->begin[i];
 	}
 
 	const uint8_t& operator[](const size_t i) const {
-		assert(i < this->length());
+		assert(i <= this->length());
 		return this->begin[i];
 	}
 };
