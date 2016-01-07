@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -146,8 +147,7 @@ public:
 };
 
 struct Block {
-	Slice header;
-	Slice data;
+	Slice header, data;
 
 	Block(Slice header) : header(header) {
 		assert(header.length() == 80);
@@ -157,34 +157,36 @@ struct Block {
 		assert(header.length() == 80);
 	}
 
-	void target (uint8_t buffer[32]) const {
-		const auto bits = *(reinterpret_cast<uint32_t*>(this->header.begin + 72));
-		const uint32_t exponent = ((bits & 0xff000000) >> 24) - 3;
-		const uint32_t mantissa = bits & 0x007fffff;
-		const size_t i = static_cast<size_t>(31 - exponent);
-		if (i > 32) return;
+	static auto calculateTarget (uint32_t bits) {
+		std::array<uint8_t, 32> buffer = {};
+
+		const auto exponent = ((bits & 0xff000000) >> 24) - 3;
+		const auto mantissa = bits & 0x007fffff;
+		const auto i = static_cast<size_t>(31 - exponent);
+		if (i > 31) return buffer;
 
 		buffer[i] = static_cast<uint8_t>(mantissa & 0xff);
 		buffer[i - 1] = static_cast<uint8_t>(mantissa >> 8);
 		buffer[i - 2] = static_cast<uint8_t>(mantissa >> 16);
 		buffer[i - 3] = static_cast<uint8_t>(mantissa >> 24);
+
+		return buffer;
 	}
 
 	auto transactions () const {
-		auto _data = Slice(this->data);
-		auto n = readVI(_data);
+		auto _data = this->data;
+		const auto n = readVI(_data);
 
 		return TransactionRange(n, _data);
 	}
 
 	auto verify () const {
-		uint8_t hash[32];
-		uint8_t _target[32] = {};
-
-		hash256(&hash[0], this->header);
+		auto hash = hash256(this->header);
 		std::reverse(&hash[0], &hash[32]);
-		this->target(_target);
 
-		return memcmp(hash, _target, 32) <= 0;
+		const auto bits = *(reinterpret_cast<uint32_t*>(this->header.begin + 72));
+		const auto _target = Block::calculateTarget(bits);
+
+		return memcmp(&hash[0], &_target[0], 32) <= 0;
 	}
 };
