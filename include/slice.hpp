@@ -17,6 +17,7 @@ struct Slice {
 	uint8_t* begin;
 	uint8_t* end;
 
+	Slice() : begin(nullptr), end(nullptr) {}
 	Slice(uint8_t* begin, uint8_t* end) : begin(begin), end(end) {
 		assert(begin);
 		assert(end);
