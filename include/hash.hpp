@@ -77,12 +77,6 @@ auto sha256 (const uint8_t* src, size_t n) {
 	return tmp;
 }
 
-auto hash160 (const Slice src) { return hash160(src.begin, src.length()); }
-auto hash256 (const Slice src) { return hash256(src.begin, src.length()); }
-auto ripemd160 (const Slice src) { return ripemd160(src.begin, src.length()); }
-auto sha1 (const Slice src) { return sha1(src.begin, src.length()); }
-auto sha256 (const Slice src) { return sha256(src.begin, src.length()); }
-
 void hash160 (uint8_t* dest, const Slice src) { hash160(dest, src.begin, src.length()); }
 void hash256 (uint8_t* dest, const Slice src) { hash256(dest, src.begin, src.length()); }
 void ripemd160 (uint8_t* dest, const Slice src) { ripemd160(dest, src.begin, src.length()); }

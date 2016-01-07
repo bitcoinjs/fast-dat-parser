@@ -160,20 +160,16 @@ struct Block {
 		assert(header.length() == 80);
 	}
 
-	static auto calculateTarget (uint32_t bits) {
-		std::array<uint8_t, 32> buffer = {};
-
+	static void calculateTarget (uint8_t* dest, uint32_t bits) {
 		const auto exponent = ((bits & 0xff000000) >> 24) - 3;
 		const auto mantissa = bits & 0x007fffff;
 		const auto i = static_cast<size_t>(31 - exponent);
-		if (i > 31) return buffer;
+		if (i > 31) return;
 
-		buffer[i] = static_cast<uint8_t>(mantissa & 0xff);
-		buffer[i - 1] = static_cast<uint8_t>(mantissa >> 8);
-		buffer[i - 2] = static_cast<uint8_t>(mantissa >> 16);
-		buffer[i - 3] = static_cast<uint8_t>(mantissa >> 24);
-
-		return buffer;
+		dest[i] = static_cast<uint8_t>(mantissa & 0xff);
+		dest[i - 1] = static_cast<uint8_t>(mantissa >> 8);
+		dest[i - 2] = static_cast<uint8_t>(mantissa >> 16);
+		dest[i - 3] = static_cast<uint8_t>(mantissa >> 24);
 	}
 
 	auto transactions () const {
@@ -184,12 +180,15 @@ struct Block {
 	}
 
 	auto verify () const {
-		auto hash = hash256(this->header);
-		std::reverse(&hash[0], &hash[32]);
+		uint8_t hash[32];
+		uint8_t target[32] = {};
+
+		hash256(hash, this->header);
+		std::reverse(hash, hash + 32);
 
 		const auto bits = *(reinterpret_cast<uint32_t*>(this->header.begin + 72));
-		const auto _target = Block::calculateTarget(bits);
+		Block::calculateTarget(target, bits);
 
-		return memcmp(&hash[0], &_target[0], 32) <= 0;
+		return memcmp(hash, target, 32) <= 0;
 	}
 };
