@@ -19,13 +19,13 @@ struct Slice {
 
 	Slice() : begin(nullptr), end(nullptr) {}
 	Slice(uint8_t* begin, uint8_t* end) : begin(begin), end(end) {
-		assert(begin);
-		assert(end);
+		assert(this->begin);
+		assert(this->end);
 	}
 
 	void popFrontN (size_t n) {
 		assert(n <= this->length());
-		begin += n;
+		this->begin += n;
 	}
 
 	void popFront () {
