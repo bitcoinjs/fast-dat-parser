@@ -94,7 +94,7 @@ private:
 		const auto source = this->data;
 		const auto version = this->data.read<uint32_t>();
 
-		auto nInputs = readVI(this->data);
+		const auto nInputs = readVI(this->data);
 
 		std::vector<Transaction::Input> inputs;
 		for (size_t i = 0; i < nInputs; ++i) {
@@ -108,7 +108,7 @@ private:
 			inputs.push_back(Transaction::Input(hash, vout, script, sequence));
 		}
 
-		auto nOutputs = readVI(this->data);
+		const auto nOutputs = readVI(this->data);
 
 		std::vector<Transaction::Output> outputs;
 		for (size_t i = 0; i < nOutputs; ++i) {
