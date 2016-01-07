@@ -111,7 +111,7 @@ private:
 		auto nOutputs = readVI(this->data);
 
 		std::vector<Transaction::Output> outputs;
-		for (size_t i = 0; i < nInputs; ++i) {
+		for (size_t i = 0; i < nOutputs; ++i) {
 			auto value = this->data.read<uint64_t>();
 
 			auto SL = readVI(this->data);
