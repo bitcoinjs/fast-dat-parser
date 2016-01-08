@@ -121,8 +121,8 @@ int main (int argc, char** argv) {
 	ThreadPool<std::function<void(void)>> pool(nThreads);
 	std::cerr << "Initialized " << nThreads << " threads in the thread pool" << std::endl;
 
-	uint64_t remainder = 0;
 	size_t count = 0;
+	size_t remainder = 0;
 
 	while (true) {
 		const auto rbuf = iobuffer.drop(remainder);
@@ -133,7 +133,7 @@ int main (int argc, char** argv) {
 		pool.wait();
 
 		// copy iobuffer to buffer, allows iobuffer to be modified independently after
-		memcpy(buffer.begin, iobuffer.begin, iobuffer.length());
+		memcpy(buffer.begin, iobuffer.begin, halfMemoryAlloc);
 
 		auto data = buffer.take(remainder + read);
 		std::cerr << "-- Processed " << count << " blocks (processing " << data.length() / 1024 << " KiB)" << (eof ? " EOF" : "") << std::endl;
