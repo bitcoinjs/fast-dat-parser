@@ -110,15 +110,13 @@ int main (int argc, char** argv) {
 		std::cerr << "Initialized whitelist (" << whitelist.size() << " entries)" << std::endl;
 	}
 
-	// pre-allocate back buffer
-	const auto halfMemoryAlloc = memoryAlloc / 2;
-	auto _buffer = new uint8_t[halfMemoryAlloc];
-	Slice buffer(_buffer, _buffer + halfMemoryAlloc);
-	std::cerr << "Initialized compute buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
+	std::vector<uint8_t> backBuffer(memoryAlloc);
+	std::cerr << "Initialized shared compute/IO buffer (" << memoryAlloc << " bytes)" << std::endl;
 
-	auto _iobuffer = new uint8_t[halfMemoryAlloc];
-	Slice iobuffer(_iobuffer, _iobuffer + halfMemoryAlloc);
-	std::cerr << "Initialized IO buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
+	// pre-allocate buffers
+	const auto halfMemoryAlloc = memoryAlloc / 2;
+	Slice buffer(&backBuffer[0], &backBuffer[halfMemoryAlloc]);
+	Slice iobuffer(&backBuffer[halfMemoryAlloc], &backBuffer[memoryAlloc]);
 
 	ThreadPool<std::function<void(void)>> pool(nThreads);
 	std::cerr << "Initialized " << nThreads << " threads in the thread pool" << std::endl;
@@ -190,9 +188,6 @@ int main (int argc, char** argv) {
 		remainder = data.length();
 		memcpy(iobuffer.begin, data.begin, remainder);
 	}
-
-	delete[] _buffer;
-	delete[] _iobuffer;
 
 	return 0;
 }
