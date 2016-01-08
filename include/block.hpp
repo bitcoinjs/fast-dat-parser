@@ -10,9 +10,9 @@
 #include "slice.hpp"
 
 uint64_t readVI (Slice& data) {
-	const auto i = data.peek<uint8_t>();
+	const auto i = data.read<uint8_t>();
 
-	if (i < 253) return static_cast<uint64_t>(data.read<uint8_t>());
+	if (i < 253) return static_cast<uint64_t>(i);
 	if (i < 254) return static_cast<uint64_t>(data.read<uint16_t>());
 	if (i < 255) return static_cast<uint64_t>(data.read<uint32_t>());
 	return data.read<uint64_t>();
