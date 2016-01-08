@@ -16,7 +16,7 @@ private:
 	std::atomic_bool joined;
 	std::atomic_int running;
 	std::condition_variable idle_signal;
-	std::condition_variable work_signal;
+	std::condition_variable go_signal;
 	std::mutex vector_mutex;
 
 	void run() {
@@ -27,24 +27,25 @@ private:
 
 			{
 				std::unique_lock<std::mutex> vector_lock(this->vector_mutex);
-				--this->running;
 
 				if (this->vector.empty()) {
+					--this->running;
+
 					this->idle_signal.notify_one();
+
+					// releases vector_lock, waits for job or join event
+					this->go_signal.wait(vector_lock, [this] {
+						// aquires vector_lock
+						return !this->vector.empty() || this->joined;
+					});
+					// vector_lock is re-aquired
+
+					if (this->joined) break;
+					++this->running;
 				}
-
-				// releases vector_lock, waits for job or join event
-				this->work_signal.wait(vector_lock, [this] {
-					// aquires vector_lock
-					return !this->vector.empty() || this->joined;
-				});
-				// vector_lock is re-aquired
-
-				if (this->joined) return;
 
 				job = vector.back();
 				this->vector.pop_back();
-				++this->running;
 			}
 
 			// execute
@@ -67,18 +68,20 @@ public:
 	}
 
 	void push(const F f) {
-		std::lock_guard<std::mutex> guard(this->vector_mutex);
+		assert(!this->joined);
+		std::lock_guard<std::mutex> vector_guard(this->vector_mutex);
 
 		this->vector.push_back(f);
-		this->work_signal.notify_one();
+		this->go_signal.notify_one();
 	}
 
 	void join() {
+		assert(!this->joined);
 		this->wait();
 		this->joined = true;
 
 		// wake any waiting threads
-		this->work_signal.notify_all();
+		this->go_signal.notify_all();
 
 		// join joinable threads
 		for (auto &x : this->threads) {
@@ -89,11 +92,12 @@ public:
 	}
 
 	void wait() {
+		assert(!this->joined);
 		if (this->running == 0) return;
 
-		std::unique_lock<std::mutex> lock(this->vector_mutex);
+		std::unique_lock<std::mutex> vector_lock(this->vector_mutex);
 
-		this->idle_signal.wait(lock, [this]() {
+		this->idle_signal.wait(vector_lock, [this]() {
 			return this->running == 0;
 		});
 	}
