@@ -105,7 +105,7 @@ private:
 			auto script = readSlice(this->data, SL);
 			auto sequence = this->data.read<uint32_t>();
 
-			inputs.push_back(Transaction::Input(hash, vout, script, sequence));
+			inputs.emplace_back(Transaction::Input(hash, vout, script, sequence));
 		}
 
 		const auto nOutputs = readVI(this->data);
@@ -117,7 +117,7 @@ private:
 			auto SL = readVI(this->data);
 			auto script = readSlice(this->data, SL);
 
-			outputs.push_back(Transaction::Output(script, value));
+			outputs.emplace_back(Transaction::Output(script, value));
 		}
 
 		const auto locktime = this->data.read<uint32_t>();
