@@ -57,7 +57,7 @@ processFunction_t FUNCTIONS[] = {
 auto importWhitelist (const std::string& fileName) {
 	std::set<hash256_t> set;
 
-	auto file = fopen(fileName.c_str(), "r");
+	const auto file = fopen(fileName.c_str(), "r");
 	if (file == nullptr) return set;
 
 	while (true) {
@@ -69,6 +69,8 @@ auto importWhitelist (const std::string& fileName) {
 
 		set.emplace(hash);
 	}
+
+	fclose(file);
 
 	return set;
 }
