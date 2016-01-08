@@ -53,9 +53,11 @@ private:
 	}
 
 public:
-	ThreadPool(size_t n) : running(0), joined(false), threads(n) {
-		for (auto& thread : this->threads) {
-			thread = std::move(std::thread([this] { this->run(); }));
+	ThreadPool(size_t n) : running(0), joined(false) {
+		this->threads.reserve(n);
+
+		for (size_t i = 0; i < n; ++i) {
+			this->threads.emplace_back(std::thread([this] { this->run(); }));
 		}
 	}
 
