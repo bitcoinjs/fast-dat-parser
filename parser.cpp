@@ -95,7 +95,7 @@ auto parseArg (char* argv) {
 
 int main (int argc, char** argv) {
 	for (auto i = 1; i < argc; ++i) {
-		if (!parseArg(argv[i])) return 1;
+		assert(parseArg(argv[i]));
 	}
 
 	const auto delegate = FUNCTIONS[functionIndex];
@@ -105,7 +105,7 @@ int main (int argc, char** argv) {
 	std::set<hash256_t> whitelist;
 	if (doWhitelist) {
 		whitelist = importWhitelist(whitelistFileName);
-		if (whitelist.empty()) return 1;
+		assert(!whitelist.empty());
 
 		std::cerr << "Initialized whitelist (" << whitelist.size() << " entries)" << std::endl;
 	}
