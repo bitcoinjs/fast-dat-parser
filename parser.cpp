@@ -110,13 +110,13 @@ int main (int argc, char** argv) {
 		std::cerr << "Initialized whitelist (" << whitelist.size() << " entries)" << std::endl;
 	}
 
-	std::vector<uint8_t> backBuffer(memoryAlloc);
-	std::cerr << "Initialized shared compute/IO buffer (" << memoryAlloc << " bytes)" << std::endl;
-
 	// pre-allocate buffers
 	const auto halfMemoryAlloc = memoryAlloc / 2;
-	Slice buffer(&backBuffer[0], &backBuffer[halfMemoryAlloc]);
-	Slice iobuffer(&backBuffer[halfMemoryAlloc], &backBuffer[memoryAlloc]);
+	FixedSlice buffer(halfMemoryAlloc);
+	std::cerr << "Initialized compute buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
+
+	FixedSlice iobuffer(halfMemoryAlloc);
+	std::cerr << "Initialized IO buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
 
 	ThreadPool<std::function<void(void)>> pool(nThreads);
 	std::cerr << "Initialized " << nThreads << " threads in the thread pool" << std::endl;
@@ -132,8 +132,8 @@ int main (int argc, char** argv) {
 		// wait for all workers before overwrite
 		pool.wait();
 
-		// swap the buffers (maintains memory safety across threads)
-		std::swap(buffer, iobuffer);
+		// copy iobuffer to buffer, allows iobuffer to be modified independently after
+		memcpy(buffer.begin, iobuffer.begin, iobuffer.length());
 
 		auto data = buffer.take(remainder + read);
 		std::cerr << "-- Processed " << count << " blocks (processing " << data.length() / 1024 << " KiB)" << (eof ? " EOF" : "") << std::endl;

@@ -132,7 +132,7 @@ public:
 
 	auto empty () const { return this->n == 0; }
 	auto length () const { return this->n; }
-	auto& front () {
+	auto front () {
 		if (this->lazy) {
 			this->readTransaction();
 		}
