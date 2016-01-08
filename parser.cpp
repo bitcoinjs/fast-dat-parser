@@ -138,7 +138,7 @@ int main (int argc, char** argv) {
 		std::swap(buffer, iobuffer);
 
 		auto data = buffer.take(remainder + read);
-		std::cerr << "-- " << count << " Blocks (processing " << data.length() / 1024 << " KiB)" << (eof ? " EOF" : "") << std::endl;
+		std::cerr << "-- Processed " << count << " blocks (processing " << data.length() / 1024 << " KiB)" << (eof ? " EOF" : "") << std::endl;
 
 		while (data.length() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
@@ -151,6 +151,8 @@ int main (int argc, char** argv) {
 			const auto header = data.drop(8).take(80);
 			if (!Block(header).verify()) {
 				data.popFrontN(1);
+
+				std::cerr << "--- Invalid block" << std::endl;
 				continue;
 			}
 
