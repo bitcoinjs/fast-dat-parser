@@ -45,7 +45,7 @@ Accepts 80-byte block headers until EOF, finds the best-chain then outputs the r
 **Output all scripts for the local-best blockchain**
 ``` bash
 # parse the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f0 | ./bestchain > headers.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 | ./bestchain > headers.dat
 
 # output every script found in the local-best blockchain
 cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f1 -wheaders.dat > ~/.bitcoin/scripts.dat
@@ -54,7 +54,7 @@ cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f1 -wheaders.dat > ~/.bitcoin/scr
 **Output a script index for the local-best blockchain**
 ``` bash
 # parse the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f0 | ./bestchain > headers.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 | ./bestchain > headers.dat
 
 # output a txOut index
 cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f2 -wheaders.dat > txoindex.dat
