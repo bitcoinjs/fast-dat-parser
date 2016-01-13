@@ -102,7 +102,7 @@ struct dumpScripts : whitelisted_t {
 	}
 };
 
-// H(TX_HASH | VOUT) | OUTPUT_SCRIPT_HASH > stdout
+// SHA1(TX_HASH | VOUT) | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndexMap : whitelisted_t {
 	void operator() (const Block& block) const {
 		if (this->skip(block)) return;
@@ -134,8 +134,8 @@ struct dumpScriptIndexMap : whitelisted_t {
 
 const uint8_t COINBASE[32] = {};
 
-// BLOCK_HASH | TX_HASH | PREVIOUS_OUTPUT_SCRIPT_HASH > stdout
-// BLOCK_HASH | TX_HASH | OUTPUT_SCRIPT_HASH > stdout
+// BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT) > stdout
+// BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndex : whitelisted_t {
 	std::map<hash160_t, hash160_t> txOutMap;
 
@@ -171,8 +171,6 @@ struct dumpScriptIndex : whitelisted_t {
 	}
 
 	void operator() (const Block& block) const {
-		assert(!this->txOutMap.empty());
-
 		hash256_t hash;
 		hash256(&hash[0], block.header);
 		if (this->skipHash(hash)) return;
@@ -186,27 +184,29 @@ struct dumpScriptIndex : whitelisted_t {
 
 			hash256(sbuf + 32, transaction.data);
 
-			for (const auto& input : transaction.inputs) {
-				// Coinbase input?
-				if (
-					input.vout == 0xffffffff &&
-					memcmp(input.hash.begin, COINBASE, sizeof(COINBASE)) == 0
-				) {
-					sha1(&hash[0], input.script);
-					memcpy(sbuf + 64, &hash[0], 20);
+			if (!this->txOutMap.empty()) {
+				for (const auto& input : transaction.inputs) {
+					// Coinbase input?
+					if (
+						input.vout == 0xffffffff &&
+						memcmp(input.hash.begin, COINBASE, sizeof(COINBASE)) == 0
+					) {
+						sha1(&hash[0], input.script);
+						memcpy(sbuf + 64, &hash[0], 20);
+						fwrite(sbuf, sizeof(sbuf), 1, stdout);
+
+						continue;
+					}
+
+					hash160_t hash;
+					sha1(&hash[0], input.data.take(36));
+
+					const auto txOutMapIter = this->txOutMap.find(hash);
+					assert(txOutMapIter != this->txOutMap.end());
+
+					memcpy(sbuf + 64, &(txOutMapIter->second)[0], 20);
 					fwrite(sbuf, sizeof(sbuf), 1, stdout);
-
-					continue;
 				}
-
-				hash160_t hash;
-				sha1(&hash[0], input.data.take(36));
-
-				const auto txOutMapIter = this->txOutMap.find(hash);
-				assert(txOutMapIter != this->txOutMap.end());
-
-				memcpy(sbuf + 64, &(txOutMapIter->second)[0], 20);
-				fwrite(sbuf, sizeof(sbuf), 1, stdout);
 			}
 
 			for (const auto& output : transaction.outputs) {
