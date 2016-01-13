@@ -41,18 +41,18 @@ struct whitelisted_t : processFunctor_t {
 		return false;
 	}
 
-	bool skip (const Block& block) const {
+	bool shouldSkip (const Block& block) const {
 		if (this->whitelist.empty()) return false;
 		hash256_t hash;
 		hash256(&hash[0], block.header);
 
-		return this->whitelist.find(hash) != this->whitelist.end();
+		return this->whitelist.find(hash) == this->whitelist.end();
 	}
 
-	bool skipHash (const hash256_t& hash) const {
+	bool shouldSkip (const hash256_t& hash) const {
 		if (this->whitelist.empty()) return false;
 
-		return this->whitelist.find(hash) != this->whitelist.end();
+		return this->whitelist.find(hash) == this->whitelist.end();
 	}
 };
 
@@ -61,7 +61,7 @@ struct whitelisted_t : processFunctor_t {
 // BLOCK_HEADER > stdout
 struct dumpHeaders : whitelisted_t {
 	void operator() (const Block& block) const {
-		if (this->skip(block)) return;
+		if (this->shouldSkip(block)) return;
 
 		fwrite(block.header.begin, 80, 1, stdout);
 	}
@@ -70,7 +70,7 @@ struct dumpHeaders : whitelisted_t {
 // SCRIPT_LENGTH | SCRIPT > stdout
 struct dumpScripts : whitelisted_t {
 	void operator() (const Block& block) const {
-		if (this->skip(block)) return;
+		if (this->shouldSkip(block)) return;
 
 		uint8_t sbuf[4096];
 		const auto maxScriptLength = sizeof(sbuf) - sizeof(uint16_t);
@@ -105,7 +105,7 @@ struct dumpScripts : whitelisted_t {
 // SHA1(TX_HASH | VOUT) | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndexMap : whitelisted_t {
 	void operator() (const Block& block) const {
-		if (this->skip(block)) return;
+		if (this->shouldSkip(block)) return;
 
 		uint8_t sbuf[40] = {};
 		uint8_t tbuf[36] = {};
@@ -173,7 +173,7 @@ struct dumpScriptIndex : whitelisted_t {
 	void operator() (const Block& block) const {
 		hash256_t hash;
 		hash256(&hash[0], block.header);
-		if (this->skipHash(hash)) return;
+		if (this->shouldSkip(hash)) return;
 
 		uint8_t sbuf[84] = {};
 		memcpy(sbuf, &hash[0], 32);
