@@ -93,12 +93,12 @@ public:
 
 	void wait() {
 		assert(!this->joined);
-		if (this->running == 0) return;
 
 		std::unique_lock<std::mutex> vector_lock(this->vector_mutex);
+		if (this->vector.empty() && this->running == 0) return;
 
 		this->idle_signal.wait(vector_lock, [this]() {
-			return this->running == 0;
+			return this->vector.empty() && this->running == 0;
 		});
 	}
 };
