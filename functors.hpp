@@ -108,20 +108,20 @@ struct dumpScriptIndexMap : whitelisted_t {
 		if (this->skip(block)) return;
 
 		uint8_t sbuf[40] = {};
+		uint8_t tbuf[36] = {};
 
 		auto transactions = block.transactions();
 		while (!transactions.empty()) {
 			const auto& transaction = transactions.front();
 
-			uint8_t txOut[36];
-			hash256(txOut, transaction.data);
+			hash256(tbuf, transaction.data);
 
 			uint32_t vout = 0;
 			for (const auto& output : transaction.outputs) {
-				Slice(txOut + 32, txOut + sizeof(txOut)).put(vout);
+				Slice(tbuf + 32, tbuf + sizeof(tbuf)).put(vout);
 				++vout;
 
-				sha1(sbuf, txOut, sizeof(txOut));
+				sha1(sbuf, tbuf, sizeof(tbuf));
 				sha1(sbuf + 20, output.script);
 
 				fwrite(sbuf, sizeof(sbuf), 1, stdout);
