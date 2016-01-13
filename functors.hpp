@@ -9,8 +9,6 @@ struct processFunctor_t {
 		return false;
 	}
 	virtual void operator() (const Block&) const = 0;
-	virtual void ready () {}
-	virtual void finalize () {}
 };
 
 struct whitelisted_t : processFunctor_t {
@@ -60,7 +58,7 @@ struct whitelisted_t : processFunctor_t {
 
 // XXX: fwrite can be used without sizeof(sbuf) < PIPE_BUF (4096 bytes)
 
-// BLOCK_HEADER > stdoud
+// BLOCK_HEADER > stdout
 struct dumpHeaders : whitelisted_t {
 	void operator() (const Block& block) const {
 		if (this->skip(block)) return;
@@ -104,61 +102,29 @@ struct dumpScripts : whitelisted_t {
 	}
 };
 
-// BLOCK_HASH | TX_HASH | OUTPUT_SCRIPT_HASH > stdout
-// H(TX_HASH | VOUT) | OUTPUT_SCRIPT_HASH > file
-struct dumpScriptIndexOutputs : whitelisted_t {
-	FILE* txOutMapFile = nullptr;
-
-	bool initialize (const char* arg) {
-		if (whitelisted_t::initialize(arg)) return true;
-		if (strncmp(arg, "-fm", 3) == 0) {
-			assert(!txOutMapFile);
-			auto fileName = std::string(arg + 3);
-
-			this->txOutMapFile = fopen(fileName.c_str(), "w");
-			assert(this->txOutMapFile != nullptr);
-
-			return true;
-		}
-
-		return false;
-	}
-
-	void ready () {
-		assert(this->txOutMapFile != nullptr);
-	}
-
-	void finalize () {
-		fclose(this->txOutMapFile);
-	}
-
+// H(TX_HASH | VOUT) | OUTPUT_SCRIPT_HASH > stdout
+struct dumpScriptIndexMap : whitelisted_t {
 	void operator() (const Block& block) const {
-		hash256_t hash;
-		hash256(&hash[0], block.header);
-		if (this->skipHash(hash)) return;
+		if (this->skip(block)) return;
 
-		uint8_t sbuf[84] = {};
-		uint8_t fbuf[40] = {};
-		memcpy(sbuf, &hash[0], 32);
+		uint8_t sbuf[40] = {};
 
 		auto transactions = block.transactions();
 		while (!transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			uint8_t txOut[36];
-			hash256(sbuf + 32, transaction.data);
-			memcpy(txOut, sbuf + 32, 32);
+			hash256(txOut, transaction.data);
 
 			uint32_t vout = 0;
 			for (const auto& output : transaction.outputs) {
-				sha1(sbuf + 64, output.script);
-				fwrite(sbuf, sizeof(sbuf), 1, stdout);
-
 				Slice(txOut + 32, txOut + sizeof(txOut)).put(vout);
-				sha1(fbuf, txOut, sizeof(txOut));
-				memcpy(fbuf + 20, sbuf + 64, 20);
-				fwrite(fbuf, sizeof(fbuf), 1, this->txOutMapFile);
 				++vout;
+
+				sha1(sbuf, txOut, sizeof(txOut));
+				sha1(sbuf + 20, output.script);
+
+				fwrite(sbuf, sizeof(sbuf), 1, stdout);
 			}
 
 			transactions.popFront();
@@ -168,13 +134,15 @@ struct dumpScriptIndexOutputs : whitelisted_t {
 
 const uint8_t COINBASE[32] = {};
 
-struct dumpScriptIndexInputs : whitelisted_t {
+// BLOCK_HASH | TX_HASH | PREVIOUS_OUTPUT_SCRIPT_HASH > stdout
+// BLOCK_HASH | TX_HASH | OUTPUT_SCRIPT_HASH > stdout
+struct dumpScriptIndex : whitelisted_t {
 	std::map<hash160_t, hash160_t> txOutMap;
 
 	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
-		if (strncmp(arg, "-fm", 3) == 0) {
-			const auto fileName = std::string(arg + 3);
+		if (strncmp(arg, "-txo", 4) == 0) {
+			const auto fileName = std::string(arg + 4);
 			const auto file = fopen(fileName.c_str(), "r");
 			assert(file != nullptr);
 
@@ -219,11 +187,15 @@ struct dumpScriptIndexInputs : whitelisted_t {
 			hash256(sbuf + 32, transaction.data);
 
 			for (const auto& input : transaction.inputs) {
-				// Coinbase input? skip
+				// Coinbase input?
 				if (
 					input.vout == 0xffffffff &&
 					memcmp(input.hash.begin, COINBASE, sizeof(COINBASE)) == 0
 				) {
+					sha1(&hash[0], input.script);
+					memcpy(sbuf + 64, &hash[0], 20);
+					fwrite(sbuf, sizeof(sbuf), 1, stdout);
+
 					continue;
 				}
 
@@ -234,6 +206,11 @@ struct dumpScriptIndexInputs : whitelisted_t {
 				assert(txOutMapIter != this->txOutMap.end());
 
 				memcpy(sbuf + 64, &(txOutMapIter->second)[0], 20);
+				fwrite(sbuf, sizeof(sbuf), 1, stdout);
+			}
+
+			for (const auto& output : transaction.outputs) {
+				sha1(sbuf + 64, output.script);
 				fwrite(sbuf, sizeof(sbuf), 1, stdout);
 			}
 

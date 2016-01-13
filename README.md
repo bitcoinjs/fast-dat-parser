@@ -22,9 +22,9 @@ A fast `blk*.dat` parser for bitcoin blockchain analysis.
 - `-w` - whitelist file, for omitting blocks from parsing
 
 
-#### parse functions
+#### parse functions (`-f`)
 
-Each of these functions write their output as raw data (binary, not hex) to `stdout`.
+Each of these functions write their output as raw data (binary, not hex).
 
 - `0` - Output the *unordered* 80-byte block headers, includes orphans
 - `1` - Outputs every script prefixed with a `uint16_t` length

@@ -22,8 +22,8 @@ int main (int argc, char** argv) {
 			assert(delegate == nullptr);
 			if (functorIndex == 0) delegate = new dumpHeaders();
 			else if (functorIndex == 1) delegate = new dumpScripts();
-			else if (functorIndex == 2) delegate = new dumpScriptIndexOutputs();
-			else if (functorIndex == 3) delegate = new dumpScriptIndexInputs();
+			else if (functorIndex == 2) delegate = new dumpScriptIndexMap();
+			else if (functorIndex == 3) delegate = new dumpScriptIndex();
 			continue;
 		}
 		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;
@@ -34,7 +34,6 @@ int main (int argc, char** argv) {
 	}
 
 	assert(delegate != nullptr);
-	delegate->ready();
 
 	// pre-allocate buffers
 	const auto halfMemoryAlloc = memoryAlloc / 2;
@@ -103,8 +102,6 @@ int main (int argc, char** argv) {
 		remainder = data.length();
 		memcpy(iobuffer.begin, data.begin, remainder);
 	}
-
-	delegate->finalize();
 
 	return 0;
 }
