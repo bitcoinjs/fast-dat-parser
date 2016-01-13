@@ -21,7 +21,7 @@ auto findChainTips(const std::map<hash256_t, Block>& blocks) {
 
 	for (const auto& blockIter : blocks) {
 		const auto block = blockIter.second;
-		if (blocks.count(block.prevBlockHash) == 0) continue;
+		if (blocks.find(block.prevBlockHash) == blocks.end()) continue;
 
 		parents[block.prevBlockHash] = true;
 	}
