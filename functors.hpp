@@ -31,6 +31,7 @@ struct whitelisted_t : processFunctor_t {
 			this->whitelist.resize(fileSize / sizeof(hash256_t));
 			const auto read = fread(&this->whitelist[0], fileSize, 1, file);
 			assert(read == 1);
+			assert(!this->whitelist.empty());
 
 			fclose(file);
 
@@ -186,6 +187,7 @@ struct dumpScriptIndex : whitelisted_t {
 			this->txOuts.resize(fileSize / sizeof(TxOut));
 			const auto read = fread(&this->txOuts[0], fileSize, 1, file);
 			assert(read == 1);
+			assert(!this->txOuts.empty());
 
 			fclose(file);
 
@@ -233,7 +235,7 @@ struct dumpScriptIndex : whitelisted_t {
 					hash160_t hash;
 					sha1(&hash[0], input.data.take(36));
 
-					const auto txOutsIter = std::lower_bound(this->txOuts.begin(), this->txOuts.end(), hash, [](const TxOut& a, const hash160_t& b) {
+					const auto txOutsIter = std::lower_bound(this->txOuts.begin(), this->txOuts.end(), hash, [](const auto& a, const hash160_t& b) {
 						return a.first < b;
 					});
 					assert((txOutsIter != this->txOuts.end()) && !(hash < txOutsIter->first));
