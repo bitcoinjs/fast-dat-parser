@@ -174,8 +174,8 @@ struct dumpScriptIndex : whitelisted_t {
 
 	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
-		if (strncmp(arg, "-txo", 4) == 0) {
-			const auto fileName = std::string(arg + 4);
+		if (strncmp(arg, "-i", 2) == 0) {
+			const auto fileName = std::string(arg + 2);
 			const auto file = fopen(fileName.c_str(), "r");
 			assert(file != nullptr);
 

@@ -60,5 +60,5 @@ cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 | ./bestchain > headers.dat
 cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f2 -wheaders.dat > txoindex.dat
 
 # output a script index for the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f3 -wheaders.dat -txotxoindex.dat > ~/.bitcoin/scripts.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f3 -wheaders.dat -itxoindex.dat > ~/.bitcoin/scripts.dat
 ```
