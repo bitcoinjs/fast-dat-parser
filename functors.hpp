@@ -5,10 +5,12 @@
 #include "hash.hpp"
 
 struct processFunctor_t {
-	virtual bool initialize(const char*) {
+	virtual bool initialize (const char*) {
 		return false;
 	}
-	virtual void operator()(const Block&) const = 0;
+	virtual void operator() (const Block&) const = 0;
+	virtual void ready () {}
+	virtual void finalize () {}
 };
 
 struct whitelisted_t : processFunctor_t {
@@ -60,7 +62,7 @@ struct whitelisted_t : processFunctor_t {
 
 // BLOCK_HEADER > stdoud
 struct dumpHeaders : whitelisted_t {
-	void operator()(const Block& block) const {
+	void operator() (const Block& block) const {
 		if (this->skip(block)) return;
 
 		fwrite(block.header.begin, 80, 1, stdout);
@@ -69,7 +71,7 @@ struct dumpHeaders : whitelisted_t {
 
 // SCRIPT_LENGTH | SCRIPT > stdout
 struct dumpScripts : whitelisted_t {
-	void operator()(const Block& block) const {
+	void operator() (const Block& block) const {
 		if (this->skip(block)) return;
 
 		uint8_t sbuf[4096];
@@ -107,7 +109,7 @@ struct dumpScripts : whitelisted_t {
 struct dumpScriptIndexOutputs : whitelisted_t {
 	FILE* txOutMapFile = nullptr;
 
-	bool initialize(const char* arg) {
+	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
 		if (strncmp(arg, "-fm", 3) == 0) {
 			assert(!txOutMapFile);
@@ -122,7 +124,15 @@ struct dumpScriptIndexOutputs : whitelisted_t {
 		return false;
 	}
 
-	void operator()(const Block& block) const {
+	void ready () {
+		assert(this->txOutMapFile != nullptr);
+	}
+
+	void finalize () {
+		fclose(this->txOutMapFile);
+	}
+
+	void operator() (const Block& block) const {
 		hash256_t hash;
 		hash256(&hash[0], block.header);
 		if (this->skipHash(hash)) return;
@@ -144,8 +154,6 @@ struct dumpScriptIndexOutputs : whitelisted_t {
 				sha1(sbuf + 64, output.script);
 				fwrite(sbuf, sizeof(sbuf), 1, stdout);
 
-				if (!this->txOutMapFile) continue;
-
 				Slice(txOut + 32, txOut + sizeof(txOut)).put(vout);
 				sha1(fbuf, txOut, sizeof(txOut));
 				memcpy(fbuf + 20, sbuf + 64, 20);
@@ -163,7 +171,7 @@ const uint8_t COINBASE[32] = {};
 struct dumpScriptIndexInputs : whitelisted_t {
 	std::map<hash160_t, hash160_t> txOutMap;
 
-	bool initialize(const char* arg) {
+	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
 		if (strncmp(arg, "-fm", 3) == 0) {
 			const auto fileName = std::string(arg + 3);
@@ -194,7 +202,7 @@ struct dumpScriptIndexInputs : whitelisted_t {
 		return false;
 	}
 
-	void operator()(const Block& block) const {
+	void operator() (const Block& block) const {
 		assert(!this->txOutMap.empty());
 
 		hash256_t hash;

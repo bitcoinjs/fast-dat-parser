@@ -34,6 +34,7 @@ int main (int argc, char** argv) {
 	}
 
 	assert(delegate != nullptr);
+	delegate->ready();
 
 	// pre-allocate buffers
 	const auto halfMemoryAlloc = memoryAlloc / 2;
@@ -102,6 +103,8 @@ int main (int argc, char** argv) {
 		remainder = data.length();
 		memcpy(iobuffer.begin, data.begin, remainder);
 	}
+
+	delegate->finalize();
 
 	return 0;
 }
