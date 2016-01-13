@@ -190,7 +190,10 @@ struct dumpScriptIndex : whitelisted_t {
 			fclose(file);
 
 			std::cerr << "Initialized " << this->txOuts.size() << " txOuts" << std::endl;
-			std::sort(this->txOuts.begin(), this->txOuts.end());
+			std::sort(this->txOuts.begin(), this->txOuts.end(), [](const auto& a, const auto& b) {
+				return a.first < b.first;
+			});
+
 			std::cerr << "Sorted " << this->txOuts.size() << " txOuts" << std::endl;
 
 			return true;
