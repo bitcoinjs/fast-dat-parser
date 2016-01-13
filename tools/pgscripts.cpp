@@ -1,22 +1,21 @@
 #include <algorithm>
-#include <array>
 #include <cstdio>
+#include <cstring>
 #include <map>
 
+#include "hash.hpp"
 #include "pg.hpp"
 #include "slice.hpp"
 
-typedef std::array<uint8_t, 32> hash_t;
-
 auto importHeightMap (const std::string& fileName) {
-	std::map<hash_t, uint32_t> map;
+	std::map<hash256_t, uint32_t> map;
 
 	auto file = fopen(fileName.c_str(), "r");
 	if (file == nullptr) return map;
 
 	uint32_t height = 0;
 	do {
-		hash_t hash;
+		hash256_t hash;
 		const auto read = fread(&hash[0], 32, 1, file);
 
 		// EOF?
@@ -30,11 +29,10 @@ auto importHeightMap (const std::string& fileName) {
 }
 
 int main (int argc, char** argv) {
-	if (argc < 2) return 1;
-
+	assert(argc >= 2);
 	const auto headersFileName = std::string(argv[1]);
 	const auto chainHeightMap = importHeightMap(headersFileName);
-	if (chainHeightMap.empty()) return 1;
+	assert(!chainHeightMap.empty());
 
 	fwrite(PG_BINARY_HEADER, sizeof(PG_BINARY_HEADER), 1, stdout);
 
@@ -45,7 +43,7 @@ int main (int argc, char** argv) {
 		// EOF?
 		if (read == 0) break;
 
-		hash_t block_hash;
+		hash256_t block_hash;
 		memcpy(&block_hash[0], &buffer[0], 32);
 
 		const auto heightPair = chainHeightMap.find(block_hash);
@@ -60,10 +58,12 @@ int main (int argc, char** argv) {
 		pslice.write<int16_t, true>(3);
 
 		pslice.write<int32_t, true>(20);
-		pslice.write(buffer + 64, 20);
+		memcpy(pslice.begin, buffer + 64, 20);
+		pslice.popFrontN(20);
 
 		pslice.write<int32_t, true>(32);
-		pslice.write(buffer + 32, 32);
+		memcpy(pslice.begin, buffer + 32, 32);
+		pslice.popFrontN(32);
 
 		pslice.write<int32_t, true>(4);
 		pslice.write<int32_t>(heightPair->second);

@@ -1,13 +1,13 @@
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
 
 #include "pg.hpp"
 #include "slice.hpp"
 
 int main () {
-	uint32_t height = 0;
-
 	fwrite(PG_BINARY_HEADER, sizeof(PG_BINARY_HEADER), 1, stdout);
+	uint32_t height = 0;
 
 	while (true) {
 		uint8_t buffer[32];
@@ -25,7 +25,8 @@ int main () {
 		pslice.write<int16_t, true>(2);
 
 		pslice.write<int32_t, true>(32);
-		pslice.write(buffer, 32);
+		memcpy(pslice.begin, buffer, 32);
+		pslice.popFrontN(32);
 
 		pslice.write<int32_t, true>(4);
 		pslice.write<int32_t, true>(height);
