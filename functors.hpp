@@ -162,7 +162,7 @@ struct dumpScriptIndex : whitelisted_t {
 			}
 
 			fclose(file);
-			std::cerr << "Read " << this->txOuts.size() << " txOuts" << std::endl;
+			std::cerr << "Initialized " << this->txOuts.size() << " txOuts" << std::endl;
 
 			return true;
 		}
