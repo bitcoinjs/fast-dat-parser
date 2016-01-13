@@ -105,7 +105,7 @@ struct dumpScripts : whitelisted_t {
 // BLOCK_HASH | TX_HASH | OUTPUT_SCRIPT_HASH > stdout
 // H(TX_HASH | VOUT) | OUTPUT_SCRIPT_HASH > file
 struct dumpScriptIndexOutputs : whitelisted_t {
-	FILE* txOutMapFile;
+	FILE* txOutMapFile = nullptr;
 
 	bool initialize(const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
