@@ -1,11 +1,6 @@
-#include <array>
 #include <cstdio>
 #include <cstring>
-#include <functional>
 #include <iostream>
-#include <set>
-
-#include <memory>
 
 #include "block.hpp"
 #include "functors.hpp"
@@ -13,33 +8,10 @@
 #include "slice.hpp"
 #include "threadpool.hpp"
 
-auto importWhitelist (const std::string& fileName) {
-	const auto file = fopen(fileName.c_str(), "r");
-	assert(file != nullptr);
-
-	std::set<hash256_t> set;
-
-	while (true) {
-		hash256_t hash;
-		const auto read = fread(&hash[0], 32, 1, file);
-
-		// EOF?
-		if (read == 0) break;
-
-		set.emplace(hash);
-	}
-
-	fclose(file);
-	assert(!set.empty());
-
-	return set;
-}
-
 int main (int argc, char** argv) {
 	processFunctor_t* delegate = nullptr;
 	size_t memoryAlloc = 100 * 1024 * 1024;
 	size_t nThreads = 1;
-	std::set<hash256_t> whitelist;
 
 	// parse command line arguments
 	for (auto i = 1; i < argc; ++i) {

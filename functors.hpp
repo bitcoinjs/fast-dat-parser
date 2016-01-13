@@ -1,4 +1,5 @@
 #include <map>
+#include <set>
 
 #include "block.hpp"
 #include "hash.hpp"
