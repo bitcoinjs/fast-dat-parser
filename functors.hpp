@@ -161,6 +161,7 @@ struct dumpScriptIndexMap : whitelisted_t {
 	}
 };
 
+#define READ_KV_COUNT 30000
 const uint8_t COINBASE[32] = {};
 
 // BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT) > stdout
@@ -177,17 +178,21 @@ struct dumpScriptIndex : whitelisted_t {
 
 			// read mapped txOuts from file until EOF
 			while (true) {
-				uint8_t rbuf[40];
-				const auto read = fread(rbuf, sizeof(rbuf), 1, file);
-
-				// EOF?
-				if (read == 0) break;
+				uint8_t rbuf[40 * READ_KV_COUNT];
+				const auto read = fread(rbuf, 40, READ_KV_COUNT, file);
+				const auto eof = read < READ_KV_COUNT;
 
 				hash160_t key, value;
-				memcpy(&key[0], rbuf, 20);
-				memcpy(&value[0], rbuf, 20);
+				for (auto i = 0; i < read; ++i) {
+					const auto offset = i * 40;
+					memcpy(&key[0], rbuf + ofset, 20);
+					memcpy(&value[0], rbuf + offset + 20, 20);
 
-				this->txOuts.emplace(key, value);
+					this->txOuts.emplace(key, value);
+				}
+
+				// EOF?
+				if (read != READ_KV_COUNT) break;
 			}
 
 			fclose(file);
