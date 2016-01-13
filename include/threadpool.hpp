@@ -15,8 +15,8 @@ private:
 
 	std::atomic_bool joined;
 	std::atomic_int running;
-	std::condition_variable idle_signal;
 	std::condition_variable go_signal;
+	std::condition_variable idle_signal;
 	std::mutex vector_mutex;
 
 	void run() {
@@ -54,7 +54,7 @@ private:
 	}
 
 public:
-	ThreadPool(size_t n) : running(0), joined(false) {
+	ThreadPool(size_t n) : joined(false), running(0) {
 		this->threads.reserve(n);
 
 		for (size_t i = 0; i < n; ++i) {
