@@ -15,7 +15,7 @@ struct processFunctor_t {
 };
 
 struct whitelisted_t : processFunctor_t {
-	std::set<hash256_t> whitelist;
+	std::vector<hash256_t> whitelist;
 
 	bool initialize (const char* arg) {
 		if (strncmp(arg, "-w", 2) == 0) {
@@ -23,20 +23,20 @@ struct whitelisted_t : processFunctor_t {
 			const auto file = fopen(fileName.c_str(), "r");
 			assert(file != nullptr);
 
-			while (true) {
-				hash256_t hash;
-				const auto read = fread(&hash[0], 32, 1, file);
+			fseek(file, 0, SEEK_END);
+			const auto fileSize = ftell(file);
+			fseek(file, 0, SEEK_SET);
 
-				// EOF?
-				if (read == 0) break;
-
-				this->whitelist.emplace(hash);
-			}
+			assert(sizeof(hash256_t) == 32);
+			this->whitelist.resize(fileSize / sizeof(hash256_t));
+			const auto read = fread(&this->whitelist[0], fileSize, 1, file);
+			assert(read == 1);
 
 			fclose(file);
-			assert(!this->whitelist.empty());
 
-			std::cerr << "Initialized whitelist (" << this->whitelist.size() << " entries)" << std::endl;
+			std::cerr << "Initialized " << this->whitelist.size() << " block hashes" << std::endl;
+			std::sort(this->whitelist.begin(), this->whitelist.end());
+			std::cerr << "Sorted " << this->whitelist.size() << " block hashes" << std::endl;
 
 			return true;
 		}
@@ -49,13 +49,15 @@ struct whitelisted_t : processFunctor_t {
 		hash256_t hash;
 		hash256(&hash[0], block.header);
 
-		return this->whitelist.find(hash) == this->whitelist.end();
+		const auto hashIter = std::lower_bound(this->whitelist.begin(), this->whitelist.end(), hash);
+		return (hashIter != this->whitelist.end()) && !(hash < *hashIter);
 	}
 
 	bool shouldSkip (const hash256_t& hash) const {
 		if (this->whitelist.empty()) return false;
 
-		return this->whitelist.find(hash) == this->whitelist.end();
+		const auto hashIter = std::lower_bound(this->whitelist.begin(), this->whitelist.end(), hash);
+		return (hashIter != this->whitelist.end()) && !(hash < *hashIter);
 	}
 };
 
@@ -161,13 +163,13 @@ struct dumpScriptIndexMap : whitelisted_t {
 	}
 };
 
-#define READ_KV_COUNT 30000
 const uint8_t COINBASE[32] = {};
 
 // BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT) > stdout
 // BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndex : whitelisted_t {
-	std::map<hash160_t, hash160_t> txOuts;
+	typedef std::pair<hash160_t, hash160_t> TxOut;
+	std::vector<TxOut> txOuts;
 
 	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
@@ -176,27 +178,20 @@ struct dumpScriptIndex : whitelisted_t {
 			const auto file = fopen(fileName.c_str(), "r");
 			assert(file != nullptr);
 
-			// read mapped txOuts from file until EOF
-			while (true) {
-				uint8_t rbuf[40 * READ_KV_COUNT];
-				const auto read = fread(rbuf, 40, READ_KV_COUNT, file);
-				const auto eof = read < READ_KV_COUNT;
+			fseek(file, 0, SEEK_END);
+			const auto fileSize = ftell(file);
+			fseek(file, 0, SEEK_SET);
 
-				hash160_t key, value;
-				for (size_t i = 0; i < read; ++i) {
-					const auto offset = i * 40;
-					memcpy(&key[0], rbuf + offset, 20);
-					memcpy(&value[0], rbuf + offset + 20, 20);
-
-					this->txOuts.emplace(key, value);
-				}
-
-				// EOF?
-				if (read != READ_KV_COUNT) break;
-			}
+			assert(sizeof(TxOut) == 40);
+			this->txOuts.resize(fileSize / sizeof(TxOut));
+			const auto read = fread(&this->txOuts[0], fileSize, 1, file);
+			assert(read == 1);
 
 			fclose(file);
+
 			std::cerr << "Initialized " << this->txOuts.size() << " txOuts" << std::endl;
+			std::sort(this->txOuts.begin(), this->txOuts.end());
+			std::cerr << "Sorted " << this->txOuts.size() << " txOuts" << std::endl;
 
 			return true;
 		}
@@ -235,8 +230,10 @@ struct dumpScriptIndex : whitelisted_t {
 					hash160_t hash;
 					sha1(&hash[0], input.data.take(36));
 
-					const auto txOutsIter = this->txOuts.find(hash);
-					assert(txOutsIter != this->txOuts.end());
+					const auto txOutsIter = std::lower_bound(this->txOuts.begin(), this->txOuts.end(), hash, [](const TxOut& a, const hash160_t& b) {
+						return a.first < b;
+					});
+					assert((txOutsIter != this->txOuts.end()) && !(hash < txOutsIter->first));
 
 					memcpy(sbuf + 64, &(txOutsIter->second)[0], 20);
 					fwrite(sbuf, sizeof(sbuf), 1, stdout);
