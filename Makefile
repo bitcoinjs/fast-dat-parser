@@ -1,10 +1,12 @@
+W=-pedantic -std=c++14 -W -Wall -Wconversion -Wextra -Wfatal-errors -Wwrite-strings -Wno-unused-variable -Wno-unused-parameter
+
 all: bestchain parser
 
 bestchain: bestchain.cpp include/hash.hpp
-	g++ -O3 $< -Iinclude -I. libconsensus/*.cpp -std=c++14 -o $@
+	g++ $W -O3 $< -Iinclude -I. libconsensus/*.cpp -std=c++14 -o $@
 
 parser: parser.cpp functors.hpp include/block.hpp include/hash.hpp include/slice.hpp include/threadpool.hpp
-	g++ -pthread -O3 $< -Iinclude -I. libconsensus/*.cpp -std=c++14 -o $@
+	g++ $W -pthread -O3 $< -Iinclude -I. libconsensus/*.cpp -std=c++14 -o $@
 
 clean:
 	rm -f bestchain parser
