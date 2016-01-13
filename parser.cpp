@@ -5,60 +5,19 @@
 #include <iostream>
 #include <set>
 
+#include <memory>
+
 #include "block.hpp"
+#include "functors.hpp"
 #include "hash.hpp"
 #include "slice.hpp"
 #include "threadpool.hpp"
 
-// XXX: no locking for fwrite if sizeof(wbuf) < PIPE_BUF (4096 bytes)
-
-// BLOCK_HEADER
-void dumpHeaders (Slice data) {
-	fwrite(data.begin, 80, 1, stdout);
-}
-
-// SCRIPT_LENGTH | SCRIPT
-void dumpScripts (Slice data) {
-	const auto block = Block(data.take(80), data.drop(80));
-	uint8_t wbuf[4096];
-
-	auto transactions = block.transactions();
-	while (!transactions.empty()) {
-		const auto& transaction = transactions.front();
-
-		for (const auto& input : transaction.inputs) {
-			if (input.script.length() > sizeof(wbuf) - sizeof(uint16_t)) continue;
-			const auto scriptLength = static_cast<uint16_t>(input.script.length());
-
-			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength);
-			memcpy(wbuf + sizeof(uint16_t), input.script.begin, scriptLength);
-			fwrite(wbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
-		}
-
-		for (const auto& output : transaction.outputs) {
-			if (output.script.length() > sizeof(wbuf) - sizeof(uint16_t)) continue;
-			const auto scriptLength = static_cast<uint16_t>(output.script.length());
-
-			Slice(wbuf, wbuf + sizeof(uint16_t)).put<uint16_t>(scriptLength);
-			memcpy(wbuf + sizeof(uint16_t), output.script.begin, scriptLength);
-			fwrite(wbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
-		}
-
-		transactions.popFront();
-	}
-}
-
-typedef void(*processFunction_t)(Slice);
-processFunction_t FUNCTIONS[] = {
-	&dumpHeaders,
-	&dumpScripts
-};
-
 auto importWhitelist (const std::string& fileName) {
-	std::set<hash256_t> set;
-
 	const auto file = fopen(fileName.c_str(), "r");
-	if (file == nullptr) return set;
+	assert(file != nullptr);
+
+	std::set<hash256_t> set;
 
 	while (true) {
 		hash256_t hash;
@@ -71,46 +30,38 @@ auto importWhitelist (const std::string& fileName) {
 	}
 
 	fclose(file);
+	assert(!set.empty());
 
 	return set;
 }
 
-static size_t memoryAlloc = 100 * 1024 * 1024;
-static size_t nThreads = 1;
-static size_t functionIndex = 0;
-static std::string whitelistFileName;
-
-auto parseArg (char* argv) {
-	if (sscanf(argv, "-f%lu", &functionIndex) == 1) {
-		assert(functionIndex < sizeof(FUNCTIONS));
-		return true;
-	}
-	if (sscanf(argv, "-j%lu", &nThreads) == 1) return true;
-	if (sscanf(argv, "-m%lu", &memoryAlloc) == 1) return true;
-	if (strncmp(argv, "-w", 2) == 0) {
-		whitelistFileName = std::string(argv + 2);
-		return true;
-	}
-
-	return false;
-}
-
 int main (int argc, char** argv) {
-	for (auto i = 1; i < argc; ++i) {
-		assert(parseArg(argv[i]));
-	}
-
-	const auto delegate = FUNCTIONS[functionIndex];
-
-	// if specified, import the whitelist
-	const auto doWhitelist = !whitelistFileName.empty();
+	processFunctor_t* delegate = nullptr;
+	size_t memoryAlloc = 100 * 1024 * 1024;
+	size_t nThreads = 1;
 	std::set<hash256_t> whitelist;
-	if (doWhitelist) {
-		whitelist = importWhitelist(whitelistFileName);
-		assert(!whitelist.empty());
 
-		std::cerr << "Initialized whitelist (" << whitelist.size() << " entries)" << std::endl;
+	// parse command line arguments
+	for (auto i = 1; i < argc; ++i) {
+		const auto arg = argv[i];
+		size_t functorIndex = 0;
+
+		if (sscanf(arg, "-f%lu", &functorIndex) == 1) {
+			assert(delegate == nullptr);
+			if (functorIndex == 0) delegate = new dumpHeaders();
+			else if (functorIndex == 1) delegate = new dumpScripts();
+			else if (functorIndex == 2) delegate = new dumpScriptIndexOutputs();
+			else if (functorIndex == 3) delegate = new dumpScriptIndexInputs();
+			continue;
+		}
+		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;
+		if (sscanf(arg, "-m%lu", &memoryAlloc) == 1) continue;
+
+		if (delegate && delegate->initialize(arg)) continue;
+		assert(false);
 	}
+
+	assert(delegate != nullptr);
 
 	// pre-allocate buffers
 	const auto halfMemoryAlloc = memoryAlloc / 2;
@@ -160,28 +111,17 @@ int main (int argc, char** argv) {
 			const auto length = data.drop(4).peek<uint32_t>();
 			const auto total = 8 + length;
 			if (total > data.length()) break;
+			data.popFrontN(8);
 
-			// is whitelisting in effect?
-			if (doWhitelist) {
-				hash256_t hash;
-				hash256(&hash[0], header);
+			// send the block data to the threadpool
+			const auto block = Block(data.take(80), data.drop(80));
 
-				// skip if not found
-				if (whitelist.find(hash) == whitelist.end()) {
-					data.popFrontN(total);
-
-					std::cerr << "--- Skipped block" << std::endl;
-					continue;
-				}
-			}
-
-			// lets do it, send the block data to the threadpool
-			const auto block = data.drop(8).take(length);
-
-			pool.push([block, delegate]() { delegate(block); });
+			pool.push([block, delegate]() {
+				delegate->operator()(block);
+			});
 			count++;
 
-			data.popFrontN(total);
+			data.popFrontN(length);
 		}
 
 		if (eof) break;
