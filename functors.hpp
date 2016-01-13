@@ -183,9 +183,9 @@ struct dumpScriptIndex : whitelisted_t {
 				const auto eof = read < READ_KV_COUNT;
 
 				hash160_t key, value;
-				for (auto i = 0; i < read; ++i) {
+				for (size_t i = 0; i < read; ++i) {
 					const auto offset = i * 40;
-					memcpy(&key[0], rbuf + ofset, 20);
+					memcpy(&key[0], rbuf + offset, 20);
 					memcpy(&value[0], rbuf + offset + 20, 20);
 
 					this->txOuts.emplace(key, value);
