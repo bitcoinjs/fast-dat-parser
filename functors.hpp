@@ -1,3 +1,4 @@
+#include <atomic>
 #include <map>
 #include <set>
 
@@ -5,10 +6,12 @@
 #include "hash.hpp"
 
 struct processFunctor_t {
+	virtual ~processFunctor_t () {}
+
 	virtual bool initialize (const char*) {
 		return false;
 	}
-	virtual void operator() (const Block&) const = 0;
+	virtual void operator() (const Block&) = 0;
 };
 
 struct whitelisted_t : processFunctor_t {
@@ -60,7 +63,7 @@ struct whitelisted_t : processFunctor_t {
 
 // BLOCK_HEADER > stdout
 struct dumpHeaders : whitelisted_t {
-	void operator() (const Block& block) const {
+	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
 		fwrite(block.header.begin, 80, 1, stdout);
@@ -69,7 +72,7 @@ struct dumpHeaders : whitelisted_t {
 
 // SCRIPT_LENGTH | SCRIPT > stdout
 struct dumpScripts : whitelisted_t {
-	void operator() (const Block& block) const {
+	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
 		uint8_t sbuf[4096];
@@ -102,9 +105,35 @@ struct dumpScripts : whitelisted_t {
 	}
 };
 
+struct dumpStatistics : whitelisted_t {
+	std::atomic_ulong inputs;
+	std::atomic_ulong outputs;
+	std::atomic_ulong transactions;
+
+	~dumpStatistics () {
+		std::cout << this->inputs << '\n' << this->outputs << '\n' << this->transactions << std::endl;
+	}
+
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		auto transactions = block.transactions();
+		this->transactions += transactions.length();
+
+		while (!transactions.empty()) {
+			const auto& transaction = transactions.front();
+
+			this->inputs += transaction.inputs.size();
+			this->outputs += transaction.outputs.size();
+
+			transactions.popFront();
+		}
+	}
+};
+
 // SHA1(TX_HASH | VOUT) | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndexMap : whitelisted_t {
-	void operator() (const Block& block) const {
+	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
 		uint8_t sbuf[40] = {};
@@ -170,7 +199,7 @@ struct dumpScriptIndex : whitelisted_t {
 		return false;
 	}
 
-	void operator() (const Block& block) const {
+	void operator() (const Block& block) {
 		hash256_t hash;
 		hash256(&hash[0], block.header);
 		if (this->shouldSkip(hash)) return;

@@ -1,3 +1,4 @@
+#include <csignal>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -24,6 +25,7 @@ int main (int argc, char** argv) {
 			else if (functorIndex == 1) delegate = new dumpScripts();
 			else if (functorIndex == 2) delegate = new dumpScriptIndexMap();
 			else if (functorIndex == 3) delegate = new dumpScriptIndex();
+			else if (functorIndex == 4) delegate = new dumpStatistics();
 			continue;
 		}
 		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;
@@ -102,6 +104,8 @@ int main (int argc, char** argv) {
 		remainder = data.length();
 		memcpy(iobuffer.begin, data.begin, remainder);
 	}
+
+	delete delegate;
 
 	return 0;
 }
