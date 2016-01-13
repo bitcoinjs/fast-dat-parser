@@ -31,9 +31,9 @@ struct whitelisted_t : processFunctor_t {
 			}
 
 			fclose(file);
-			assert(!whitelist.empty());
+			assert(!this->whitelist.empty());
 
-			std::cerr << "Initialized whitelist (" << whitelist.size() << " entries)" << std::endl;
+			std::cerr << "Initialized whitelist (" << this->whitelist.size() << " entries)" << std::endl;
 
 			return true;
 		}
@@ -137,7 +137,7 @@ const uint8_t COINBASE[32] = {};
 // BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT) > stdout
 // BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndex : whitelisted_t {
-	std::map<hash160_t, hash160_t> txOutMap;
+	std::map<hash160_t, hash160_t> txOuts;
 
 	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
@@ -158,11 +158,11 @@ struct dumpScriptIndex : whitelisted_t {
 				memcpy(&key[0], rbuf, 20);
 				memcpy(&value[0], rbuf, 20);
 
-				this->txOutMap.emplace(key, value);
+				this->txOuts.emplace(key, value);
 			}
 
 			fclose(file);
-			std::cerr << "Read " << this->txOutMap.size() << " txOuts" << std::endl;
+			std::cerr << "Read " << this->txOuts.size() << " txOuts" << std::endl;
 
 			return true;
 		}
@@ -184,7 +184,7 @@ struct dumpScriptIndex : whitelisted_t {
 
 			hash256(sbuf + 32, transaction.data);
 
-			if (!this->txOutMap.empty()) {
+			if (!this->txOuts.empty()) {
 				for (const auto& input : transaction.inputs) {
 					// Coinbase input?
 					if (
@@ -201,10 +201,10 @@ struct dumpScriptIndex : whitelisted_t {
 					hash160_t hash;
 					sha1(&hash[0], input.data.take(36));
 
-					const auto txOutMapIter = this->txOutMap.find(hash);
-					assert(txOutMapIter != this->txOutMap.end());
+					const auto txOutsIter = this->txOuts.find(hash);
+					assert(txOutsIter != this->txOuts.end());
 
-					memcpy(sbuf + 64, &(txOutMapIter->second)[0], 20);
+					memcpy(sbuf + 64, &(txOutsIter->second)[0], 20);
 					fwrite(sbuf, sizeof(sbuf), 1, stdout);
 				}
 			}
