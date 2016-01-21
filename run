@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+DATA_DIR=./
+
+# parse the local-best blockchain
+cat $DATA_DIR/blocks/*.dat | ./parser -f0 | ./bestchain > headers.dat
+
+# output a txOut index
+cat $DATA_DIR/blocks/*.dat | ./parser -j4 -f2 -wheaders.dat > txoindex.dat
+
+# output a script index for the local-best blockchain
+cat $DATA_DIR/blocks/*.dat | ./parser -j4 -f3 -wheaders.dat -itxoindex.dat > scripts.dat
