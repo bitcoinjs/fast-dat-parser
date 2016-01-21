@@ -4,6 +4,7 @@
 
 #include "block.hpp"
 #include "hash.hpp"
+#include "hvectors.hpp"
 
 struct processFunctor_t {
 	virtual ~processFunctor_t () {}
@@ -15,7 +16,7 @@ struct processFunctor_t {
 };
 
 struct whitelisted_t : processFunctor_t {
-	std::vector<hash256_t> whitelist;
+	HSet<hash256_t> whitelist;
 
 	bool initialize (const char* arg) {
 		if (strncmp(arg, "-w", 2) == 0) {
@@ -36,7 +37,7 @@ struct whitelisted_t : processFunctor_t {
 			fclose(file);
 
 			std::cerr << "Initialized " << this->whitelist.size() << " block hashes" << std::endl;
-			std::sort(this->whitelist.begin(), this->whitelist.end());
+			this->whitelist.sort();
 			std::cerr << "Sorted " << this->whitelist.size() << " block hashes" << std::endl;
 
 			return true;
@@ -47,18 +48,16 @@ struct whitelisted_t : processFunctor_t {
 
 	bool shouldSkip (const Block& block) const {
 		if (this->whitelist.empty()) return false;
+
 		hash256_t hash;
 		hash256(&hash[0], block.header);
-
-		const auto hashIter = std::lower_bound(this->whitelist.begin(), this->whitelist.end(), hash);
-		return !((hashIter != this->whitelist.end()) && !(hash < *hashIter));
+		return !this->whitelist.contains(hash);
 	}
 
 	bool shouldSkip (const hash256_t& hash) const {
 		if (this->whitelist.empty()) return false;
 
-		const auto hashIter = std::lower_bound(this->whitelist.begin(), this->whitelist.end(), hash);
-		return !((hashIter != this->whitelist.end()) && !(hash < *hashIter));
+		return !this->whitelist.contains(hash);
 	}
 };
 
@@ -169,8 +168,8 @@ const uint8_t COINBASE[32] = {};
 // BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT) > stdout
 // BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndex : whitelisted_t {
-	typedef std::pair<hash160_t, hash160_t> TxOut;
-	std::vector<TxOut> txOuts;
+	typedef HMap<hash160_t, hash160_t> TxOutHMap;
+	TxOutHMap txOuts;
 
 	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
@@ -183,8 +182,8 @@ struct dumpScriptIndex : whitelisted_t {
 			const auto fileSize = ftell(file);
 			fseek(file, 0, SEEK_SET);
 
-			assert(sizeof(TxOut) == 40);
-			this->txOuts.resize(fileSize / sizeof(TxOut));
+			assert(sizeof(this->txOuts[0]) == 40);
+			this->txOuts.resize(fileSize / sizeof(this->txOuts[0]));
 			const auto read = fread(&this->txOuts[0], fileSize, 1, file);
 			assert(read == 1);
 			assert(!this->txOuts.empty());
@@ -192,10 +191,7 @@ struct dumpScriptIndex : whitelisted_t {
 			fclose(file);
 
 			std::cerr << "Initialized " << this->txOuts.size() << " txOuts" << std::endl;
-			std::sort(this->txOuts.begin(), this->txOuts.end(), [](const auto& a, const auto& b) {
-				return a.first < b.first;
-			});
-
+			this->txOuts.sort();
 			std::cerr << "Sorted " << this->txOuts.size() << " txOuts" << std::endl;
 
 			return true;
@@ -235,12 +231,10 @@ struct dumpScriptIndex : whitelisted_t {
 					hash160_t hash;
 					sha1(&hash[0], input.data.take(36));
 
-					const auto txOutsIter = std::lower_bound(this->txOuts.begin(), this->txOuts.end(), hash, [](const auto& a, const hash160_t& b) {
-						return a.first < b;
-					});
-					assert((txOutsIter != this->txOuts.end()) && !(hash < txOutsIter->first));
+					const auto txOutIter = this->txOuts.find(hash);
+					assert(txOutIter != this->txOuts.end());
 
-					memcpy(sbuf + 64, &(txOutsIter->second)[0], 20);
+					memcpy(sbuf + 64, &(txOutIter->second)[0], 20);
 					fwrite(sbuf, sizeof(sbuf), 1, stdout);
 				}
 			}

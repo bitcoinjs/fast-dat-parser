@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "hash.hpp"
+#include "hvectors.hpp"
 
 struct Block {
 	hash256_t hash = {};
@@ -16,7 +17,7 @@ struct Block {
 };
 
 // find all blocks who are not parents to any other blocks (aka, a chain tip)
-auto findChainTips(const std::map<hash256_t, Block>& blocks) {
+auto findChainTips(const HMap<hash256_t, Block>& blocks) {
 	std::map<hash256_t, bool> parents;
 
 	for (const auto& blockIter : blocks) {
@@ -37,7 +38,7 @@ auto findChainTips(const std::map<hash256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork(const std::map<hash256_t, size_t>& workCache, const std::map<hash256_t, Block>& blocks, const Block source) {
+auto determineWork(const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, const Block source) {
 	auto visitor = source;
 	size_t totalWork = source.bits;
 
@@ -59,17 +60,17 @@ auto determineWork(const std::map<hash256_t, size_t>& workCache, const std::map<
 	return totalWork;
 }
 
-auto findBest(const std::map<hash256_t, Block>& blocks) {
+auto findBest(const HMap<hash256_t, Block>& blocks) {
 	auto bestBlock = Block();
 	size_t mostWork = 0;
 
-	std::map<hash256_t, size_t> workCache;
+	HMap<hash256_t, size_t> workCache;
 
 	for (const auto& blockIter : blocks) {
 		const auto& block = blockIter.second;
 		const auto work = determineWork(workCache, blocks, block);
 
-		workCache.emplace(block.hash, work);
+		workCache.insort(block.hash, work);
 
 		if (work > mostWork) {
 			bestBlock = block;
@@ -94,7 +95,7 @@ auto findBest(const std::map<hash256_t, Block>& blocks) {
 }
 
 int main () {
-	std::map<hash256_t, Block> blocks;
+	HMap<hash256_t, Block> blocks;
 
 	// read block headers from stdin until EOF
 	{
@@ -112,10 +113,12 @@ int main () {
 			memcpy(&prevBlockHash[0], rbuf + 4, 32);
 			memcpy(&bits, rbuf + 72, 4);
 
-			blocks[hash] = Block(hash, prevBlockHash, bits);
+			blocks.emplace_back(std::make_pair(hash, Block(hash, prevBlockHash, bits)));
 		}
 
 		std::cerr << "Read " << blocks.size() << " headers" << std::endl;
+		blocks.sort();
+		std::cerr << "Sorted " << blocks.size() << " headers" << std::endl;
 	}
 
 	// how many tips exist?
