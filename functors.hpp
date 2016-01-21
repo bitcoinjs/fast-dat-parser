@@ -51,14 +51,14 @@ struct whitelisted_t : processFunctor_t {
 		hash256(&hash[0], block.header);
 
 		const auto hashIter = std::lower_bound(this->whitelist.begin(), this->whitelist.end(), hash);
-		return (hashIter != this->whitelist.end()) && !(hash < *hashIter);
+		return !((hashIter != this->whitelist.end()) && !(hash < *hashIter));
 	}
 
 	bool shouldSkip (const hash256_t& hash) const {
 		if (this->whitelist.empty()) return false;
 
 		const auto hashIter = std::lower_bound(this->whitelist.begin(), this->whitelist.end(), hash);
-		return (hashIter != this->whitelist.end()) && !(hash < *hashIter);
+		return !((hashIter != this->whitelist.end()) && !(hash < *hashIter));
 	}
 };
 
