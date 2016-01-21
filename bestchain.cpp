@@ -20,7 +20,7 @@ auto findChainTips(const std::map<hash256_t, Block>& blocks) {
 	std::map<hash256_t, bool> parents;
 
 	for (const auto& blockIter : blocks) {
-		const auto block = blockIter.second;
+		const auto& block = blockIter.second;
 		if (blocks.find(block.prevBlockHash) == blocks.end()) continue;
 
 		parents[block.prevBlockHash] = true;
@@ -28,10 +28,10 @@ auto findChainTips(const std::map<hash256_t, Block>& blocks) {
 
 	std::vector<Block> tips;
 	for (const auto& blockIter : blocks) {
-		const auto block = blockIter.second;
+		const auto& block = blockIter.second;
 		if (parents.find(block.hash) != parents.end()) continue;
 
-		tips.push_back(block);
+		tips.emplace_back(block);
 	}
 
 	return tips;
@@ -68,7 +68,7 @@ auto findBest(const std::map<hash256_t, Block>& blocks) {
 	std::map<hash256_t, size_t> workCache;
 
 	for (const auto& blockIter : blocks) {
-		const auto block = blockIter.second;
+		const auto& block = blockIter.second;
 		const auto work = determineWork(workCache, blocks, block);
 
 		if (work > mostWork) {
