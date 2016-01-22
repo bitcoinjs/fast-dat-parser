@@ -10,7 +10,7 @@
 auto importHeightMap (const std::string& fileName) {
 	std::map<hash256_t, uint32_t> map;
 
-	auto file = fopen(fileName.c_str(), "r");
+	auto file = fopen(fileName.c_str(), "rb");
 	if (file == nullptr) return map;
 
 	uint32_t height = 0;
