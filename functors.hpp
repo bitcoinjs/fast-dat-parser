@@ -36,9 +36,7 @@ struct whitelisted_t : processFunctor_t {
 
 			fclose(file);
 
-			std::cerr << "Initialized " << this->whitelist.size() << " block hashes" << std::endl;
-			this->whitelist.sort();
-			std::cerr << "Sorted " << this->whitelist.size() << " block hashes" << std::endl;
+			std::cerr << "Read " << this->whitelist.size() << " block hashes" << std::endl;
 
 			return true;
 		}
@@ -190,9 +188,7 @@ struct dumpScriptIndex : whitelisted_t {
 
 			fclose(file);
 
-			std::cerr << "Initialized " << this->txOuts.size() << " txOuts" << std::endl;
-			this->txOuts.sort();
-			std::cerr << "Sorted " << this->txOuts.size() << " txOuts" << std::endl;
+			std::cerr << "Read " << this->txOuts.size() << " txOuts" << std::endl;
 
 			return true;
 		}

@@ -7,7 +7,7 @@
 #include <vector>
 
 int main (int argc, char** argv) {
-	assert(argc > 2 && argc < 4);
+	assert(argc == 2 || argc == 3);
 
 	size_t compareBytes = 0;
 	assert(sscanf(argv[1], "%lu", &compareBytes) == 1);
