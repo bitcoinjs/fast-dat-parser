@@ -1,4 +1,3 @@
-#include <csignal>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
