@@ -133,8 +133,7 @@ int main () {
 		// output
 		std::cerr << "Best chain" << std::endl;
 		std::cerr << "- Height: " << bestBlockChain.size() - 1 << std::endl;
-		std::cerr << std::hex;
-		std::cerr << "- Genesis: ";
+		std::cerr << "- Genesis: " << std::hex;
 		for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) genesis.hash[i];
 		std::cerr << std::endl << "- Tip: ";
 		for (size_t i = 31; i < 32; --i) std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) tip.hash[i];
