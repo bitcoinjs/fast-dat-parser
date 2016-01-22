@@ -37,7 +37,7 @@ auto findChainTips(const std::map<hash256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork(std::map<hash256_t, size_t>& workCache, const std::map<hash256_t, Block>& blocks, const Block source) {
+auto determineWork(const std::map<hash256_t, size_t>& workCache, const std::map<hash256_t, Block>& blocks, const Block source) {
 	auto visitor = source;
 	size_t totalWork = source.bits;
 
@@ -56,8 +56,6 @@ auto determineWork(std::map<hash256_t, size_t>& workCache, const std::map<hash25
 		totalWork += visitor.bits;
 	}
 
-	workCache.emplace(source.hash, totalWork);
-
 	return totalWork;
 }
 
@@ -70,6 +68,8 @@ auto findBest(const std::map<hash256_t, Block>& blocks) {
 	for (const auto& blockIter : blocks) {
 		const auto& block = blockIter.second;
 		const auto work = determineWork(workCache, blocks, block);
+
+		workCache.emplace(block.hash, work);
 
 		if (work > mostWork) {
 			bestBlock = block;
