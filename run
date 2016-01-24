@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-DATA_DIR=./
+DATA_DIR=~/.bitcoin
 
 # parse the local-best blockchain
 cat $DATA_DIR/blocks/*.dat | ./parser -f0 | ./bestchain | ./binsort 32 > headers.dat
