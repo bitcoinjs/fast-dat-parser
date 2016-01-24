@@ -39,11 +39,11 @@ int main (int argc, char** argv) {
 
 	// pre-allocate buffers
 	const auto halfMemoryAlloc = memoryAlloc / 2;
-	FixedSlice buffer(halfMemoryAlloc);
-	std::cerr << "Initialized compute buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
-
 	FixedSlice iobuffer(halfMemoryAlloc);
-	std::cerr << "Initialized IO buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
+	std::cerr << "Allocated IO buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
+
+	FixedSlice buffer(halfMemoryAlloc);
+	std::cerr << "Allocated active buffer (" << halfMemoryAlloc << " bytes)" << std::endl;
 
 	ThreadPool<std::function<void(void)>> pool(nThreads);
 	std::cerr << "Initialized " << nThreads << " threads in the thread pool" << std::endl;
