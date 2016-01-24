@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
+#include <memory>
 
 #include "block.hpp"
 #include "functors.hpp"
@@ -9,7 +10,7 @@
 #include "threadpool.hpp"
 
 int main (int argc, char** argv) {
-	processFunctor_t* delegate = nullptr;
+	std::unique_ptr<processFunctor_t> delegate;
 	size_t memoryAlloc = 100 * 1024 * 1024;
 	size_t nThreads = 1;
 
@@ -20,11 +21,11 @@ int main (int argc, char** argv) {
 
 		if (sscanf(arg, "-f%lu", &functorIndex) == 1) {
 			assert(delegate == nullptr);
-			if (functorIndex == 0) delegate = new dumpHeaders();
-			else if (functorIndex == 1) delegate = new dumpScripts();
-			else if (functorIndex == 2) delegate = new dumpScriptIndexMap();
-			else if (functorIndex == 3) delegate = new dumpScriptIndex();
-			else if (functorIndex == 4) delegate = new dumpStatistics();
+			if (functorIndex == 0) delegate.reset(new dumpHeaders());
+			else if (functorIndex == 1) delegate.reset(new dumpScripts());
+			else if (functorIndex == 2) delegate.reset(new dumpScriptIndexMap());
+			else if (functorIndex == 3) delegate.reset(new dumpScriptIndex());
+			else if (functorIndex == 4) delegate.reset(new dumpStatistics());
 			continue;
 		}
 		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;
@@ -89,7 +90,7 @@ int main (int argc, char** argv) {
 			// send the block data to the threadpool
 			const auto block = Block(data.take(80), data.drop(80));
 
-			pool.push([block, delegate]() {
+			pool.push([block, &delegate]() {
 				delegate->operator()(block);
 			});
 			count++;
@@ -106,8 +107,6 @@ int main (int argc, char** argv) {
 
 	// wait for all workers before delete
 	pool.wait();
-
-	delete delegate;
 
 	return 0;
 }
