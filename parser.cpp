@@ -108,8 +108,5 @@ int main (int argc, char** argv) {
 		memcpy(iobuffer.begin, data.begin, remainder);
 	}
 
-	// wait for all workers before delete
-	pool.wait();
-
 	return 0;
 }
