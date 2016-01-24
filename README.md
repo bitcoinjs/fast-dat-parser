@@ -18,7 +18,7 @@ A fast `blk*.dat` parser for bitcoin blockchain analysis.
 
 - `-f<FUNCTION INDEX>` - parse function (default `0`, see pre-packaged parse functions below)
 - `-j<THREADS>` - N threads for parallel computation (default `1`)
-- `-m<BYTES>` - memory usage (default `104857600` bytes, ~100 MiB)
+- `-m<BYTES>` - memory usage (default `209715200` bytes, ~200 MiB)
 - `-w<FILENAME>` - whitelist file, for omitting blocks from parsing
 
 

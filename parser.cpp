@@ -11,7 +11,7 @@
 
 int main (int argc, char** argv) {
 	std::unique_ptr<processFunctor_t> delegate;
-	size_t memoryAlloc = 100 * 1024 * 1024;
+	size_t memoryAlloc = 200 * 1024 * 1024;
 	size_t nThreads = 1;
 
 	// parse command line arguments
@@ -50,6 +50,9 @@ int main (int argc, char** argv) {
 
 	size_t count = 0;
 	size_t remainder = 0;
+
+	// disable buffering for stdin
+	setvbuf (stdin, nullptr, _IONBF, 0);
 
 	while (true) {
 		const auto rbuf = iobuffer.drop(remainder);
