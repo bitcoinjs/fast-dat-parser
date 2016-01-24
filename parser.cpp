@@ -51,9 +51,6 @@ int main (int argc, char** argv) {
 	size_t count = 0;
 	size_t remainder = 0;
 
-	// disable buffering for stdin
-	setvbuf (stdin, nullptr, _IONBF, 0);
-
 	while (true) {
 		const auto rbuf = iobuffer.drop(remainder);
 		const auto read = fread(rbuf.begin, 1, rbuf.length(), stdin);
