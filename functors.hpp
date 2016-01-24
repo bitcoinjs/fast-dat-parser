@@ -28,15 +28,16 @@ struct whitelisted_t : processFunctor_t {
 			const auto fileSize = ftell(file);
 			fseek(file, 0, SEEK_SET);
 
-			assert(sizeof(hash256_t) == 32);
+			assert(sizeof(this->whitelist[0]) == 32);
 			this->whitelist.resize(fileSize / sizeof(hash256_t));
 			const auto read = fread(&this->whitelist[0], fileSize, 1, file);
 			assert(read == 1);
-			assert(!this->whitelist.empty());
 
 			fclose(file);
+			assert(!this->whitelist.empty());
+			assert(std::is_sorted(this->whitelist.begin(), this->whitelist.end()));
 
-			std::cerr << "Read " << this->whitelist.size() << " block hashes" << std::endl;
+			std::cerr << "Whitelisted " << this->whitelist.size() << " block hashes" << std::endl;
 
 			return true;
 		}
@@ -180,15 +181,16 @@ struct dumpScriptIndex : whitelisted_t {
 			const auto fileSize = ftell(file);
 			fseek(file, 0, SEEK_SET);
 
-			assert(sizeof(this->txOuts[0]) == 40);
+			assert(sizeof(hash160_t) == 40);
 			this->txOuts.resize(fileSize / sizeof(this->txOuts[0]));
 			const auto read = fread(&this->txOuts[0], fileSize, 1, file);
 			assert(read == 1);
-			assert(!this->txOuts.empty());
 
 			fclose(file);
+			assert(!this->txOuts.empty());
+			assert(std::is_sorted(this->txOuts.begin(), this->txOuts.end()));
 
-			std::cerr << "Read " << this->txOuts.size() << " txOuts" << std::endl;
+			std::cerr << "Mapped " << this->txOuts.size() << " txOuts" << std::endl;
 
 			return true;
 		}
