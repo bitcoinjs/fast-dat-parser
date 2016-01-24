@@ -88,7 +88,7 @@ int main (int argc, char** argv) {
 			data.popFrontN(8);
 
 			// send the block data to the threadpool
-			const auto block = Block(data.take(80), data.drop(80));
+			const auto block = Block(header, data.drop(80));
 
 			pool.push([block, &delegate]() {
 				delegate->operator()(block);
