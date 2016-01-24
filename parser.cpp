@@ -66,7 +66,7 @@ int main (int argc, char** argv) {
 		memcpy(buffer.begin, iobuffer.begin, halfMemoryAlloc);
 
 		auto data = buffer.take(remainder + read);
-		std::cerr << "-- Processed " << count << " blocks (processing " << data.length() / 1024 << " KiB)" << (eof ? " EOF" : "") << std::endl;
+		std::cerr << "-- Parsed " << count << " blocks (read " << data.length() / 1024 << " KiB)" << (eof ? " EOF" : "") << std::endl;
 
 		while (data.length() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
