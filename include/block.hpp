@@ -154,6 +154,12 @@ public:
 		return this->current;
 	}
 
+	// TODO: verify
+// 	void popFront () {
+// 		this->lazy = true;
+// 		this->n--;
+// 	}
+
 	void popFront () {
 		this->n--;
 
