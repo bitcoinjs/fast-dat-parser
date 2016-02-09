@@ -24,7 +24,7 @@ A fast `blk*.dat` parser for bitcoin blockchain analysis.
 
 #### parse functions (`-f`)
 
-Each of these functions write their output as raw data (binary, not hex).
+Each of these pre-included functions write their output as raw data (binary, not hex).
 
 - `0` - Output the *unordered* 80-byte block headers, includes orphans
 - `1` - Outputs every script prefixed with a `uint16_t` length
@@ -32,7 +32,7 @@ Each of these functions write their output as raw data (binary, not hex).
 - `3` - Outputs a script index of `BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT)`, if a `txOutMap` file is specified via `-txo<FILENAME>`, `BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT)`'s are also written for each transaction input.
 
 Use a whitelist (see `-w`) to avoid orphan data being included. (see below examples for filtering by best chain)
-
+You can easily write your own though!
 
 ### bestchain
 
