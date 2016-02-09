@@ -34,6 +34,9 @@ int main (int argc, char** argv) {
 		assert(sscanf(argv[3], "%lu", &totalBytes) == 1);
 	}
 
+	assert(compareBytes > 0);
+	assert(compareOffset < totalBytes);
+
 	std::vector<uint8_t*> vector;
 
 	// TODO: alloc into 1 huge buffer
@@ -49,8 +52,8 @@ int main (int argc, char** argv) {
 
 	__gnu_parallel::sort(
 		vector.begin(), vector.end(),
-		[compareBytes](const auto& a, const auto& b) {
-			return memcmp(a, b, compareBytes) < 0;
+		[=](const auto& a, const auto& b) {
+			return memcmp(a + compareOffset, b + compareOffset, compareBytes) < 0;
 		}
 	);
 
