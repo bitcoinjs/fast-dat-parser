@@ -29,6 +29,8 @@ struct whitelisted_t : processFunctor_t {
 			fseek(file, 0, SEEK_SET);
 
 			assert(sizeof(this->whitelist[0]) == 32);
+			assert(fileSize % sizeof(this->whitelist[0]) == 0);
+
 			this->whitelist.resize(fileSize / sizeof(hash256_t));
 			const auto read = fread(&this->whitelist[0], fileSize, 1, file);
 			assert(read == 1);
@@ -181,6 +183,8 @@ struct dumpScriptIndex : whitelisted_t {
 			fseek(file, 0, SEEK_SET);
 
 			assert(sizeof(this->txOuts[0]) == 40);
+			assert(fileSize % sizeof(this->txOuts[0]) == 0);
+
 			this->txOuts.resize(fileSize / sizeof(this->txOuts[0]));
 			const auto read = fread(&this->txOuts[0], fileSize, 1, file);
 			assert(read == 1);
