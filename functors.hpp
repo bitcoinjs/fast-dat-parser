@@ -167,8 +167,7 @@ const uint8_t COINBASE[32] = {};
 // BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT) > stdout
 // BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndex : whitelisted_t {
-	typedef HMap<hash160_t, hash160_t> TxOutHMap;
-	TxOutHMap txOuts;
+	HMap<hash160_t, hash160_t> txOuts;
 
 	bool initialize (const char* arg) {
 		if (whitelisted_t::initialize(arg)) return true;
