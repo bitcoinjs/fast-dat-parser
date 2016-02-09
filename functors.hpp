@@ -180,7 +180,7 @@ struct dumpScriptIndex : whitelisted_t {
 			const auto fileSize = ftell(file);
 			fseek(file, 0, SEEK_SET);
 
-			assert(sizeof(hash160_t) == 40);
+			assert(sizeof(this->txOuts[0]) == 40);
 			this->txOuts.resize(fileSize / sizeof(this->txOuts[0]));
 			const auto read = fread(&this->txOuts[0], fileSize, 1, file);
 			assert(read == 1);
