@@ -6,7 +6,7 @@ DATA_DIR=~/.bitcoin
 cat $DATA_DIR/blocks/*.dat | ./parser -f0 | ./bestchain | ./binsort 32 > headers.dat
 
 # output a txOut index
-cat $DATA_DIR/blocks/*.dat | ./parser -j4 -f2 -wheaders.dat | ./binsort 20 20 > txoindex.dat
+cat $DATA_DIR/blocks/*.dat | ./parser -j4 -f2 -wheaders.dat | ./binsort 20 40 > txoindex.dat
 
 # output a script index for the local-best blockchain
 cat $DATA_DIR/blocks/*.dat | ./parser -j4 -f3 -wheaders.dat -itxoindex.dat > scripts.dat

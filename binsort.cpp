@@ -7,17 +7,33 @@
 #include <vector>
 
 int main (int argc, char** argv) {
-	assert(argc == 2 || argc == 3);
+	assert(argc == 2 || argc == 3 || argc == 4);
 
+	size_t compareOffset = 0;
 	size_t compareBytes = 0;
-	assert(sscanf(argv[1], "%lu", &compareBytes) == 1);
+	size_t totalBytes = 0;
 
-	size_t dataBytes = 0;
-	if (argc == 3) {
-		assert(sscanf(argv[2], "%lu", &dataBytes) == 1);
+	// eg. 32, compare bytes[0:32], 32 total bytes
+	if (argc == 2) {
+		assert(sscanf(argv[1], "%lu", &compareBytes) == 1);
+		totalBytes = compareBytes;
 	}
 
-	const auto totalBytes = compareBytes + dataBytes;
+	// eg. 20 40, compare bytes[0:20], 40 total bytes
+	if (argc == 3) {
+		assert(sscanf(argv[1], "%lu", &compareBytes) == 1);
+		assert(sscanf(argv[2], "%lu", &totalBytes) == 1);
+	}
+
+	// eg. 2 22 22, compare bytes[2:22], 22 total bytes
+	if (argc == 4) {
+		assert(sscanf(argv[1], "%lu", &compareOffset) == 1);
+		assert(sscanf(argv[2], "%lu", &compareBytes) == 1);
+		assert(compareBytes >= compareOffset);
+		compareBytes = compareBytes - compareOffset;
+		assert(sscanf(argv[3], "%lu", &totalBytes) == 1);
+	}
+
 	std::vector<uint8_t*> vector;
 
 	// TODO: alloc into 1 huge buffer
