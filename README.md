@@ -62,3 +62,9 @@ cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f2 -wheaders.dat > txoindex.dat
 # output a script index for the local-best blockchain
 cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f3 -wheaders.dat -itxoindex.dat > ~/.bitcoin/scripts.dat
 ```
+
+#### Useful tools
+These tools are for the CLI, but will aid in preparing/using data produced by the above.
+
+* [binsort](https://github.com/dcousens/binsort)
+* [hexxer](https://github.com/dcousens/hexxer)
