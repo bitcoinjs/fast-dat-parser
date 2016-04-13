@@ -39,7 +39,7 @@ struct whitelisted_t : processFunctor_t {
 			assert(!this->whitelist.empty());
 			assert(std::is_sorted(this->whitelist.begin(), this->whitelist.end()));
 
-			std::cerr << "Whitelisted " << this->whitelist.size() << " block hashes" << std::endl;
+			std::cerr << "Whitelisted " << this->whitelist.size() << " hashes" << std::endl;
 
 			return true;
 		}
