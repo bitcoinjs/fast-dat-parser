@@ -108,6 +108,31 @@ struct dumpScripts : whitelisted_t {
 	}
 };
 
+// PREV_TX_HASH | PREV_TX_VOUT | TX_HASH > stdout
+struct dumpTxOutIndex : whitelisted_t {
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		uint8_t sbuf[68];
+
+		auto transactions = block.transactions();
+		while (!transactions.empty()) {
+			const auto& transaction = transactions.front();
+
+			hash256(sbuf + 36, transaction.data);
+
+			for (const auto& input : transaction.inputs) {
+				memcpy(sbuf, input.hash.begin, 32);
+				Slice(sbuf + 32, sbuf + 36).put(input.vout);
+
+				fwrite(sbuf, sizeof(sbuf), 1, stdout);
+			}
+
+			transactions.popFront();
+		}
+	}
+};
+
 struct dumpStatistics : whitelisted_t {
 	std::atomic_ulong inputs;
 	std::atomic_ulong outputs;

@@ -26,6 +26,7 @@ int main (int argc, char** argv) {
 			else if (functorIndex == 2) delegate.reset(new dumpScriptIndexMap());
 			else if (functorIndex == 3) delegate.reset(new dumpScriptIndex());
 			else if (functorIndex == 4) delegate.reset(new dumpStatistics());
+			else if (functorIndex == 5) delegate.reset(new dumpTxOutIndex());
 			continue;
 		}
 		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;
