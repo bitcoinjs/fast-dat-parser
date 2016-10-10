@@ -165,7 +165,7 @@ struct dumpVersionStatistics : whitelisted_t {
 	std::atomic_ulong transactions;
 	std::atomic_ulong blocks;
 
-	~dumpStatistics () {
+	~dumpVersionStatistics () {
 		std::cout << this->v1 << '\n' << this->v2 << '\n' << this->transactions << '\n' << this->blocks << std::endl;
 	}
 

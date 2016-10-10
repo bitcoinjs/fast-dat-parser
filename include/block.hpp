@@ -107,12 +107,12 @@ private:
 		std::vector<Transaction::Input> inputs;
 		for (size_t i = 0; i < nInputs; ++i) {
 			const auto idataSource = this->data;
-			auto hash = readSlice(this->data, 32);
-			auto vout = this->data.read<uint32_t>();
+			const auto hash = readSlice(this->data, 32);
+			const auto vout = this->data.read<uint32_t>();
 
-			auto SL = readVI(this->data);
-			auto script = readSlice(this->data, SL);
-			auto sequence = this->data.read<uint32_t>();
+			const auto scriptLen = readVI(this->data);
+			const auto script = readSlice(this->data, scriptLen);
+			const auto sequence = this->data.read<uint32_t>();
 
 			const auto idata = Slice(idataSource.begin, this->data.begin);
 			inputs.emplace_back(
@@ -125,19 +125,19 @@ private:
 		std::vector<Transaction::Output> outputs;
 		for (size_t i = 0; i < nOutputs; ++i) {
 			const auto odataSource = this->data;
-			auto value = this->data.read<uint64_t>();
+			const auto value = this->data.read<uint64_t>();
 
-			auto SL = readVI(this->data);
-			auto script = readSlice(this->data, SL);
+			const auto scriptLen = readVI(this->data);
+			const auto script = readSlice(this->data, scriptLen);
 
 			const auto odata = Slice(odataSource.begin, this->data.begin);
 			outputs.emplace_back(Transaction::Output(odata, script, value));
 		}
 
 		const auto locktime = this->data.read<uint32_t>();
-		auto tdata = source.take(source.length() - this->data.length());
+		const auto _data = source.take(source.length() - this->data.length());
 
-		this->current = Transaction(tdata, version, inputs, outputs, locktime);
+		this->current = Transaction(_data, version, std::move(inputs), std::move(outputs), locktime);
 		this->lazy = false;
 	}
 
