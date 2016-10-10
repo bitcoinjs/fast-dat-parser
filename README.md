@@ -31,6 +31,7 @@ You can easily write your own though!
 - `1` - Outputs every script prefixed with a `uint16_t` length
 - `2` - Outputs a txOut dump of `SHA1(TX_HASH | VOUT) | SHA1(OUTPUT_SCRIPT)`'s
 - `3` - Outputs a script index of `BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT)`, if a `txOutMap` file is specified via `-i<FILENAME>`, `BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT)`'s are also written for each transaction input.
+- `4` - Output the number of transaction inputs, outputs and number of transactions in the blockchain
 
 Use a whitelist (see `-w`) to avoid orphan data being included. (see below examples for filtering by best chain)
 
@@ -61,6 +62,9 @@ cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f2 -wheaders.dat > txoindex.dat
 
 # output a script index for the local-best blockchain
 cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f3 -wheaders.dat -itxoindex.dat > ~/.bitcoin/scripts.dat
+
+# dump some statistics for the blockchain
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f4
 ```
 
 #### Useful tools

@@ -159,6 +159,34 @@ struct dumpStatistics : whitelisted_t {
 	}
 };
 
+struct dumpVersionStatistics : whitelisted_t {
+	std::atomic_ulong v1;
+	std::atomic_ulong v2;
+	std::atomic_ulong transactions;
+	std::atomic_ulong blocks;
+
+	~dumpStatistics () {
+		std::cout << this->v1 << '\n' << this->v2 << '\n' << this->transactions << '\n' << this->blocks << std::endl;
+	}
+
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		this->blocks++;
+		auto transactions = block.transactions();
+		this->transactions += transactions.length();
+
+		while (!transactions.empty()) {
+			const auto& transaction = transactions.front();
+
+			this->v1 += transaction.version == 1;
+			this->v2 += transaction.version == 2;
+
+			transactions.popFront();
+		}
+	}
+};
+
 // SHA1(TX_HASH | VOUT) | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndexMap : whitelisted_t {
 	void operator() (const Block& block) {
