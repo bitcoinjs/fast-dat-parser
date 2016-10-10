@@ -19,7 +19,7 @@ private:
 	std::condition_variable idle_signal;
 	std::mutex vector_mutex;
 
-	void run() {
+	void run () {
 		++this->running;
 
 		while (!this->joined) {
@@ -54,7 +54,7 @@ private:
 	}
 
 public:
-	ThreadPool(size_t n) : joined(false), running(0) {
+	ThreadPool (size_t n) : joined(false), running(0) {
 		this->threads.reserve(n);
 
 		for (size_t i = 0; i < n; ++i) {
@@ -62,12 +62,12 @@ public:
 		}
 	}
 
-	~ThreadPool() {
+	~ThreadPool () {
 		if (this->joined) return;
 		this->join();
 	}
 
-	void push(const F f) {
+	void push (const F f) {
 		assert(!this->joined);
 		std::lock_guard<std::mutex> vector_guard(this->vector_mutex);
 
@@ -75,7 +75,7 @@ public:
 		this->go_signal.notify_one();
 	}
 
-	void join() {
+	void join () {
 		assert(!this->joined);
 		this->wait();
 		this->joined = true;
@@ -91,7 +91,7 @@ public:
 		}
 	}
 
-	void wait() {
+	void wait () {
 		assert(!this->joined);
 
 		std::unique_lock<std::mutex> vector_lock(this->vector_mutex);
