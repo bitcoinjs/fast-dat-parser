@@ -60,7 +60,7 @@ struct Transaction {
 	};
 
 	Slice data;
-	uint32_t version;
+	int32_t version;
 
 	std::vector<Input> inputs;
 	std::vector<Output> outputs;
@@ -70,7 +70,7 @@ struct Transaction {
 	Transaction () {}
 	Transaction (
 		Slice data,
-		uint32_t version,
+		int32_t version,
 		std::vector<Input> inputs,
 		std::vector<Output> outputs,
 		uint32_t locktime
@@ -100,7 +100,7 @@ private:
 
 	auto readTransaction () {
 		const auto source = this->data;
-		const auto version = this->data.read<uint32_t>();
+		const auto version = this->data.read<int32_t>();
 
 		const auto nInputs = readVI(this->data);
 

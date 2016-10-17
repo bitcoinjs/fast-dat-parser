@@ -159,6 +159,34 @@ struct dumpStatistics : whitelisted_t {
 	}
 };
 
+struct dumpOtherStatistics : whitelisted_t {
+	std::atomic_ulong custom;
+	std::atomic_ulong transactions;
+	std::atomic_ulong blocks;
+
+	~dumpOtherStatistics () {
+		std::cout <<
+			"nLockTimes != 0:\t" << this->custom << '\n' <<
+			"Transactions:\t" << this->transactions << '\n' <<
+			"Blocks:\t" << this->blocks << std::endl;
+	}
+
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		this->blocks++;
+		auto transactions = block.transactions();
+		this->transactions += transactions.length();
+
+		while (!transactions.empty()) {
+			const auto& transaction = transactions.front();
+
+			this->custom += transaction.locktime != 0;
+			transactions.popFront();
+		}
+	}
+};
+
 struct dumpVersionStatistics : whitelisted_t {
 	std::atomic_ulong v1;
 	std::atomic_ulong v2;
