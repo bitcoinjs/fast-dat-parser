@@ -1,4 +1,4 @@
-W=-pedantic -std=c++14 -W -Wall -Wconversion -Wextra -Wfatal-errors -Wwrite-strings -Wno-unused-variable -Wno-unused-parameter
+W=-std=c++17 -W -Wall -Wconversion -Wextra -Wfatal-errors -Wwrite-strings -Wno-unused-variable -Wno-unused-parameter
 
 all: bestchain parser
 

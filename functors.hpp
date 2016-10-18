@@ -133,13 +133,27 @@ struct dumpTxOutIndex : whitelisted_t {
 	}
 };
 
+auto perc (auto a, auto ab) {
+	return static_cast<double>(a) / static_cast<double>(ab);
+}
+
 struct dumpStatistics : whitelisted_t {
-	std::atomic_ulong inputs;
-	std::atomic_ulong outputs;
-	std::atomic_ulong transactions;
+	std::atomic_ulong inputs = 0;
+	std::atomic_ulong outputs = 0;
+	std::atomic_ulong transactions = 0;
+	std::atomic_ulong version1 = 0;
+	std::atomic_ulong version2 = 0;
+	std::atomic_ulong locktimesGt0 = 0;
 
 	~dumpStatistics () {
-		std::cout << this->inputs << '\n' << this->outputs << '\n' << this->transactions << std::endl;
+		std::cout <<
+			"Transactions:\t" << this->transactions <<
+			"-- Inputs:\t" << this->inputs << " (ratio " << perc(this->inputs, this->transactions) << ") \n" <<
+			"-- Outputs:\t" << this->outputs << " (ratio " << perc(this->outputs, this->transactions) << ") \n" <<
+			"-- Version1:\t" << this->version1 << " (" << perc(this->version1, this->transactions) << "%) \n" <<
+			"-- Version2:\t" << this->version2 << " (" << perc(this->version2, this->transactions) << "%) \n" <<
+			"-- Locktimes (>0):\t" << this->locktimesGt0 << " (" << perc(this->locktimesGt0, this->transactions) << "%) \n" <<
+			std::endl;
 	}
 
 	void operator() (const Block& block) {
@@ -154,61 +168,9 @@ struct dumpStatistics : whitelisted_t {
 			this->inputs += transaction.inputs.size();
 			this->outputs += transaction.outputs.size();
 
-			transactions.popFront();
-		}
-	}
-};
-
-struct dumpOtherStatistics : whitelisted_t {
-	std::atomic_ulong custom;
-	std::atomic_ulong transactions;
-	std::atomic_ulong blocks;
-
-	~dumpOtherStatistics () {
-		std::cout <<
-			"nLockTimes != 0:\t" << this->custom << '\n' <<
-			"Transactions:\t" << this->transactions << '\n' <<
-			"Blocks:\t" << this->blocks << std::endl;
-	}
-
-	void operator() (const Block& block) {
-		if (this->shouldSkip(block)) return;
-
-		this->blocks++;
-		auto transactions = block.transactions();
-		this->transactions += transactions.length();
-
-		while (!transactions.empty()) {
-			const auto& transaction = transactions.front();
-
-			this->custom += transaction.locktime != 0;
-			transactions.popFront();
-		}
-	}
-};
-
-struct dumpVersionStatistics : whitelisted_t {
-	std::atomic_ulong v1;
-	std::atomic_ulong v2;
-	std::atomic_ulong transactions;
-	std::atomic_ulong blocks;
-
-	~dumpVersionStatistics () {
-		std::cout << this->v1 << '\n' << this->v2 << '\n' << this->transactions << '\n' << this->blocks << std::endl;
-	}
-
-	void operator() (const Block& block) {
-		if (this->shouldSkip(block)) return;
-
-		this->blocks++;
-		auto transactions = block.transactions();
-		this->transactions += transactions.length();
-
-		while (!transactions.empty()) {
-			const auto& transaction = transactions.front();
-
-			this->v1 += transaction.version == 1;
-			this->v2 += transaction.version == 2;
+			this->version1 += transaction.version == 1;
+			this->version2 += transaction.version == 2;
+			this->locktimesGt0 += transaction.locktime > 0;
 
 			transactions.popFront();
 		}
