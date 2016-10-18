@@ -156,7 +156,7 @@ struct dumpStatistics : whitelisted_t {
 
 	~dumpStatistics () {
 		std::cout <<
-			"Transactions:\t" << this->transactions <<
+			"Transactions:\t" << this->transactions << '\n' <<
 			"-- Inputs:\t" << this->inputs << " (ratio " << perc(this->inputs, this->transactions) << ") \n" <<
 			"-- Outputs:\t" << this->outputs << " (ratio " << perc(this->outputs, this->transactions) << ") \n" <<
 			"-- Version1:\t" << this->version1 << " (" << perc(this->version1, this->transactions) << "%) \n" <<
