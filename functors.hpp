@@ -159,9 +159,9 @@ struct dumpStatistics : whitelisted_t {
 			"Transactions:\t" << this->transactions << '\n' <<
 			"-- Inputs:\t" << this->inputs << " (ratio " << perc(this->inputs, this->transactions) << ") \n" <<
 			"-- Outputs:\t" << this->outputs << " (ratio " << perc(this->outputs, this->transactions) << ") \n" <<
-			"-- Version1:\t" << this->version1 << " (" << perc(this->version1, this->transactions) << "%) \n" <<
-			"-- Version2:\t" << this->version2 << " (" << perc(this->version2, this->transactions) << "%) \n" <<
-			"-- Locktimes (>0):\t" << this->locktimesGt0 << " (" << perc(this->locktimesGt0, this->transactions) << "%) \n" <<
+			"-- Version1:\t" << this->version1 << " (" << perc(this->version1, this->transactions) * 100 << "%) \n" <<
+			"-- Version2:\t" << this->version2 << " (" << perc(this->version2, this->transactions) * 100 << "%) \n" <<
+			"-- Locktimes (>0):\t" << this->locktimesGt0 << " (" << perc(this->locktimesGt0, this->transactions) * 100 << "%) \n" <<
 			std::endl;
 	}
 
