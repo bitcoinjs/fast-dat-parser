@@ -133,17 +133,26 @@ struct dumpTxOutIndex : whitelisted_t {
 	}
 };
 
-auto perc (auto a, auto ab) {
+auto perc (uint64_t a, uint64_t ab) {
 	return static_cast<double>(a) / static_cast<double>(ab);
 }
 
 struct dumpStatistics : whitelisted_t {
-	std::atomic_ulong inputs = 0;
-	std::atomic_ulong outputs = 0;
-	std::atomic_ulong transactions = 0;
-	std::atomic_ulong version1 = 0;
-	std::atomic_ulong version2 = 0;
-	std::atomic_ulong locktimesGt0 = 0;
+	std::atomic_ulong inputs;
+	std::atomic_ulong outputs;
+	std::atomic_ulong transactions;
+	std::atomic_ulong version1;
+	std::atomic_ulong version2;
+	std::atomic_ulong locktimesGt0;
+
+	dumpStatistics () {
+		this->inputs = 0;
+		this->outputs = 0;
+		this->transactions = 0;
+		this->version1 = 0;
+		this->version2 = 0;
+		this->locktimesGt0 = 0;
+	}
 
 	~dumpStatistics () {
 		std::cout <<
