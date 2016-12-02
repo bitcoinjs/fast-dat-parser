@@ -200,7 +200,7 @@ struct Block {
 	}
 
 	auto utc () const {
-		return data.peek<uint32_t>(68);
+		return this->header.peek<uint32_t>(68);
 	}
 
 	auto verify () const {
