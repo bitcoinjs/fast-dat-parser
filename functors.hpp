@@ -186,6 +186,29 @@ struct dumpStatistics : whitelisted_t {
 	}
 };
 
+// HEIGHT | VALUE > stdout
+struct dumpOutputValuesOverHeight : whitelisted_t {
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		uint8_t sbuf[12] = {};
+		Slice(sbuf, sbuf + sizeof(sbuf)).put(block.utc());
+
+		auto transactions = block.transactions();
+		while (!transactions.empty()) {
+			const auto& transaction = transactions.front();
+
+			for (const auto& output : transaction.outputs) {
+				Slice(sbuf + 4, sbuf + sizeof(sbuf)).put(output.value);
+
+				fwrite(sbuf, sizeof(sbuf), 1, stdout);
+			}
+
+			transactions.popFront();
+		}
+	}
+};
+
 // SHA1(TX_HASH | VOUT) | SHA1(OUTPUT_SCRIPT) > stdout
 struct dumpScriptIndexMap : whitelisted_t {
 	void operator() (const Block& block) {
