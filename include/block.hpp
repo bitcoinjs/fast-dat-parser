@@ -199,6 +199,10 @@ struct Block {
 		return TransactionRange(n, _data);
 	}
 
+	auto utc () const {
+		return data.peek<uint32_t>(68);
+	}
+
 	auto verify () const {
 		uint8_t hash[32];
 		uint8_t target[32] = {};
@@ -206,7 +210,7 @@ struct Block {
 		hash256(hash, this->header);
 		std::reverse(hash, hash + 32);
 
-		const auto bits = *(reinterpret_cast<uint32_t*>(this->header.begin + 72));
+		const auto bits = this->header.peek<uint32_t>(72);
 		Block::calculateTarget(target, bits);
 
 		return memcmp(hash, target, 32) <= 0;
