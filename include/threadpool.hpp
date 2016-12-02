@@ -22,7 +22,7 @@ private:
 	void run () {
 		++this->running;
 
-		while (!this->joined) {
+		while (not this->joined) {
 			F job;
 
 			{
@@ -36,7 +36,7 @@ private:
 					// releases vector_lock, waits for job or join event
 					this->go_signal.wait(vector_lock, [this] {
 						// aquires vector_lock
-						return !this->vector.empty() || this->joined;
+						return (not this->vector.empty()) or this->joined;
 					});
 					// vector_lock is re-aquired
 
@@ -68,7 +68,7 @@ public:
 	}
 
 	void push (const F f) {
-		assert(!this->joined);
+		assert(not this->joined);
 		std::lock_guard<std::mutex> vector_guard(this->vector_mutex);
 
 		this->vector.push_back(f);
@@ -76,7 +76,7 @@ public:
 	}
 
 	void join () {
-		assert(!this->joined);
+		assert(not this->joined);
 		this->wait();
 		this->joined = true;
 
@@ -85,14 +85,14 @@ public:
 
 		// join joinable threads
 		for (auto &x : this->threads) {
-			if (!x.joinable()) continue;
+			if (not x.joinable()) continue;
 
 			x.join();
 		}
 	}
 
 	void wait () {
-		assert(!this->joined);
+		assert(not this->joined);
 
 		std::unique_lock<std::mutex> vector_lock(this->vector_mutex);
 		if (this->vector.empty() && this->running == 0) return;
