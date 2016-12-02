@@ -36,7 +36,7 @@ struct whitelisted_t : processFunctor_t {
 			assert(read == 1);
 
 			fclose(file);
-			assert(!this->whitelist.empty());
+			assert(not this->whitelist.empty());
 			assert(std::is_sorted(this->whitelist.begin(), this->whitelist.end()));
 
 			std::cerr << "Whitelisted " << this->whitelist.size() << " hashes" << std::endl;
@@ -52,13 +52,13 @@ struct whitelisted_t : processFunctor_t {
 
 		hash256_t hash;
 		hash256(&hash[0], block.header);
-		return !this->whitelist.contains(hash);
+		return not this->whitelist.contains(hash);
 	}
 
 	bool shouldSkip (const hash256_t& hash) const {
 		if (this->whitelist.empty()) return false;
 
-		return !this->whitelist.contains(hash);
+		return not this->whitelist.contains(hash);
 	}
 };
 
@@ -82,7 +82,7 @@ struct dumpScripts : whitelisted_t {
 		const auto maxScriptLength = sizeof(sbuf) - sizeof(uint16_t);
 
 		auto transactions = block.transactions();
-		while (!transactions.empty()) {
+		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			for (const auto& input : transaction.inputs) {
@@ -116,7 +116,7 @@ struct dumpTxOutIndex : whitelisted_t {
 		uint8_t sbuf[68];
 
 		auto transactions = block.transactions();
-		while (!transactions.empty()) {
+		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			hash256(sbuf + 36, transaction.data);
@@ -171,7 +171,7 @@ struct dumpStatistics : whitelisted_t {
 		auto transactions = block.transactions();
 		this->transactions += transactions.length();
 
-		while (!transactions.empty()) {
+		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			this->inputs += transaction.inputs.size();
@@ -191,15 +191,15 @@ struct dumpOutputValuesOverHeight : whitelisted_t {
 	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
-		uint8_t sbuf[12] = {};
-		Slice(sbuf, sbuf + sizeof(sbuf)).put(block.utc());
+		uint8_t sbuf[8] = {};
+// 		Slice(sbuf, sbuf + sizeof(sbuf)).put(block.utc());
 
 		auto transactions = block.transactions();
-		while (!transactions.empty()) {
+		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			for (const auto& output : transaction.outputs) {
-				Slice(sbuf + 4, sbuf + sizeof(sbuf)).put(output.value);
+				Slice(sbuf, sbuf + sizeof(sbuf)).put(output.value);
 
 				fwrite(sbuf, sizeof(sbuf), 1, stdout);
 			}
@@ -218,7 +218,7 @@ struct dumpScriptIndexMap : whitelisted_t {
 		uint8_t tbuf[36] = {};
 
 		auto transactions = block.transactions();
-		while (!transactions.empty()) {
+		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			hash256(tbuf, transaction.data);
@@ -265,7 +265,7 @@ struct dumpScriptIndex : whitelisted_t {
 			assert(read == 1);
 
 			fclose(file);
-			assert(!this->txOuts.empty());
+			assert(not this->txOuts.empty());
 			assert(std::is_sorted(this->txOuts.begin(), this->txOuts.end()));
 
 			std::cerr << "Mapped " << this->txOuts.size() << " txOuts" << std::endl;
@@ -285,12 +285,12 @@ struct dumpScriptIndex : whitelisted_t {
 		memcpy(sbuf, &hash[0], 32);
 
 		auto transactions = block.transactions();
-		while (!transactions.empty()) {
+		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			hash256(sbuf + 32, transaction.data);
 
-			if (!this->txOuts.empty()) {
+			if (not this->txOuts.empty()) {
 				for (const auto& input : transaction.inputs) {
 					// Coinbase input?
 					if (
