@@ -9,13 +9,21 @@
 #include "hash.hpp"
 #include "slice.hpp"
 
-uint64_t readVI (Slice& data) {
-	const auto i = data.read<uint8_t>();
+namespace {
+	auto readSlice (Slice& data, uint64_t n) {
+		auto slice = data.take(n);
+		data.popFrontN(n);
+		return slice;
+	}
 
-	if (i < 253) return static_cast<uint64_t>(i);
-	if (i < 254) return static_cast<uint64_t>(data.read<uint16_t>());
-	if (i < 255) return static_cast<uint64_t>(data.read<uint32_t>());
-	return data.read<uint64_t>();
+	auto readVI (Slice& data) {
+		const auto i = data.read<uint8_t>();
+
+		if (i < 253) return static_cast<uint64_t>(i);
+		if (i < 254) return static_cast<uint64_t>(data.read<uint16_t>());
+		if (i < 255) return static_cast<uint64_t>(data.read<uint32_t>());
+		return data.read<uint64_t>();
+	}
 }
 
 struct Transaction {
@@ -81,14 +89,6 @@ struct Transaction {
 		outputs(outputs),
 		locktime(locktime) {}
 };
-
-namespace {
-	auto readSlice (Slice& data, uint64_t n) {
-		auto slice = data.take(n);
-		data.popFrontN(n);
-		return slice;
-	}
-}
 
 struct TransactionRange {
 private:
