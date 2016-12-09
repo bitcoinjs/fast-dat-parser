@@ -18,7 +18,7 @@ struct HSet : std::vector<H> {
 			this->begin(), this->end(), key
 		);
 
-        this->emplace(iter, key);
+		this->emplace(iter, key);
 	}
 
 	auto sort () {
@@ -36,7 +36,7 @@ struct HMap : std::vector<std::pair<K, V>> {
 			}
 		);
 
-        this->emplace(iter, std::make_pair(key, value));
+		this->emplace(iter, std::make_pair(key, value));
 	}
 
 	auto find (const K& key) const {
