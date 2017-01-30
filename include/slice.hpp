@@ -12,12 +12,13 @@ namespace {
 	}
 }
 
-struct Slice {
-	uint8_t* begin;
-	uint8_t* end;
+template <typename T>
+struct TypedSlice {
+	T* begin;
+	T* end;
 
-	Slice() : begin(nullptr), end(nullptr) {}
-	Slice(uint8_t* begin, uint8_t* end) : begin(begin), end(end) {
+	TypedSlice() : begin(nullptr), end(nullptr) {}
+	TypedSlice(T* begin, T* end) : begin(begin), end(end) {
 		assert(this->begin);
 		assert(this->end);
 	}
@@ -33,19 +34,19 @@ struct Slice {
 
 	auto drop (size_t n) const {
 		assert(n <= this->length());
-		return Slice(this->begin + n, this->end);
+		return TypedSlice<T>(this->begin + n, this->end);
 	}
 
 	auto take (size_t n) const {
 		assert(n <= this->length());
-		return Slice(this->begin, this->begin + n);
+		return TypedSlice<T>(this->begin, this->begin + n);
 	}
 
 	size_t length () const {
-		return static_cast<size_t>(this->end - this->begin);
+		return static_cast<size_t>(this->end - this->begin) / sizeof(T);
 	}
 
-	template <typename Y = uint8_t>
+	template <typename Y = T>
 	auto peek (size_t offset = 0) const {
 		assert(offset + sizeof(Y) <= this->length());
 		return *(reinterpret_cast<Y*>(this->begin + offset));
@@ -60,7 +61,7 @@ struct Slice {
 		if (swap) swapEndian(ptr);
 	}
 
-	template <typename Y = uint8_t>
+	template <typename Y = T>
 	auto read () {
 		const Y value = this->peek<Y>();
 		this->popFrontN(sizeof(Y));
@@ -84,25 +85,25 @@ struct Slice {
 	}
 };
 
-template <size_t N>
-struct ArraySlice {
-	uint8_t data[N];
+template <size_t N, typename T>
+struct TypedStackSlice {
+	T data[N];
 
 	auto drop (size_t n) const {
 		assert(n <= N);
-		return Slice(this->data + n, this->data + N);
+		return TypedSlice<T>(this->data + n, this->data + N);
 	}
 
 	auto take (size_t n) const {
 		assert(n <= N);
-		return Slice(this->data, this->data + n);
+		return TypedSlice<T>(this->data, this->data + n);
 	}
 
 	auto length () const {
 		return N;
 	}
 
-	template <typename Y = uint8_t>
+	template <typename Y = T>
 	auto peek (size_t offset = 0) const {
 		assert(offset + sizeof(Y) <= N);
 		return *(reinterpret_cast<Y*>(this->data + offset));
@@ -128,33 +129,34 @@ struct ArraySlice {
 	}
 };
 
-struct FixedSlice {
-	uint8_t* begin;
-	uint8_t* end;
+template <typename T>
+struct TypedHeapSlice {
+	T* begin;
+	T* end;
 
-	FixedSlice (size_t n) : begin(new uint8_t[n]) {
+	TypedHeapSlice (size_t n) : begin(new T[n]) {
 		this->end = this->begin + n;
 	}
 
-	~FixedSlice () {
+	~TypedHeapSlice () {
 		delete[] this->begin;
 	}
 
 	auto drop (size_t n) const {
 		assert(n <= this->length());
-		return Slice(this->begin + n, this->end);
+		return TypedSlice<T>(this->begin + n, this->end);
 	}
 
 	auto take (size_t n) const {
 		assert(n <= this->length());
-		return Slice(this->begin, this->begin + n);
+		return TypedSlice<T>(this->begin, this->begin + n);
 	}
 
 	size_t length () const {
 		return static_cast<size_t>(this->end - this->begin);
 	}
 
-	template <typename Y = uint8_t>
+	template <typename Y = T>
 	auto peek (size_t offset = 0) const {
 		assert(offset + sizeof(Y) <= this->length());
 		return *(reinterpret_cast<Y*>(this->begin + offset));
@@ -179,3 +181,9 @@ struct FixedSlice {
 		return this->begin[i];
 	}
 };
+
+typedef TypedSlice<uint8_t> Slice;
+typedef TypedHeapSlice<uint8_t> HeapSlice;
+
+template <size_t N>
+using StackSlice = TypedStackSlice<N, uint8_t>;
