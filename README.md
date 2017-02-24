@@ -10,7 +10,7 @@ All memory is allocated up front.
 Output goes to `stdout`, `stderr` is used for logging.
 
 
-### parser
+## Usage
 
 A fast `blk*.dat` parser for bitcoin blockchain analysis.
 
