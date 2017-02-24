@@ -115,7 +115,6 @@ struct TypedHeapSlice : TypedFixedSlice<T> {
 	}
 };
 
-
 typedef TypedHeapSlice<uint8_t> HeapSlice;
 
 template <size_t N>
