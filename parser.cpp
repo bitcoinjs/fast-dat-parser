@@ -17,17 +17,16 @@ int main (int argc, char** argv) {
 	// parse command line arguments
 	for (auto i = 1; i < argc; ++i) {
 		const auto arg = argv[i];
-		size_t functorIndex = 0;
+		size_t transformIndex = 0;
 
-		if (sscanf(arg, "-f%lu", &functorIndex) == 1) {
+		if (sscanf(arg, "-f%lu", &transformIndex) == 1) {
 			assert(delegate == nullptr);
-			if (functorIndex == 0) delegate.reset(new dumpHeaders());
-			else if (functorIndex == 1) delegate.reset(new dumpScripts());
-			else if (functorIndex == 2) delegate.reset(new dumpScriptIndexMap());
-			else if (functorIndex == 3) delegate.reset(new dumpScriptIndex());
-			else if (functorIndex == 4) delegate.reset(new dumpStatistics());
-			else if (functorIndex == 5) delegate.reset(new dumpTxOutIndex());
-			else if (functorIndex == 6) delegate.reset(new dumpOutputValuesOverHeight());
+			if (transformIndex == 0) delegate.reset(new dumpHeaders());
+			else if (transformIndex == 1) delegate.reset(new dumpScripts());
+			else if (transformIndex == 3) delegate.reset(new dumpScriptIndex());
+			else if (transformIndex == 4) delegate.reset(new dumpStatistics());
+			else if (transformIndex == 5) delegate.reset(new dumpSpentIndex());
+			else if (transformIndex == 6) delegate.reset(new dumpOutputValuesOverHeight());
 			continue;
 		}
 		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;

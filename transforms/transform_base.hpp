@@ -4,16 +4,14 @@
 #include "hash.hpp"
 #include "hvectors.hpp"
 
-struct transform_t {
-	virtual ~transform_t () {}
+struct transform_t_base {
+	virtual ~transform_t_base () {}
 
-	virtual bool initialize (const char*) {
-		return false;
-	}
+	virtual bool initialize (const char*) { return false; }
 	virtual void operator() (const Block&) = 0;
 };
 
-struct whitelisted_t : transform_t {
+struct transform_t : transform_t_base {
 	HSet<hash256_t> whitelist;
 
 	bool initialize (const char* arg) {
