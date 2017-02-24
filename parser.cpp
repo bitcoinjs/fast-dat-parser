@@ -4,13 +4,13 @@
 #include <memory>
 
 #include "block.hpp"
-#include "functors.hpp"
 #include "hash.hpp"
 #include "slice.hpp"
 #include "threadpool.hpp"
+#include "transforms.hpp"
 
 int main (int argc, char** argv) {
-	std::unique_ptr<processFunctor_t> delegate;
+	std::unique_ptr<transform_t> delegate;
 	size_t memoryAlloc = 200 * 1024 * 1024;
 	size_t nThreads = 1;
 
