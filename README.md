@@ -36,7 +36,8 @@ Use a whitelist (see `-w`) to avoid orphan data being included. (see below examp
 ### bestchain
 
 A best-chain filter for block headers.
-Accepts 80-byte block headers until EOF, finds the best-chain then outputs the resultant list of block hashes.
+
+Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  and outputs the best-chain in the form of a sorted hash map [(see HMap<K, V>)](https://github.com/dcousens/fast-dat-parser/blob/master/include/hvectors.hpp).
 
 
 ## Examples
