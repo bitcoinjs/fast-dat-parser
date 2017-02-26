@@ -1,7 +1,7 @@
 #pragma once
 
 #include <atomic>
-#include "transform_base.hpp"
+#include "base.hpp"
 
 // HEIGHT | VALUE > stdout
 struct dumpOutputValuesOverHeight : transform_t {

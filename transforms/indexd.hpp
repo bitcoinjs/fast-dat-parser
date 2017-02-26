@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hvectors.hpp"
-#include "transform_base.hpp"
+#include "base.hpp"
 
 // XXX: fwrite can be used without sizeof(sbuf) < PIPE_BUF (4096 bytes)
 const uint8_t COINBASE[32] = {};
@@ -12,11 +12,11 @@ struct dumpScriptIndex : transform_t {
 
 	void operator() (const Block& block) {
 		hash256_t hash;
-		hash256(&hash[0], block.header);
+		hash256(hash.begin(), block.header);
 		if (this->shouldSkip(hash)) return;
 
 		uint8_t sbuf[84] = {};
-		memcpy(sbuf, &hash[0], 32);
+		memcpy(sbuf, hash.begin(), 32);
 
 		auto transactions = block.transactions();
 		while (not transactions.empty()) {
@@ -31,20 +31,20 @@ struct dumpScriptIndex : transform_t {
 						input.vout == 0xffffffff &&
 						memcmp(input.hash.begin, COINBASE, sizeof(COINBASE)) == 0
 					) {
-						sha1(&hash[0], input.script);
-						memcpy(sbuf + 64, &hash[0], 20);
+						sha1(hash.begin(), input.script);
+						memcpy(sbuf + 64, hash.begin(), 20);
 						fwrite(sbuf, sizeof(sbuf), 1, stdout);
 
 						continue;
 					}
 
 					hash160_t hash;
-					sha1(&hash[0], input.data.take(36));
+					sha1(hash.begin(), input.data.take(36));
 
 					const auto txOutIter = this->txOuts.find(hash);
 					assert(txOutIter != this->txOuts.end());
 
-					memcpy(sbuf + 64, &(txOutIter->second)[0], 20);
+					memcpy(sbuf + 64, txOutIter->second.begin(), 20);
 					fwrite(sbuf, sizeof(sbuf), 1, stdout);
 				}
 			}

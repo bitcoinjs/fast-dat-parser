@@ -1,7 +1,7 @@
 #pragma once
 
 #include <atomic>
-#include "transform_base.hpp"
+#include "base.hpp"
 
 // SCRIPT_LENGTH | SCRIPT > stdout
 struct dumpScripts : transform_t {

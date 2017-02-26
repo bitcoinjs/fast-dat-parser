@@ -28,7 +28,7 @@ struct transform_t : transform_t_base {
 			assert(fileSize % sizeof(this->whitelist[0]) == 0);
 
 			this->whitelist.resize(fileSize / sizeof(hash256_t));
-			const auto read = fread(&this->whitelist[0], fileSize, 1, file);
+			const auto read = fread(this->whitelist.begin(), fileSize, 1, file);
 			assert(read == 1);
 
 			fclose(file);
@@ -47,7 +47,7 @@ struct transform_t : transform_t_base {
 		if (this->whitelist.empty()) return false;
 
 		hash256_t hash;
-		hash256(&hash[0], block.header);
+		hash256(hash.begin(), block.header);
 		return not this->whitelist.contains(hash);
 	}
 
