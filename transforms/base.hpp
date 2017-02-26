@@ -24,10 +24,11 @@ struct transform_t : transform_t_base {
 			const auto fileSize = ftell(file);
 			fseek(file, 0, SEEK_SET);
 
-			assert(sizeof(this->whitelist.front()) == 36);
-			assert(fileSize % sizeof(this->whitelist.front()) == 0);
+			const auto elementSize = sizeof(this->whitelist.front());
+			assert(elementSize == 36);
+			assert((fileSize % elementSize) == 0);
 
-			this->whitelist.resize(fileSize / sizeof(hash256_t));
+			this->whitelist.resize(fileSize / elementSize);
 			const auto read = fread(this->whitelist.begin(), fileSize, 1, file);
 			assert(read == 1);
 
@@ -36,7 +37,6 @@ struct transform_t : transform_t_base {
 			assert(std::is_sorted(this->whitelist.begin(), this->whitelist.end()));
 
 			std::cerr << "Whitelisted " << this->whitelist.size() << " hashes" << std::endl;
-
 			return true;
 		}
 
@@ -48,12 +48,12 @@ struct transform_t : transform_t_base {
 
 		hash256_t hash;
 		hash256(hash.begin(), block.header);
-		return not this->whitelist.contains(hash);
+		return this->whitelist.find(hash) == this->whitelist.end();
 	}
 
 	bool shouldSkip (const hash256_t& hash) const {
 		if (this->whitelist.empty()) return false;
 
-		return not this->whitelist.contains(hash);
+		return this->whitelist.find(hash) == this->whitelist.end();
 	}
 };
