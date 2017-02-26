@@ -12,7 +12,7 @@ struct transform_t_base {
 };
 
 struct transform_t : transform_t_base {
-	HSet<hash256_t> whitelist;
+	HMap<hash256_t, uint32_t> whitelist;
 
 	bool initialize (const char* arg) {
 		if (strncmp(arg, "-w", 2) == 0) {
@@ -24,8 +24,8 @@ struct transform_t : transform_t_base {
 			const auto fileSize = ftell(file);
 			fseek(file, 0, SEEK_SET);
 
-			assert(sizeof(this->whitelist[0]) == 32);
-			assert(fileSize % sizeof(this->whitelist[0]) == 0);
+			assert(sizeof(this->whitelist.front()) == 36);
+			assert(fileSize % sizeof(this->whitelist.front()) == 0);
 
 			this->whitelist.resize(fileSize / sizeof(hash256_t));
 			const auto read = fread(this->whitelist.begin(), fileSize, 1, file);
