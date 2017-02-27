@@ -1,3 +1,4 @@
+// XXX: fwrite can be used without sizeof(sbuf) < PIPE_BUF (4096 bytes)
 #pragma once
 
 #include "block.hpp"
@@ -29,7 +30,7 @@ struct transform_t : transform_t_base {
 			assert((fileSize % elementSize) == 0);
 
 			this->whitelist.resize(fileSize / elementSize);
-			const auto read = fread(this->whitelist.begin(), fileSize, 1, file);
+			const auto read = fread(&this->whitelist[0], fileSize, 1, file);
 			assert(read == 1);
 
 			fclose(file);
@@ -43,17 +44,16 @@ struct transform_t : transform_t_base {
 		return false;
 	}
 
-	bool shouldSkip (const Block& block) const {
+	bool shouldSkip (const Block& block, hash256_t* _hash = nullptr, uint32_t* _height = nullptr) const {
 		if (this->whitelist.empty()) return false;
 
 		hash256_t hash;
 		hash256(hash.begin(), block.header);
-		return this->whitelist.find(hash) == this->whitelist.end();
-	}
+		auto iter = this->whitelist.find(hash);
+		if (iter == this->whitelist.end()) return false;
 
-	bool shouldSkip (const hash256_t& hash) const {
-		if (this->whitelist.empty()) return false;
-
-		return this->whitelist.find(hash) == this->whitelist.end();
+		if (_hash != nullptr) *_hash = iter->first;
+		if (_height != nullptr) *_height = iter->second;
+		return true;
 	}
 };
