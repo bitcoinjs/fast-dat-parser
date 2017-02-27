@@ -83,10 +83,15 @@ struct TypedSlice : public TypedFixedSlice<T> {
 		this->popFrontN(sizeof(T) / sizeof(Y));
 	}
 
-	template <typename S>
-	void copy (const S& other) {
-		assert(other.length() >= this->length());
-		memcpy(other.begin, this->begin, other.length());
+	void copy (const TypedFixedSlice<T>& other) {
+		this->copy(other.begin, other.length());
+	}
+
+	template <typename Y>
+	void copy (const Y* data, size_t n) {
+		assert(n >= this->length());
+		memcpy(this->begin, data, n);
+		this->popFrontN(n);
 	}
 };
 
@@ -107,6 +112,9 @@ struct TypedStackSlice : TypedFixedSlice<T> {
 	T data[N];
 
 	TypedStackSlice () : TypedFixedSlice<T>(data, data + N) {}
+// 	TypedStackSlice (const TypedStackSlice& copy) {
+// 		memcpy(this->begin, copy.begin, N);
+// 	}
 };
 
 template <typename T>
