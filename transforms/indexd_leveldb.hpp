@@ -1,8 +1,7 @@
 #pragma once
 #include "base.hpp"
 #include <iostream>
-#include <sstream>
-#include <string>
+#include <iomanip>
 #include "leveldb/db.h"
 #include "leveldb/filter_policy.h"
 
@@ -37,7 +36,7 @@ struct exportLDB : transform_t {
 	}
 
 	// 0x00 \ SHA256(block)
-	void putTip (const hash256_t& id) {
+	void putTip (hash256_t id) {
 		StackSlice<1 + 32> data;
 		{
 			auto _data = data.drop(0);
@@ -55,25 +54,25 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x01);
-			_data.copy(scHash);
+			_data.copy(scHash.begin(), 32);
 			_data.write<uint32_t, true>(height);
-			_data.copy(Slice(txHash.begin(), txHash.end()));
+			_data.copy(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			assert(_data.length() == 0);
 		}
 
-		this->put(data, data.take(0));
+		this->put(data.drop(0), data.take(0));
 	}
 
 	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
-	void putSpent (const hash256_t& prevTxHash, uint32_t vout, const hash256_t& txHash, uint32_t vin) {
+	void putSpent (const Slice& prevTxHash, uint32_t vout, const hash256_t& txHash, uint32_t vin) {
 		StackSlice<1 + 32 + 4 + 32 + 4> data;
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x02);
-			_data.copy(Slice(prevTxHash.begin(), prevTxHash.end()));
+			_data.copy(prevTxHash.begin, 32);
 			_data.write<uint32_t>(vout);
-			_data.copy(Slice(txHash.begin(), txHash.end()));
+			_data.copy(txHash.begin(), 32);
 			_data.write<uint32_t>(vin);
 			assert(_data.length() == 0);
 		}
@@ -87,7 +86,7 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x03);
-			_data.copy(Slice(txHash.begin(), txHash.end()));
+			_data.copy(txHash.begin(), 32);
 			_data.write<uint32_t>(height);
 			assert(_data.length() == 0);
 		}
@@ -101,7 +100,7 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x04);
-			_data.copy(Slice(txHash.begin(), txHash.end()));
+			_data.copy(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			_data.write<uint64_t>(value);
 			assert(_data.length() == 0);
