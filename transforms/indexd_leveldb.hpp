@@ -58,7 +58,7 @@ struct exportLDB : transform_t {
 			assert(_data.length() === 0);
 		}
 
-		this->put(data);
+		this->put(data, data.take(0));
 	}
 
 	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
@@ -106,16 +106,22 @@ struct exportLDB : transform_t {
 		this->put(data.take(37), data.drop(37));
 	}
 
-	void put (const Slice& key) {
-		this->ldb->Put(leveldb::WriteOptions(), leveldb::Slice(key.begin(), key.length()), leveldb::Slice());
-	}
-
 	void put (const Slice& key, const Slice& value) {
-		this->ldb->Put(
-			leveldb::WriteOptions(),
-			leveldb::Slice(key.begin(), key.length()),
-			leveldb::Slice(value.begin(), value.length())
-		);
+		std::cerr << "PUT" << std::hex;
+		for (size_t i = 0; i < key.length(); ++i) {
+			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) key[i];
+		}
+		std::cerr << '\\';
+		for (size_t i = 0; i < key.length(); ++i) {
+			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) key[i];
+		}
+		std::cerr << std::dec;
+
+// 		this->ldb->Put(
+// 			leveldb::WriteOptions(),
+// 			leveldb::Slice(key.begin(), key.length()),
+// 			leveldb::Slice(value.begin(), value.length())
+// 		);
 	}
 
 	void operator() (const Block& block) {
