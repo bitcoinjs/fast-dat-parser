@@ -1,8 +1,5 @@
 # fast-dat-parser
 
-* Includes orphan blocks
-* Skips bitcoind allocated zero-byte gaps
-
 Parses the blockchain about as fast as your IO can pipe it out.  For a typical SSD, this can be around ~450 MiB/s.
 
 All memory is allocated up front.
@@ -19,6 +16,8 @@ A fast `blk*.dat` parser for bitcoin blockchain analysis.
 - `-m<BYTES>` - memory usage (default `209715200` bytes, ~200 MiB)
 - `-w<FILENAME>` - whitelist file, for omitting blocks from parsing
 
+
+Important to note is that the implementation skips bitcoind allocated zero-byte gaps,  and includes orphan blocks unless `-w` omits them.
 
 #### parse functions (`-f`)
 
