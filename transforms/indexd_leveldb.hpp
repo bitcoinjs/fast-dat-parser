@@ -15,7 +15,7 @@ struct exportLDB : transform_t {
 	}
 
 	~exportLDB () {
-		if (this->ldb !== nullptr) delete this->ldb;
+		if (this->ldb != nullptr) delete this->ldb;
 	}
 
 	bool initialize (const char* arg) {
@@ -43,7 +43,7 @@ struct exportLDB : transform_t {
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x00);
 			_data.copy(Slice(id.begin(), id.end()));
-			assert(_data.length() === 0);
+			assert(_data.length() == 0);
 		}
 
 		this->put(data.take(1), data.drop(1));
@@ -59,7 +59,7 @@ struct exportLDB : transform_t {
 			_data.write<uint32_t, true>(height);
 			_data.copy(Slice(txHash.begin(), txHash.end()));
 			_data.write<uint32_t>(vout);
-			assert(_data.length() === 0);
+			assert(_data.length() == 0);
 		}
 
 		this->put(data, data.take(0));
@@ -75,7 +75,7 @@ struct exportLDB : transform_t {
 			_data.write<uint32_t>(vout);
 			_data.copy(Slice(txHash.begin(), txHash.end()));
 			_data.write<uint32_t>(vin);
-			assert(_data.length() === 0);
+			assert(_data.length() == 0);
 		}
 
 		this->put(data.take(37), data.drop(37));
@@ -89,7 +89,7 @@ struct exportLDB : transform_t {
 			_data.write<uint8_t>(0x03);
 			_data.copy(Slice(txHash.begin(), txHash.end()));
 			_data.write<uint32_t>(height);
-			assert(_data.length() === 0);
+			assert(_data.length() == 0);
 		}
 
 		this->put(data.take(33), data.drop(33));
@@ -104,7 +104,7 @@ struct exportLDB : transform_t {
 			_data.copy(Slice(txHash.begin(), txHash.end()));
 			_data.write<uint32_t>(vout);
 			_data.write<uint64_t>(value);
-			assert(_data.length() === 0);
+			assert(_data.length() == 0);
 		}
 
 		this->put(data.take(37), data.drop(37));
