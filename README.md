@@ -56,16 +56,16 @@ cat ~/.bitcoin/blocks/blk*.dat | ./parser -t6
 ```
 
 
-#### Useful tools
+### Useful tools
 These tools are for the CLI, but will aid in preparing/using data produced by the above.
 
 
-### `bestchain`
+#### `bestchain`
 A best-chain filter for block headers.
 
 Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  and outputs the best-chain in the form of a sorted hash map [(see HMap<K, V>)](https://github.com/dcousens/fast-dat-parser/blob/master/include/hvectors.hpp).
 
 
-### External
+#### External
 * [binsort](https://github.com/dcousens/binsort)
 * [hexxer](https://github.com/dcousens/hexxer)
