@@ -20,7 +20,7 @@ struct dumpScriptIndex : transform_t {
 
 			uint32_t vout = 0;
 			for (const auto& output : transaction.outputs) {
-				hash256(sbuf, transaction.data);
+				hash256(sbuf, output.script);
 				Slice(sbuf + 68, sbuf + 72).put(vout);
 				++vout;
 
