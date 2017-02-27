@@ -6,7 +6,7 @@ struct dumpHeaders : transform_t {
 	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
-		fwrite(block.header.begin, 80, 1, stdout);
+		fwrite(block.header.begin(), 80, 1, stdout);
 	}
 };
 
@@ -27,7 +27,7 @@ struct dumpScripts : transform_t {
 				const auto scriptLength = static_cast<uint16_t>(input.script.length());
 
 				Slice(sbuf, sbuf + sizeof(sbuf)).put(scriptLength);
-				memcpy(sbuf + sizeof(uint16_t), input.script.begin, scriptLength);
+				memcpy(sbuf + sizeof(uint16_t), input.script.begin(), scriptLength);
 				fwrite(sbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
 			}
 
@@ -36,7 +36,7 @@ struct dumpScripts : transform_t {
 				const auto scriptLength = static_cast<uint16_t>(output.script.length());
 
 				Slice(sbuf, sbuf + sizeof(sbuf)).put(scriptLength);
-				memcpy(sbuf + sizeof(uint16_t), output.script.begin, scriptLength);
+				memcpy(sbuf + sizeof(uint16_t), output.script.begin(), scriptLength);
 				fwrite(sbuf, sizeof(uint16_t) + scriptLength, 1, stdout);
 			}
 

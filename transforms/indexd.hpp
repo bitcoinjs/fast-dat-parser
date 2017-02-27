@@ -47,7 +47,7 @@ struct dumpSpentIndex : transform_t {
 
 			uint32_t vin = 0;
 			for (const auto& input : transaction.inputs) {
-				memcpy(sbuf, input.hash.begin, 32);
+				memcpy(sbuf, input.hash.begin(), 32);
 				Slice(sbuf + 32, sbuf + 36).put(input.vout);
 				Slice(sbuf + 68, sbuf + 72).put(vin);
 				++vin;

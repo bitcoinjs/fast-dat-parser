@@ -64,7 +64,7 @@ int main (int argc, char** argv) {
 
 	while (true) {
 		const auto rbuf = iobuffer.drop(remainder);
-		const auto read = fread(rbuf.begin, 1, rbuf.length(), stdin);
+		const auto read = fread(rbuf.begin(), 1, rbuf.length(), stdin);
 		const auto eof = static_cast<size_t>(read) < rbuf.length();
 		accum += read;
 
@@ -72,7 +72,7 @@ int main (int argc, char** argv) {
 		pool.wait();
 
 		// copy iobuffer to buffer, allows iobuffer to be modified independently after
-		memcpy(buffer.begin, iobuffer.begin, halfMemoryAlloc);
+		memcpy(buffer.begin(), iobuffer.begin(), halfMemoryAlloc);
 
 		auto data = buffer.take(remainder + read);
 		std::cerr << "-- Parsed " << count << " blocks (read " << read / 1024 << " KiB, " << accum / 1024 / 1024 << " MiB total)" << (eof ? " EOF" : "") << std::endl;
@@ -114,7 +114,7 @@ int main (int argc, char** argv) {
 
 		// assign remainder to front of iobuffer (rbuf is offset to avoid overwrite on rawRead)
 		remainder = data.length();
-		memcpy(iobuffer.begin, data.begin, remainder);
+		memcpy(iobuffer.begin(), data.begin(), remainder);
 	}
 
 	return 0;

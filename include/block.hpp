@@ -114,7 +114,7 @@ private:
 			const auto script = readSlice(this->data, scriptLen);
 			const auto sequence = this->data.read<uint32_t>();
 
-			const auto idata = Slice(idataSource.begin, this->data.begin);
+			const auto idata = Slice(idataSource.begin(), this->data.begin());
 			inputs.emplace_back(
 				Transaction::Input(idata, hash, vout, script, sequence)
 			);
@@ -130,7 +130,7 @@ private:
 			const auto scriptLen = readVI(this->data);
 			const auto script = readSlice(this->data, scriptLen);
 
-			const auto odata = Slice(odataSource.begin, this->data.begin);
+			const auto odata = Slice(odataSource.begin(), this->data.begin());
 			outputs.emplace_back(Transaction::Output(odata, script, value));
 		}
 

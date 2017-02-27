@@ -70,7 +70,7 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x02);
-			_data.writeN(prevTxHash.begin, 32);
+			_data.writeN(prevTxHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			_data.writeN(txHash.begin(), 32);
 			_data.write<uint32_t>(vin);
