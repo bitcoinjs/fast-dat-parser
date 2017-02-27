@@ -102,11 +102,11 @@ auto TypedFixedSlice<T>::take (const size_t n) const {
 	return TypedSlice<T>(this->begin, this->begin + n);
 }
 
-template <size_t N, typename T>
+template <typename T, size_t N>
 struct TypedStackSlice : TypedFixedSlice<T> {
 	T data[N];
 
-	TypedStackSlice (const size_t n) : TypedFixedSlice<T>(data, data + N) {}
+	TypedStackSlice () : TypedFixedSlice<T>(data, data + N) {}
 };
 
 template <typename T>
@@ -124,6 +124,6 @@ struct TypedHeapSlice : TypedFixedSlice<T> {
 typedef TypedHeapSlice<uint8_t> HeapSlice;
 
 template <size_t N>
-using StackSlice = TypedStackSlice<N, uint8_t>;
+using StackSlice = TypedStackSlice<uint8_t, N>;
 
 typedef TypedSlice<uint8_t> Slice;
