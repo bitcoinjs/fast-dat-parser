@@ -24,13 +24,16 @@ Important to note is that the implementation skips bitcoind allocated zero-byte 
 Each of these pre-included functions write their output as raw data (binary, not hex).
 You can easily write your own though!
 
-- `0` - Output the *unordered* 80-byte block headers, includes orphans
+- `0` - Outputs the *unordered* 80-byte block headers (typically includes orphans)
 - `1` - Outputs every script prefixed with a `uint16_t` length
-- `2` - Outputs a txOut dump of `SHA1(TX_HASH | VOUT) | SHA1(OUTPUT_SCRIPT)`'s
-- `3` - Outputs a script index of `BLOCK_HASH | TX_HASH | SHA1(OUTPUT_SCRIPT)`, if a `txOutMap` file is specified via `-i<FILENAME>`, `BLOCK_HASH | TX_HASH | SHA1(PREVIOUS_OUTPUT_SCRIPT)`'s are also written for each transaction input.
-- `4` - Output the number of transaction inputs, outputs and number of transactions in the blockchain
+- `2` - Outputs a script index, `SHA256(OUTPUT_SCRIPT) | HEIGHT | TX_HASH | VOUT`
+- `3` - Outputs a spent index, `PREV_TX_HASH | PREV_TX_VOUT | TX_HASH | TX_VIN`
+- `4` - Outputs a transaction height index, `TX_HASH | HEIGHT`
+- `5` - Outputs a transaction output index, `TX_HASH | VOUT | VALUE`
+- `6` - Displays the number of transaction inputs, outputs and number of transactions in the blockchain
+- `7` - Outputs `HEIGHT | VALUE` for each output,  typically used for showing output balances over time.
 
-Use a whitelist (see `-w`) to avoid orphan data being included. (see below examples for filtering by best chain)
+Use a whitelist (see `-w`) to avoid orphan blocks being included. (see below examples for filtering by best chain)
 
 ### bestchain
 
@@ -44,25 +47,22 @@ Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  
 **Output all scripts for the local-best blockchain**
 ``` bash
 # parse the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 | ./bestchain > headers.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 | ./bestchain > chain.dat
 
 # output every script found in the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f1 -wheaders.dat > ~/.bitcoin/scripts.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f1 -wchain.dat > ~/.bitcoin/scripts.dat
 ```
 
 **Output a script index for the local-best blockchain**
 ``` bash
 # parse the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 | ./bestchain > headers.dat
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f0 | ./bestchain > chain.dat
 
-# output a txOut index
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f2 -wheaders.dat > txoindex.dat
-
-# output a script index for the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f3 -wheaders.dat -itxoindex.dat > ~/.bitcoin/scripts.dat
+# output a transaction output index for the local-best blockchain
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -f5 -wchain.dat > ~/.bitcoin/txos.dat
 
 # dump some statistics for the blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -f4
+cat ~/.bitcoin/blocks/blk*.dat | ./parser -f6
 ```
 
 #### Useful tools

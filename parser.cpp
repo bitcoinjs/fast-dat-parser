@@ -21,12 +21,21 @@ int main (int argc, char** argv) {
 
 		if (sscanf(arg, "-f%lu", &transformIndex) == 1) {
 			assert(delegate == nullptr);
+
+			// raw
 			if (transformIndex == 0) delegate.reset(new dumpHeaders());
 			else if (transformIndex == 1) delegate.reset(new dumpScripts());
-			else if (transformIndex == 3) delegate.reset(new dumpScriptIndex());
-			else if (transformIndex == 4) delegate.reset(new dumpStatistics());
-			else if (transformIndex == 5) delegate.reset(new dumpSpentIndex());
-			else if (transformIndex == 6) delegate.reset(new dumpOutputValuesOverHeight());
+
+			// indexd
+			else if (transformIndex == 2) delegate.reset(new dumpScriptIndex());
+			else if (transformIndex == 3) delegate.reset(new dumpSpentIndex());
+			else if (transformIndex == 4) delegate.reset(new dumpTxIndex());
+			else if (transformIndex == 5) delegate.reset(new dumpTxOutIndex());
+
+			// statistics
+			else if (transformIndex == 6) delegate.reset(new dumpStatistics());
+			else if (transformIndex == 7) delegate.reset(new dumpOutputValuesOverHeight());
+
 			continue;
 		}
 		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;
