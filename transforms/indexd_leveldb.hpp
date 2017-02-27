@@ -8,7 +8,11 @@
 
 struct exportLDB : transform_t {
 	leveldb::DB* ldb;
-	std::atomic_ulong tip = 0;
+	std::atomic_ulong maxHeight;
+
+	exportLDB () {
+		this->maxHeight = 0;
+	}
 
 	~exportLDB () {
 		if (this->ldb !== nullptr) delete this->ldb;
@@ -130,8 +134,8 @@ struct exportLDB : transform_t {
 		hash256_t blockHash;
 		uint32_t height = -1;
 		if (this->shouldSkip(block, &blockHash, &height)) return;
-		if (height >= this->tip) {
-			this->tip = height;
+		if (height >= this->maxHeight) {
+			this->maxHeight = height;
 			this->putTip(blockHash);
 		}
 
