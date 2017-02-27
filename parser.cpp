@@ -19,7 +19,7 @@ int main (int argc, char** argv) {
 		const auto arg = argv[i];
 		size_t transformIndex = 0;
 
-		if (sscanf(arg, "-f%lu", &transformIndex) == 1) {
+		if (sscanf(arg, "-t%lu", &transformIndex) == 1) {
 			assert(delegate == nullptr);
 
 			// raw
