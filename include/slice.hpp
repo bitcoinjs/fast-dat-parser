@@ -31,13 +31,13 @@ struct TypedFixedSlice {
 	}
 
 	template <typename Y = T>
-	auto peek (size_t offset = 0) const {
+	auto peek (const size_t offset = 0) const {
 		assert(offset + sizeof(Y) <= this->length());
 		return *(reinterpret_cast<Y*>(this->begin + offset));
 	}
 
 	template <typename Y, bool swap = false>
-	void put (Y value, size_t offset = 0) {
+	void put (const Y value, size_t offset = 0) {
 		assert(offset + sizeof(Y) <= this->length());
 		auto ptr = reinterpret_cast<Y*>(this->begin + offset);
 		*ptr = value;
@@ -78,20 +78,26 @@ struct TypedSlice : public TypedFixedSlice<T> {
 	}
 
 	template <typename Y, bool swap = false>
-	void write (Y value) {
+	void write (const Y value) {
 		this->template put<Y, swap>(value);
 		this->popFrontN(sizeof(T) / sizeof(Y));
+	}
+
+	template <typename S>
+	void copy (const S& other) {
+		assert(other.length() >= this->length());
+		memcpy(other.begin, this->begin, other.length());
 	}
 };
 
 template <typename T>
-auto TypedFixedSlice<T>::drop (size_t n) const {
+auto TypedFixedSlice<T>::drop (const size_t n) const {
 	assert(n <= this->length());
 	return TypedSlice<T>(this->begin + n, this->end);
 }
 
 template <typename T>
-auto TypedFixedSlice<T>::take (size_t n) const {
+auto TypedFixedSlice<T>::take (const size_t n) const {
 	assert(n <= this->length());
 	return TypedSlice<T>(this->begin, this->begin + n);
 }
@@ -100,12 +106,12 @@ template <size_t N, typename T>
 struct TypedStackSlice : TypedFixedSlice<T> {
 	T data[N];
 
-	TypedStackSlice (size_t n) : TypedFixedSlice<T>(data, data + N) {}
+	TypedStackSlice (const size_t n) : TypedFixedSlice<T>(data, data + N) {}
 };
 
 template <typename T>
 struct TypedHeapSlice : TypedFixedSlice<T> {
-	TypedHeapSlice (size_t n) : TypedFixedSlice<T>() {
+	TypedHeapSlice (const size_t n) : TypedFixedSlice<T>() {
 		this->begin = new T[n];
 		this->end = this->begin + n;
 	}
