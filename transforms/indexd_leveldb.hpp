@@ -36,12 +36,12 @@ struct exportLDB : transform_t {
 	}
 
 	// 0x00 \ SHA256(block)
-	void putTip (hash256_t id) {
+	void putTip (const hash256_t& id) {
 		StackSlice<1 + 32> data;
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x00);
-			_data.copy(Slice(id.begin(), id.end()));
+			_data.writeN(id.begin(), 32);
 			assert(_data.length() == 0);
 		}
 
@@ -54,9 +54,9 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x01);
-			_data.copy(scHash.begin(), 32);
+			_data.writeN(scHash.begin(), 32);
 			_data.write<uint32_t, true>(height);
-			_data.copy(txHash.begin(), 32);
+			_data.writeN(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			assert(_data.length() == 0);
 		}
@@ -70,9 +70,9 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x02);
-			_data.copy(prevTxHash.begin, 32);
+			_data.writeN(prevTxHash.begin, 32);
 			_data.write<uint32_t>(vout);
-			_data.copy(txHash.begin(), 32);
+			_data.writeN(txHash.begin(), 32);
 			_data.write<uint32_t>(vin);
 			assert(_data.length() == 0);
 		}
@@ -86,7 +86,7 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x03);
-			_data.copy(txHash.begin(), 32);
+			_data.writeN(txHash.begin(), 32);
 			_data.write<uint32_t>(height);
 			assert(_data.length() == 0);
 		}
@@ -100,7 +100,7 @@ struct exportLDB : transform_t {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x04);
-			_data.copy(txHash.begin(), 32);
+			_data.writeN(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			_data.write<uint64_t>(value);
 			assert(_data.length() == 0);
