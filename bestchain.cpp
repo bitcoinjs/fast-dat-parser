@@ -166,12 +166,14 @@ int main () {
 		}
 		blockChainMap.sort();
 
-		uint8_t sbuf[36];
+		StackSlice<36> buffer;
 		for (auto&& blockIter : blockChainMap) {
-			memcpy(blockIter.first.begin(), sbuf, 32);
-			Slice(sbuf + 32, sbuf + 36).put(blockIter.second);
+			auto _data = buffer.drop(0);
+			_data.writeN(blockIter.first.begin(), 32);
+			_data.write<uint32_t>(blockIter.second);
+			assert(_data.length() == 0);
 
-			fwrite(sbuf, sizeof(sbuf), 1, stdout);
+			fwrite(buffer.begin(), buffer.length(), 1, stdout);
 		}
 	}
 
