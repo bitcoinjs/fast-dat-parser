@@ -6,7 +6,7 @@ bestchain: bestchain.cpp include/hash.hpp include/hvectors.hpp
 	g++ $W -O3 $< -Iinclude -I. libconsensus/*.cpp -o $@
 
 parser: parser.cpp include/block.hpp include/hash.hpp include/hvectors.hpp include/slice.hpp include/threadpool.hpp include/transforms.hpp transforms/*.hpp
-	g++ $W -pthread -O3 $< -Iinclude -I. libconsensus/*.cpp -o $@
+	g++ $W -pthread -O3 $< -Iinclude -I. -lleveldb libconsensus/*.cpp -o $@
 
 clean:
 	rm -f bestchain parser

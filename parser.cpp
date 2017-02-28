@@ -31,6 +31,7 @@ int main (int argc, char** argv) {
 			else if (transformIndex == 3) delegate.reset(new dumpSpentIndex());
 			else if (transformIndex == 4) delegate.reset(new dumpTxIndex());
 			else if (transformIndex == 5) delegate.reset(new dumpTxOutIndex());
+			else if (transformIndex == 8) delegate.reset(new dumpIndexdLevel());
 
 			// statistics
 			else if (transformIndex == 6) delegate.reset(new dumpStatistics());

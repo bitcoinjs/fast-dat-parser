@@ -5,15 +5,15 @@
 #include "leveldb/db.h"
 #include "leveldb/filter_policy.h"
 
-struct exportLDB : transform_t {
+struct dumpIndexdLevel : transform_t {
 	leveldb::DB* ldb;
 	std::atomic_ulong maxHeight;
 
-	exportLDB () {
+	dumpIndexdLevel () {
 		this->maxHeight = 0;
 	}
 
-	~exportLDB () {
+	~dumpIndexdLevel () {
 		if (this->ldb != nullptr) delete this->ldb;
 	}
 
