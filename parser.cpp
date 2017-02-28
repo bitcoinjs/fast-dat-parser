@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <iostream>
 #include <memory>
 
@@ -10,6 +11,9 @@
 #include "transforms.hpp"
 
 int main (int argc, char** argv) {
+	time_t start, end;
+	time(&start);
+
 	std::unique_ptr<transform_t> delegate;
 	size_t memoryAlloc = 200 * 1024 * 1024;
 	size_t nThreads = 1;
@@ -117,6 +121,9 @@ int main (int argc, char** argv) {
 		remainder = data.length();
 		memcpy(iobuffer.begin(), data.begin(), remainder);
 	}
+
+	time(&end);
+	std::cerr << "Parsed " << count << " blocks in " << difftime(end, start) << " seconds" << std::endl;
 
 	return 0;
 }
