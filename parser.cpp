@@ -82,7 +82,7 @@ int main (int argc, char** argv) {
 
 		auto data = buffer.take(remainder + read);
 		if (invalid > 0) {
-			std::cerr << std::endl << "--- Skipped " << invalid << " bad bytes" << std::endl;
+			std::cerr << std::endl << "-- Skipped " << invalid << " bad bytes" << std::endl;
 			invalid = 0;
 		}
 		std::cerr << "-- Parsed " << count << " blocks (read " << read / 1024 << " KiB, " << accum / 1024 / 1024 << " MiB total)" << (eof ? " EOF" : "") << std::endl;
@@ -105,7 +105,7 @@ int main (int argc, char** argv) {
 			}
 
 			if (invalid > 0) {
-				std::cerr << std::endl << "--- Skipped " << invalid << " bad bytes" << std::endl;
+				std::cerr << std::endl << "-- Skipped " << invalid << " bad bytes" << std::endl;
 				invalid = 0;
 			}
 
@@ -131,6 +131,11 @@ int main (int argc, char** argv) {
 		// assign remainder to front of iobuffer (rbuf is offset to avoid overwrite on rawRead)
 		remainder = data.length();
 		memcpy(iobuffer.begin(), data.begin(), remainder);
+	}
+
+	if (invalid > 0) {
+		std::cerr << std::endl << "-- Skipped " << invalid << " bad bytes" << std::endl;
+		invalid = 0;
 	}
 
 	time(&end);
