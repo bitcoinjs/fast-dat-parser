@@ -90,7 +90,7 @@ struct TypedSlice : public TypedFixedSlice<T> {
 
 	template <typename Y>
 	void writeN (const Y* data, size_t n) {
-		assert(n >= this->length());
+		assert(n <= this->length());
 		memcpy(this->_begin, data, n);
 		this->popFrontN(n);
 	}
