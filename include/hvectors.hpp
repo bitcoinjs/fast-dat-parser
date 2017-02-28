@@ -18,6 +18,10 @@ struct HSet : std::vector<H> {
 		this->emplace(iter, key);
 	}
 
+	auto ready () const {
+		return std::is_sorted(this->begin(), this->end());
+	}
+
 	auto sort () {
 		std::sort(this->begin(), this->end());
 	}
@@ -47,6 +51,16 @@ struct HMap : std::vector<std::pair<K, V>> {
 		);
 
 		this->emplace(iter, std::make_pair(key, value));
+	}
+
+	auto ready () const {
+		return std::is_sorted(
+			this->begin(),
+			this->end(),
+			[](const auto& a, const auto& b) {
+				return a.first < b.first;
+			}
+		);
 	}
 
 	auto sort () {

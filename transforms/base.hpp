@@ -35,7 +35,7 @@ struct transform_t : transform_t_base {
 
 			fclose(file);
 			assert(not this->whitelist.empty());
-			assert(std::is_sorted(this->whitelist.begin(), this->whitelist.end()));
+			assert(this->whitelist.ready());
 
 			std::cerr << "Whitelisted " << this->whitelist.size() << " hashes" << std::endl;
 			return true;
