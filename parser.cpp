@@ -102,7 +102,7 @@ int main (int argc, char** argv) {
 
 			if (invalid > 0) {
 				invalid = 0;
-				std::cerr << "--- Skipped " << invalid << " bad bytes" << std::endl;
+				std::cerr << std::endl << "--- Skipped " << invalid << " bad bytes" << std::endl;
 			}
 
 			// do we have enough data?
