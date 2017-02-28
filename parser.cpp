@@ -66,6 +66,7 @@ int main (int argc, char** argv) {
 	size_t count = 0;
 	size_t remainder = 0;
 	size_t accum = 0;
+	size_t invalid = 0;
 
 	while (true) {
 		const auto rbuf = iobuffer.drop(remainder);
@@ -80,9 +81,12 @@ int main (int argc, char** argv) {
 		memcpy(buffer.begin(), iobuffer.begin(), halfMemoryAlloc);
 
 		auto data = buffer.take(remainder + read);
+		if (invalid > 0) {
+			std::cerr << std::endl << "--- Skipped " << invalid << " bad bytes" << std::endl;
+			invalid = 0;
+		}
 		std::cerr << "-- Parsed " << count << " blocks (read " << read / 1024 << " KiB, " << accum / 1024 / 1024 << " MiB total)" << (eof ? " EOF" : "") << std::endl;
 
-		size_t invalid = 0;
 		while (data.length() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
 			if (data.peek<uint32_t>() != 0xd9b4bef9) {
