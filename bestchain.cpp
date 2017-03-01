@@ -19,19 +19,23 @@ struct Block {
 
 // find all blocks who are not parents to any other blocks (aka, a chain tip)
 auto findChainTips (const HMap<hash256_t, Block>& blocks) {
-	std::map<hash256_t, bool> parents;
+	std::map<hash256_t, bool> hasChildren;
 
 	for (const auto& blockIter : blocks) {
 		const auto& block = blockIter.second;
+
+		// ignore genesis block
 		if (blocks.find(block.prevBlockHash) == blocks.end()) continue;
 
-		parents[block.prevBlockHash] = true;
+		hasChildren[block.prevBlockHash] = true;
 	}
 
 	std::vector<Block> tips;
 	for (const auto& blockIter : blocks) {
 		const auto& block = blockIter.second;
-		if (parents.find(block.hash) != parents.end()) continue;
+
+		// filter to only blocks who have no children
+		if (hasChildren.find(block.hash) != hasChildren.end()) continue;
 
 		tips.emplace_back(block);
 	}
