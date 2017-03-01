@@ -116,8 +116,8 @@ struct dumpIndexdLevel : public transform_t {
 			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) key[i];
 		}
 		std::cerr << '\\';
-		for (size_t i = 0; i < key.length(); ++i) {
-			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) key[i];
+		for (size_t i = 0; i < value.length(); ++i) {
+			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) value[i];
 		}
 		std::cerr << std::dec << std::endl;
 
