@@ -89,14 +89,14 @@ struct TypedSlice : public TypedFixedSlice<T> {
 	template <typename Y, bool swap = false>
 	void write (const Y value) {
 		this->template put<Y, swap>(value);
-		this->popFrontN(sizeof(T) / sizeof(Y));
+		this->popFrontN(sizeof(Y) / sizeof(T));
 	}
 
 	template <typename Y>
 	void writeN (const Y* data, size_t n) {
 		assert(n <= this->length());
 		memcpy(this->_begin, data, n);
-		this->popFrontN(n);
+		this->popFrontN(n * sizeof(T));
 	}
 };
 
