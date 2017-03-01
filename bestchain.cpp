@@ -12,9 +12,10 @@ struct Block {
 	hash256_t hash = {};
 	hash256_t prevBlockHash = {};
 	uint32_t bits;
+	uint64_t cachedChainWork;
 
 	Block () {}
-	Block (const hash256_t& hash, const hash256_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits) {}
+	Block (const hash256_t& hash, const hash256_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits), cachedChainWork(0) {}
 };
 
 void printerr_hash32 (hash256_t hash) {
@@ -39,7 +40,7 @@ auto walkChain (const HMap<hash256_t, Block>& blocks, Block visitor, F f) {
 	}
 }
 
-// find all blocks who are not parents to any other blocks (aka, a chain tip)
+// find all blocks who have no children (chain tips)
 auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	std::map<hash256_t, bool> hasChildren;
 
@@ -65,13 +66,12 @@ auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, const Block block) {
-	size_t totalWork = block.bits;
+auto determineWork (const HMap<hash256_t, Block>& blocks, const Block block) {
+	uint64_t totalWork = block.bits;
 
 	walkChain(blocks, block, [&](const Block& visitor) {
-		const auto prevBlockWorkCacheIter = workCache.find(visitor.prevBlockHash);
-		if (prevBlockWorkCacheIter != workCache.end()) {
-			totalWork += prevBlockWorkCacheIter->second;
+		if (visitor.cachedChainWork != 0) {
+			totalWork += visitor.cachedChainWork;
 			return true;
 		}
 
@@ -82,17 +82,15 @@ auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256
 	return totalWork;
 }
 
-auto findBestChain (const HMap<hash256_t, Block>& blocks) {
+auto findBestChain (HMap<hash256_t, Block>& blocks) {
 	auto bestBlock = Block();
-	size_t bestChainWork = 0;
+	uint64_t bestChainWork = 0;
 
-	HMap<hash256_t, size_t> workCache;
+	for (auto& blockIter : blocks) {
+		auto& block = blockIter.second;
+		const auto chainWork = determineWork(blocks, block);
+		block.cachedChainWork = chainWork;
 
-	for (const auto& blockIter : blocks) {
-		const auto& block = blockIter.second;
-		const auto chainWork = determineWork(workCache, blocks, block);
-
-		workCache.insort(block.hash, chainWork);
 		if (chainWork > bestChainWork) {
 			bestBlock = block;
 			bestChainWork = chainWork;
