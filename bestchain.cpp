@@ -17,6 +17,14 @@ struct Block {
 	Block (const hash256_t& hash, const hash256_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits) {}
 };
 
+void printerr_hash32 (hash256_t hash) {
+	std::cerr << std::hex;
+	for (size_t i = 31; i < 32; --i) {
+		std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) hash[i];
+	}
+	std::cerr << std::dec;
+}
+
 // find all blocks who are not parents to any other blocks (aka, a chain tip)
 auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	std::map<hash256_t, bool> hasChildren;
@@ -98,14 +106,6 @@ auto findBestChain (const HMap<hash256_t, Block>& blocks) {
 
 	std::reverse(blockchain.begin(), blockchain.end());
 	return blockchain;
-}
-
-void printerr_hash32 (hash256_t hash) {
-	std::cerr << std::hex;
-	for (size_t i = 31; i < 32; --i) {
-		std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) hash[i];
-	}
-	std::cerr << std::dec;
 }
 
 int main () {
