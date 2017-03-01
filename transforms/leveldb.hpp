@@ -111,21 +111,11 @@ struct dumpIndexdLevel : public transform_t {
 	}
 
 	void put (const Slice& key, const Slice& value) {
-		std::cerr << "PUT" << std::hex;
-		for (size_t i = 0; i < key.length(); ++i) {
-			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) key[i];
-		}
-		std::cerr << '\\';
-		for (size_t i = 0; i < value.length(); ++i) {
-			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) value[i];
-		}
-		std::cerr << std::dec << std::endl;
-
-// 		this->ldb->Put(
-// 			leveldb::WriteOptions(),
-// 			leveldb::Slice(key.begin(), key.length()),
-// 			leveldb::Slice(value.begin(), value.length())
-// 		);
+		this->ldb->Put(
+			leveldb::WriteOptions(),
+			leveldb::Slice(key.begin(), key.length()),
+			leveldb::Slice(value.begin(), value.length())
+		);
 	}
 
 	void operator() (const Block& block) {
