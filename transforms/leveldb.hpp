@@ -56,7 +56,7 @@ struct dumpIndexdLevel : public transform_t {
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x01);
 			_data.writeN(scHash.begin(), 32);
-			_data.write<uint32_t, true>(height);
+			_data.write<uint32_t, true>(height); // big-endian for indexing
 			_data.writeN(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			assert(_data.length() == 0);

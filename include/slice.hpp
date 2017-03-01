@@ -3,6 +3,11 @@
 #include <algorithm>
 #include <cassert>
 
+#include "endian.h"
+#if __BYTE_ORDER != __LITTLE_ENDIAN
+#error BIG_ENDIAN systems unsupported
+#endif
+
 namespace {
 	template <typename T>
 	void swapEndian (T* p) {
@@ -43,7 +48,7 @@ public:
 		return *(reinterpret_cast<Y*>(this->_begin + offset));
 	}
 
-	template <typename Y, bool swap = false>
+	template <typename Y, bool bigEndian = false>
 	void put (const Y value, size_t offset = 0) {
 		static_assert(sizeof(Y) % sizeof(T) == 0);
 
@@ -51,7 +56,7 @@ public:
 		auto ptr = reinterpret_cast<Y*>(this->_begin + offset);
 		*ptr = value;
 
-		if (swap) swapEndian(ptr);
+		if (bigEndian) swapEndian(ptr);
 	}
 
 	auto& operator[] (const size_t i) {
@@ -92,11 +97,11 @@ struct TypedSlice : public TypedFixedSlice<T> {
 		return value;
 	}
 
-	template <typename Y, bool swap = false>
+	template <typename Y, bool bigEndian = false>
 	void write (const Y value) {
 		static_assert(sizeof(Y) % sizeof(T) == 0);
 
-		this->template put<Y, swap>(value);
+		this->template put<Y, bigEndian>(value);
 		this->popFrontN(sizeof(Y) / sizeof(T));
 	}
 
