@@ -113,8 +113,8 @@ struct dumpIndexdLevel : public transform_t {
 	void put (const Slice& key, const Slice& value) {
 		this->ldb->Put(
 			leveldb::WriteOptions(),
-			leveldb::Slice(key.begin(), key.length()),
-			leveldb::Slice(value.begin(), value.length())
+			leveldb::Slice(reinterpret_cast<const char*>(key.begin()), key.length()),
+			leveldb::Slice(reinterpret_cast<const char*>(value.begin()), value.length())
 		);
 	}
 
