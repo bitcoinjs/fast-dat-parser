@@ -131,8 +131,9 @@ struct dumpIndexdLevel : public transform_t {
 		assert(not this->whitelist.empty());
 
 		hash256_t blockHash;
-		uint32_t height = -1;
+		uint32_t height = 0xffffffff;
 		if (this->shouldSkip(block, &blockHash, &height)) return;
+		assert(height != 0xffffffff);
 
 		leveldb::WriteBatch batch;
 		if (height >= this->maxHeight) {
