@@ -25,6 +25,20 @@ void printerr_hash32 (hash256_t hash) {
 	std::cerr << std::dec;
 }
 
+template <typename F>
+auto walkChain (const HMap<hash256_t, Block>& blocks, Block visitor, F f) {
+	// naively walk the chain
+	while (true) {
+		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
+
+		// is the visitor a genesis block? (no prevBlockIter)
+		if (prevBlockIter == blocks.end()) break;
+		if (f(prevBlockIter->second)) break;
+
+		visitor = prevBlockIter->second;
+	}
+}
+
 // find all blocks who are not parents to any other blocks (aka, a chain tip)
 auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	std::map<hash256_t, bool> hasChildren;
@@ -51,25 +65,20 @@ auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, Block visitor) {
-	size_t totalWork = visitor.bits;
+auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, const Block block) {
+	size_t totalWork = block.bits;
 
 	// naively walk the chain
-	while (true) {
-		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
-
-		// is the visitor a genesis block? (no prevBlockIter)
-		if (prevBlockIter == blocks.end()) break;
-
+	walkChain(blocks, block, [&](const Block& visitor) {
 		const auto prevBlockWorkCacheIter = workCache.find(visitor.prevBlockHash);
 		if (prevBlockWorkCacheIter != workCache.end()) {
 			totalWork += prevBlockWorkCacheIter->second;
-			break;
+			return true;
 		}
 
 		totalWork += visitor.bits;
-		visitor = prevBlockIter->second;
-	}
+		return false;
+	});
 
 	return totalWork;
 }
@@ -94,16 +103,11 @@ auto findBestChain (const HMap<hash256_t, Block>& blocks) {
 	std::vector<Block> blockchain;
 	blockchain.push_back(bestBlock);
 
-	// walk the chain
-	auto visitor = bestBlock;
-
-	while (true) {
-		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
-		if (prevBlockIter == blocks.end()) break;
-
-		visitor = prevBlockIter->second;
+	// naively walk the chain
+	walkChain(blocks, bestBlock, [&](const Block& visitor) {
 		blockchain.push_back(visitor);
-	}
+		return false;
+	});
 
 	std::reverse(blockchain.begin(), blockchain.end());
 	return blockchain;
