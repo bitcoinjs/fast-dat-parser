@@ -105,9 +105,20 @@ struct TypedSlice : public TypedFixedSlice<T> {
 		this->popFrontN(sizeof(Y) / sizeof(T));
 	}
 
+	// TODO: use std::copy / reverse iterators etc
 	void writeN (const T* data, size_t n) {
 		assert(n <= this->length());
 		memcpy(this->_begin, data, n);
+		this->popFrontN(n);
+	}
+
+	void writeNReverse (const T* data, size_t n) {
+		assert(n <= this->length());
+
+		for (size_t i = 0; i < n; ++i) {
+			this->_begin[i] = data[n - 1 - i];
+		}
+
 		this->popFrontN(n);
 	}
 };

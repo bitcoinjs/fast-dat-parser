@@ -20,7 +20,7 @@ namespace {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x00);
-			_data.writeN(id.begin(), 32);
+			_data.writeNReverse(id.begin(), 32);
 			assert(_data.length() == 0);
 		}
 
@@ -35,7 +35,7 @@ namespace {
 			_data.write<uint8_t>(0x01);
 			_data.writeN(scHash.begin(), 32);
 			_data.write<uint32_t, true>(height); // big-endian for indexing
-			_data.writeN(txHash.begin(), 32);
+			_data.writeNReverse(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			assert(_data.length() == 0);
 		}
@@ -49,9 +49,9 @@ namespace {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x02);
-			_data.writeN(prevTxHash.begin(), 32);
+			_data.writeNReverse(prevTxHash.begin(), 32);
 			_data.write<uint32_t>(vout);
-			_data.writeN(txHash.begin(), 32);
+			_data.writeNReverse(txHash.begin(), 32);
 			_data.write<uint32_t>(vin);
 			assert(_data.length() == 0);
 		}
@@ -65,7 +65,7 @@ namespace {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x03);
-			_data.writeN(txHash.begin(), 32);
+			_data.writeNReverse(txHash.begin(), 32);
 			_data.write<uint32_t>(height);
 			assert(_data.length() == 0);
 		}
@@ -79,7 +79,7 @@ namespace {
 		{
 			auto _data = data.drop(0);
 			_data.write<uint8_t>(0x04);
-			_data.writeN(txHash.begin(), 32);
+			_data.writeNReverse(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
 			_data.write<uint64_t>(value);
 			assert(_data.length() == 0);
