@@ -122,8 +122,8 @@ struct dumpIndexdLevel : public transform_t {
 		return false;
 	}
 
-	void write (leveldb::WriteBatch& batch) {
-		this->ldb->Write(leveldb::WriteOptions(), &batch);
+	auto write (leveldb::WriteBatch& batch) {
+		return this->ldb->Write(leveldb::WriteOptions(), &batch);
 	}
 
 	void operator() (const Block& block) {
@@ -168,6 +168,7 @@ struct dumpIndexdLevel : public transform_t {
 			transactions.popFront();
 		}
 
+		// TODO: interpret return value
 		this->write(batch);
 	}
 };
