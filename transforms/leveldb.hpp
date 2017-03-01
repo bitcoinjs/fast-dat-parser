@@ -14,7 +14,7 @@ namespace {
 		);
 	}
 
-	// 0x00 \ SHA256(block)
+	// 0x00 \ BLOCK_HASH
 	void putTip (leveldb::WriteBatch& batch, const hash256_t& id) {
 		StackSlice<1 + 32> data;
 		{
