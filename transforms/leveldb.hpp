@@ -108,6 +108,7 @@ struct dumpIndexdLevel : public transform_t {
 
 			leveldb::Options options;
 			options.create_if_missing = true;
+			options.error_if_exists = true;
 		// 	options.filter_policy = leveldb::NewBloomFilterPolicy(10); // TODO
 
 			const auto status = leveldb::DB::Open(options, folderName, &this->ldb);
@@ -122,7 +123,7 @@ struct dumpIndexdLevel : public transform_t {
 
 	void write (leveldb::WriteBatch& batch) {
 		leveldb::WriteOptions options;
-		write_options.sync = true;
+		options.sync = true;
 		this->ldb->Write(options, &batch);
 	}
 
