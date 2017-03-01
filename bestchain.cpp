@@ -52,11 +52,10 @@ auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 }
 
 auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, Block visitor) {
-	size_t totalWork = 0;
+	size_t totalWork = visitor.bits;
 
 	// naively walk the chain
 	while (true) {
-		totalWork += visitor.bits;
 		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
 
 		// is the visitor a genesis block? (no prevBlockIter)
@@ -68,6 +67,7 @@ auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256
 			break;
 		}
 
+		totalWork += visitor.bits;
 		visitor = prevBlockIter->second;
 	}
 
