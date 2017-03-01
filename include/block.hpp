@@ -192,6 +192,14 @@ struct Block {
 		dest[i - 3] = static_cast<uint8_t>(mantissa >> 24);
 	}
 
+	auto bits () const {
+		return this->header.peek<uint32_t>(72);
+	}
+
+	auto previousBlockHash () const {
+		return this->header.drop(4).take(32);
+	}
+
 	auto transactions () const {
 		auto _data = this->data;
 		const auto n = readVI(_data);
