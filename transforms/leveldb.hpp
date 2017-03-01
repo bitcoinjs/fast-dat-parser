@@ -7,7 +7,7 @@
 #include "leveldb/write_batch.h"
 
 namespace {
-	void write (leveldb::WriteBatch& batch, const Slice& key, const Slice& value) {
+	void put (leveldb::WriteBatch& batch, const Slice& key, const Slice& value) {
 		batch.Put(
 			leveldb::Slice(reinterpret_cast<const char*>(key.begin()), key.length()),
 			leveldb::Slice(reinterpret_cast<const char*>(value.begin()), value.length())
@@ -24,7 +24,7 @@ namespace {
 			assert(_data.length() == 0);
 		}
 
-		write(batch, data.take(1), data.drop(1));
+		put(batch, data.take(1), data.drop(1));
 	}
 
 	// 0x01 | SHA256(SCRIPT) | HEIGHT<BE> | TX_HASH | VOUT
@@ -40,7 +40,7 @@ namespace {
 			assert(_data.length() == 0);
 		}
 
-		write(batch, data.drop(0), data.take(0));
+		put(batch, data.drop(0), data.take(0));
 	}
 
 	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
@@ -56,7 +56,7 @@ namespace {
 			assert(_data.length() == 0);
 		}
 
-		write(batch, data.take(37), data.drop(37));
+		put(batch, data.take(37), data.drop(37));
 	}
 
 	// 0x03 | TX_HASH \ HEIGHT
@@ -70,7 +70,7 @@ namespace {
 			assert(_data.length() == 0);
 		}
 
-		write(batch, data.take(33), data.drop(33));
+		put(batch, data.take(33), data.drop(33));
 	}
 
 	// 0x04 | TX_HASH | VOUT \ VALUE
@@ -85,7 +85,7 @@ namespace {
 			assert(_data.length() == 0);
 		}
 
-		write(batch, data.take(37), data.drop(37));
+		put(batch, data.take(37), data.drop(37));
 	}
 }
 
