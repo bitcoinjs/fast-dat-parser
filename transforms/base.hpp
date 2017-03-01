@@ -52,10 +52,10 @@ public:
 		hash256_t hash;
 		hash256(hash.begin(), block.header);
 		auto iter = this->whitelist.find(hash);
-		if (iter == this->whitelist.end()) return false;
+		if (iter == this->whitelist.end()) return true;
 
 		if (_hash != nullptr) *_hash = iter->first;
 		if (_height != nullptr) *_height = iter->second;
-		return true;
+		return false;
 	}
 };
