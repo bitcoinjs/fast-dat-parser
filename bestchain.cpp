@@ -43,13 +43,15 @@ auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, const Block source) {
-	auto visitor = source;
-	size_t totalWork = source.bits;
+auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, Block visitor) {
+	size_t totalWork = 0;
 
 	// naively walk the chain
 	while (true) {
+		totalWork += visitor.bits;
 		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
+
+		// is the visitor a genesis block? (no prevBlockIter)
 		if (prevBlockIter == blocks.end()) break;
 
 		const auto prevBlockWorkCacheIter = workCache.find(visitor.prevBlockHash);
@@ -59,7 +61,6 @@ auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256
 		}
 
 		visitor = prevBlockIter->second;
-		totalWork += visitor.bits;
 	}
 
 	return totalWork;
@@ -67,19 +68,18 @@ auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256
 
 auto findBestChain (const HMap<hash256_t, Block>& blocks) {
 	auto bestBlock = Block();
-	size_t mostWork = 0;
+	size_t bestChainWork = 0;
 
 	HMap<hash256_t, size_t> workCache;
 
 	for (const auto& blockIter : blocks) {
 		const auto& block = blockIter.second;
-		const auto work = determineWork(workCache, blocks, block);
+		const auto chainWork = determineWork(workCache, blocks, block);
 
-		workCache.insort(block.hash, work);
-
-		if (work > mostWork) {
+		workCache.insort(block.hash, chainWork);
+		if (chainWork > bestChainWork) {
 			bestBlock = block;
-			mostWork = work;
+			bestChainWork = chainWork;
 		}
 	}
 
