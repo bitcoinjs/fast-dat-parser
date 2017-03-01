@@ -96,7 +96,7 @@ int main (int argc, char** argv) {
 
 			// skip bad data cont.
 			const auto header = data.drop(8).take(80);
-			if (!Block(header).verify()) {
+			if (not Block(header).verify()) {
 				data.popFrontN(1);
 
 				std::cerr << '.';

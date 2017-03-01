@@ -5,7 +5,7 @@
 #include "leveldb/db.h"
 #include "leveldb/filter_policy.h"
 
-struct dumpIndexdLevel : transform_t {
+struct dumpIndexdLevel : public transform_t {
 	leveldb::DB* ldb;
 	std::atomic_ulong maxHeight;
 
@@ -130,6 +130,7 @@ struct dumpIndexdLevel : transform_t {
 
 	void operator() (const Block& block) {
 		assert(this->ldb);
+		assert(not this->whitelist.empty());
 
 		hash256_t blockHash;
 		uint32_t height = -1;

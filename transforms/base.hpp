@@ -12,9 +12,11 @@ struct transform_t_base {
 	virtual void operator() (const Block&) = 0;
 };
 
-struct transform_t : transform_t_base {
+struct transform_t : public transform_t_base {
+protected:
 	HMap<hash256_t, uint32_t> whitelist;
 
+public:
 	bool initialize (const char* arg) {
 		if (strncmp(arg, "-w", 2) == 0) {
 			const auto fileName = std::string(arg + 2);
