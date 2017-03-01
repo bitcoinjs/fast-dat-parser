@@ -18,7 +18,7 @@ struct Block {
 };
 
 // find all blocks who are not parents to any other blocks (aka, a chain tip)
-auto findChainTips(const HMap<hash256_t, Block>& blocks) {
+auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	std::map<hash256_t, bool> parents;
 
 	for (const auto& blockIter : blocks) {
@@ -39,7 +39,7 @@ auto findChainTips(const HMap<hash256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork(const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, const Block source) {
+auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, const Block source) {
 	auto visitor = source;
 	size_t totalWork = source.bits;
 
@@ -61,7 +61,7 @@ auto determineWork(const HMap<hash256_t, size_t>& workCache, const HMap<hash256_
 	return totalWork;
 }
 
-auto findBest(const HMap<hash256_t, Block>& blocks) {
+auto findBestChain (const HMap<hash256_t, Block>& blocks) {
 	auto bestBlock = Block();
 	size_t mostWork = 0;
 
@@ -138,7 +138,7 @@ int main () {
 	}
 
 	// what is the best?
-	const auto bestBlockChain = findBest(blocks);
+	const auto bestBlockChain = findBestChain(blocks);
 
 	// print some general information
 	{
