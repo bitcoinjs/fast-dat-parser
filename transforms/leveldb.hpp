@@ -4,6 +4,90 @@
 #include <iomanip>
 #include "leveldb/db.h"
 #include "leveldb/filter_policy.h"
+#include "leveldb/write_batch.h"
+
+namespace {
+	void write (leveldb::WriteBatch& batch, const Slice& key, const Slice& value) {
+		batch.Put(
+			leveldb::Slice(reinterpret_cast<const char*>(key.begin()), key.length()),
+			leveldb::Slice(reinterpret_cast<const char*>(value.begin()), value.length())
+		);
+	}
+
+	// 0x00 \ SHA256(block)
+	void putTip (leveldb::WriteBatch& batch, const hash256_t& id) {
+		StackSlice<1 + 32> data;
+		{
+			auto _data = data.drop(0);
+			_data.write<uint8_t>(0x00);
+			_data.writeN(id.begin(), 32);
+			assert(_data.length() == 0);
+		}
+
+		write(batch, data.take(1), data.drop(1));
+	}
+
+	// 0x01 | SHA256(SCRIPT) | HEIGHT<BE> | TX_HASH | VOUT
+	void putScript (leveldb::WriteBatch& batch, const hash256_t& scHash, uint32_t height, const hash256_t& txHash, uint32_t vout) {
+		StackSlice<1 + 32 + 4 + 32 + 4> data;
+		{
+			auto _data = data.drop(0);
+			_data.write<uint8_t>(0x01);
+			_data.writeN(scHash.begin(), 32);
+			_data.write<uint32_t, true>(height); // big-endian for indexing
+			_data.writeN(txHash.begin(), 32);
+			_data.write<uint32_t>(vout);
+			assert(_data.length() == 0);
+		}
+
+		write(batch, data.drop(0), data.take(0));
+	}
+
+	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
+	void putSpent (leveldb::WriteBatch& batch, const Slice& prevTxHash, uint32_t vout, const hash256_t& txHash, uint32_t vin) {
+		StackSlice<1 + 32 + 4 + 32 + 4> data;
+		{
+			auto _data = data.drop(0);
+			_data.write<uint8_t>(0x02);
+			_data.writeN(prevTxHash.begin(), 32);
+			_data.write<uint32_t>(vout);
+			_data.writeN(txHash.begin(), 32);
+			_data.write<uint32_t>(vin);
+			assert(_data.length() == 0);
+		}
+
+		write(batch, data.take(37), data.drop(37));
+	}
+
+	// 0x03 | TX_HASH \ HEIGHT
+	void putTx (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t height) {
+		StackSlice<1 + 32 + 4> data;
+		{
+			auto _data = data.drop(0);
+			_data.write<uint8_t>(0x03);
+			_data.writeN(txHash.begin(), 32);
+			_data.write<uint32_t>(height);
+			assert(_data.length() == 0);
+		}
+
+		write(batch, data.take(33), data.drop(33));
+	}
+
+	// 0x04 | TX_HASH | VOUT \ VALUE
+	void putTxOut (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t vout, uint64_t value) {
+		StackSlice<1 + 32 + 4 + 8> data;
+		{
+			auto _data = data.drop(0);
+			_data.write<uint8_t>(0x04);
+			_data.writeN(txHash.begin(), 32);
+			_data.write<uint32_t>(vout);
+			_data.write<uint64_t>(value);
+			assert(_data.length() == 0);
+		}
+
+		write(batch, data.take(37), data.drop(37));
+	}
+}
 
 struct dumpIndexdLevel : public transform_t {
 	leveldb::DB* ldb;
@@ -36,86 +120,8 @@ struct dumpIndexdLevel : public transform_t {
 		return false;
 	}
 
-	// 0x00 \ SHA256(block)
-	void putTip (const hash256_t& id) {
-		StackSlice<1 + 32> data;
-		{
-			auto _data = data.drop(0);
-			_data.write<uint8_t>(0x00);
-			_data.writeN(id.begin(), 32);
-			assert(_data.length() == 0);
-		}
-
-		this->put(data.take(1), data.drop(1));
-	}
-
-	// 0x01 | SHA256(SCRIPT) | HEIGHT<BE> | TX_HASH | VOUT
-	void putScript (const hash256_t& scHash, uint32_t height, const hash256_t& txHash, uint32_t vout) {
-		StackSlice<1 + 32 + 4 + 32 + 4> data;
-		{
-			auto _data = data.drop(0);
-			_data.write<uint8_t>(0x01);
-			_data.writeN(scHash.begin(), 32);
-			_data.write<uint32_t, true>(height); // big-endian for indexing
-			_data.writeN(txHash.begin(), 32);
-			_data.write<uint32_t>(vout);
-			assert(_data.length() == 0);
-		}
-
-		this->put(data.drop(0), data.take(0));
-	}
-
-	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
-	void putSpent (const Slice& prevTxHash, uint32_t vout, const hash256_t& txHash, uint32_t vin) {
-		StackSlice<1 + 32 + 4 + 32 + 4> data;
-		{
-			auto _data = data.drop(0);
-			_data.write<uint8_t>(0x02);
-			_data.writeN(prevTxHash.begin(), 32);
-			_data.write<uint32_t>(vout);
-			_data.writeN(txHash.begin(), 32);
-			_data.write<uint32_t>(vin);
-			assert(_data.length() == 0);
-		}
-
-		this->put(data.take(37), data.drop(37));
-	}
-
-	// 0x03 | TX_HASH \ HEIGHT
-	void putTx (const hash256_t& txHash, uint32_t height) {
-		StackSlice<1 + 32 + 4> data;
-		{
-			auto _data = data.drop(0);
-			_data.write<uint8_t>(0x03);
-			_data.writeN(txHash.begin(), 32);
-			_data.write<uint32_t>(height);
-			assert(_data.length() == 0);
-		}
-
-		this->put(data.take(33), data.drop(33));
-	}
-
-	// 0x04 | TX_HASH | VOUT \ VALUE
-	void putTxOut (const hash256_t& txHash, uint32_t vout, uint64_t value) {
-		StackSlice<1 + 32 + 4 + 8> data;
-		{
-			auto _data = data.drop(0);
-			_data.write<uint8_t>(0x04);
-			_data.writeN(txHash.begin(), 32);
-			_data.write<uint32_t>(vout);
-			_data.write<uint64_t>(value);
-			assert(_data.length() == 0);
-		}
-
-		this->put(data.take(37), data.drop(37));
-	}
-
-	void put (const Slice& key, const Slice& value) {
-		this->ldb->Put(
-			leveldb::WriteOptions(),
-			leveldb::Slice(reinterpret_cast<const char*>(key.begin()), key.length()),
-			leveldb::Slice(reinterpret_cast<const char*>(value.begin()), value.length())
-		);
+	void write (leveldb::WriteBatch& batch) {
+		this->ldb->Write(leveldb::WriteOptions(), &batch);
 	}
 
 	void operator() (const Block& block) {
@@ -125,9 +131,11 @@ struct dumpIndexdLevel : public transform_t {
 		hash256_t blockHash;
 		uint32_t height = -1;
 		if (this->shouldSkip(block, &blockHash, &height)) return;
+
+		leveldb::WriteBatch batch;
 		if (height >= this->maxHeight) {
 			this->maxHeight = height;
-			this->putTip(blockHash);
+			putTip(batch, blockHash);
 		}
 
 		auto transactions = block.transactions();
@@ -137,11 +145,11 @@ struct dumpIndexdLevel : public transform_t {
 			hash256_t txHash;
 			hash256(txHash.begin(), transaction.data);
 
-			this->putTx(txHash, height);
+			putTx(batch, txHash, height);
 
 			uint32_t vin = 0;
 			for (const auto& input : transaction.inputs) {
-				this->putSpent(input.hash, input.vout, txHash, vin);
+				putSpent(batch, input.hash, input.vout, txHash, vin);
 				++vin;
 			}
 
@@ -150,12 +158,14 @@ struct dumpIndexdLevel : public transform_t {
 				hash256_t scHash;
 				hash256(scHash.begin(), output.script);
 
-				this->putScript(scHash, height, txHash, vout);
-				this->putTxOut(txHash, vout, output.value);
+				putScript(batch, scHash, height, txHash, vout);
+				putTxOut(batch, txHash, vout, output.value);
 				++vout;
 			}
 
 			transactions.popFront();
 		}
+
+		this->write(batch);
 	}
 };
