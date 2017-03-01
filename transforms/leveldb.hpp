@@ -119,7 +119,7 @@ struct dumpIndexdLevel : public transform_t {
 		for (size_t i = 0; i < key.length(); ++i) {
 			std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) key[i];
 		}
-		std::cerr << std::dec;
+		std::cerr << std::dec << std::endl;
 
 // 		this->ldb->Put(
 // 			leveldb::WriteOptions(),
