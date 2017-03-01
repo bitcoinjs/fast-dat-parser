@@ -68,7 +68,6 @@ auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 auto determineWork (const HMap<hash256_t, size_t>& workCache, const HMap<hash256_t, Block>& blocks, const Block block) {
 	size_t totalWork = block.bits;
 
-	// naively walk the chain
 	walkChain(blocks, block, [&](const Block& visitor) {
 		const auto prevBlockWorkCacheIter = workCache.find(visitor.prevBlockHash);
 		if (prevBlockWorkCacheIter != workCache.end()) {
@@ -103,7 +102,6 @@ auto findBestChain (const HMap<hash256_t, Block>& blocks) {
 	std::vector<Block> blockchain;
 	blockchain.push_back(bestBlock);
 
-	// naively walk the chain
 	walkChain(blocks, bestBlock, [&](const Block& visitor) {
 		blockchain.push_back(visitor);
 		return false;
