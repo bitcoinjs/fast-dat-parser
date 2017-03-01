@@ -32,18 +32,22 @@ public:
 	auto take (size_t n) const;
 
 	size_t length () const {
-		return static_cast<size_t>(this->_end - this->_begin) / sizeof(T);
+		return static_cast<size_t>(this->_end - this->_begin);
 	}
 
 	template <typename Y = T>
 	auto peek (const size_t offset = 0) const {
-		assert(offset + sizeof(Y) <= this->length());
+		static_assert(sizeof(Y) % sizeof(T) == 0);
+
+		assert(offset + (sizeof(Y) / sizeof(T)) <= this->length());
 		return *(reinterpret_cast<Y*>(this->_begin + offset));
 	}
 
 	template <typename Y, bool swap = false>
 	void put (const Y value, size_t offset = 0) {
-		assert(offset + sizeof(Y) <= this->length());
+		static_assert(sizeof(Y) % sizeof(T) == 0);
+
+		assert(offset + (sizeof(Y) / sizeof(T)) <= this->length());
 		auto ptr = reinterpret_cast<Y*>(this->_begin + offset);
 		*ptr = value;
 
@@ -81,22 +85,25 @@ struct TypedSlice : public TypedFixedSlice<T> {
 
 	template <typename Y>
 	auto read () {
+		static_assert(sizeof(Y) % sizeof(T) == 0);
+
 		const auto value = this->template peek<Y>();
-		this->popFrontN(sizeof(T) / sizeof(Y));
+		this->popFrontN(sizeof(Y) / sizeof(T));
 		return value;
 	}
 
 	template <typename Y, bool swap = false>
 	void write (const Y value) {
+		static_assert(sizeof(Y) % sizeof(T) == 0);
+
 		this->template put<Y, swap>(value);
 		this->popFrontN(sizeof(Y) / sizeof(T));
 	}
 
-	template <typename Y>
-	void writeN (const Y* data, size_t n) {
+	void writeN (const T* data, size_t n) {
 		assert(n <= this->length());
 		memcpy(this->_begin, data, n);
-		this->popFrontN(n * sizeof(T));
+		this->popFrontN(n);
 	}
 };
 
