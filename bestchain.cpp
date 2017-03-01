@@ -91,11 +91,12 @@ auto findBestChain (const HMap<hash256_t, Block>& blocks) {
 		}
 	}
 
-	auto visitor = bestBlock;
 	std::vector<Block> blockchain;
-	blockchain.push_back(visitor);
+	blockchain.push_back(bestBlock);
 
 	// walk the chain
+	auto visitor = bestBlock;
+
 	while (true) {
 		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
 		if (prevBlockIter == blocks.end()) break;
