@@ -59,6 +59,10 @@ public:
 		assert(i < this->length());
 		return this->_begin[i];
 	}
+
+	const auto operator< (const TypedFixedSlice<T>& rhs) const {
+		return std::lexicographical_compare(this->_begin, this->_end, rhs._begin, rhs._end);
+	}
 };
 
 template <typename T>

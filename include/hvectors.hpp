@@ -12,7 +12,7 @@ struct HSet : std::vector<H> {
 		return (iter != this->end()) && (*iter == key);
 	}
 
-	auto insort (const H& key) {
+	void insort (const H& key) {
 		const auto iter = std::lower_bound(this->begin(), this->end(), key);
 
 		this->emplace(iter, key);
@@ -22,7 +22,7 @@ struct HSet : std::vector<H> {
 		return std::is_sorted(this->begin(), this->end());
 	}
 
-	auto sort () {
+	void sort () {
 		std::sort(this->begin(), this->end());
 	}
 };
@@ -42,7 +42,7 @@ struct HMap : std::vector<std::pair<K, V>> {
 		return iter;
 	}
 
-	auto insort (const K& key, const V& value) {
+	void insort (const K& key, const V& value) {
 		const auto iter = std::lower_bound(
 			this->begin(), this->end(), key,
 			[](const auto& pair, const K& key) {
@@ -63,7 +63,7 @@ struct HMap : std::vector<std::pair<K, V>> {
 		);
 	}
 
-	auto sort () {
+	void sort () {
 		std::sort(
 			this->begin(),
 			this->end(),
