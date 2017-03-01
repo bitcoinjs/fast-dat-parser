@@ -168,7 +168,7 @@ struct dumpIndexdLevel : public transform_t {
 			transactions.popFront();
 		}
 
-		// TODO: interpret return value
-		this->write(batch);
+		const auto status = not this->write(batch);
+		assert(status.ok());
 	}
 };
