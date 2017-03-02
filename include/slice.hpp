@@ -33,6 +33,7 @@ public:
 	auto begin () const { return this->_begin; }
 	auto end () const { return this->_end; }
 
+	auto dup () const;
 	auto drop (size_t n) const;
 	auto take (size_t n) const;
 
@@ -128,6 +129,11 @@ struct TypedSlice : public TypedFixedSlice<T> {
 		this->popFrontN(n);
 	}
 };
+
+template <typename T>
+auto TypedFixedSlice<T>::dup () const {
+	return TypedSlice<T>(this->_begin, this->_end);
+}
 
 template <typename T>
 auto TypedFixedSlice<T>::drop (const size_t n) const {

@@ -18,7 +18,7 @@ namespace {
 	void putTip (leveldb::WriteBatch& batch, const hash256_t& id) {
 		StackSlice<1 + 32> data;
 		{
-			auto _data = data.drop(0);
+			auto _data = data.dup();
 			_data.write<uint8_t>(0x00);
 			_data.writeNReverse(id.begin(), 32);
 			assert(_data.length() == 0);
@@ -31,7 +31,7 @@ namespace {
 	void putScript (leveldb::WriteBatch& batch, const hash256_t& scHash, uint32_t height, const hash256_t& txHash, uint32_t vout) {
 		StackSlice<1 + 32 + 4 + 32 + 4> data;
 		{
-			auto _data = data.drop(0);
+			auto _data = data.dup();
 			_data.write<uint8_t>(0x01);
 			_data.writeN(scHash.begin(), 32);
 			_data.write<uint32_t, true>(height); // big-endian for indexing
@@ -40,14 +40,14 @@ namespace {
 			assert(_data.length() == 0);
 		}
 
-		put(batch, data.drop(0), data.take(0));
+		put(batch, data.dup(), data.take(0));
 	}
 
 	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
 	void putSpent (leveldb::WriteBatch& batch, const Slice& prevTxHash, uint32_t vout, const hash256_t& txHash, uint32_t vin) {
 		StackSlice<1 + 32 + 4 + 32 + 4> data;
 		{
-			auto _data = data.drop(0);
+			auto _data = data.dup();
 			_data.write<uint8_t>(0x02);
 			_data.writeNReverse(prevTxHash.begin(), 32);
 			_data.write<uint32_t>(vout);
@@ -63,7 +63,7 @@ namespace {
 	void putTx (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t height) {
 		StackSlice<1 + 32 + 4> data;
 		{
-			auto _data = data.drop(0);
+			auto _data = data.dup();
 			_data.write<uint8_t>(0x03);
 			_data.writeNReverse(txHash.begin(), 32);
 			_data.write<uint32_t>(height);
@@ -77,7 +77,7 @@ namespace {
 	void putTxOut (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t vout, uint64_t value) {
 		StackSlice<1 + 32 + 4 + 8> data;
 		{
-			auto _data = data.drop(0);
+			auto _data = data.dup();
 			_data.write<uint8_t>(0x04);
 			_data.writeNReverse(txHash.begin(), 32);
 			_data.write<uint32_t>(vout);
