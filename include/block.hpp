@@ -22,8 +22,6 @@ namespace {
 
 struct Transaction {
 	struct Input {
-		Slice data;
-
 		Slice hash;
 		uint32_t vout;
 		Slice script;
@@ -31,13 +29,11 @@ struct Transaction {
 
 		Input () {}
 		Input (
-			Slice data,
 			Slice hash,
 			uint32_t vout,
 			Slice script,
 			uint32_t sequence
 		) :
-			data(data),
 			hash(hash),
 			vout(vout),
 			script(script),
@@ -45,18 +41,14 @@ struct Transaction {
 	};
 
 	struct Output {
-		Slice data;
-
 		Slice script;
 		uint64_t value;
 
 		Output () {}
 		Output (
-			Slice data,
 			Slice script,
 			uint64_t value
 		) :
-			data(data),
 			script(script),
 			value(value) {}
 	};
@@ -100,7 +92,6 @@ private:
 
 		std::vector<Transaction::Input> inputs;
 		for (size_t i = 0; i < nInputs; ++i) {
-			const auto idataSource = this->data;
 			const auto hash = this->data.readN(32);
 			const auto vout = this->data.read<uint32_t>();
 
@@ -108,9 +99,8 @@ private:
 			const auto script = this->data.readN(scriptLen);
 			const auto sequence = this->data.read<uint32_t>();
 
-			const auto idata = Slice(idataSource.begin(), this->data.begin());
 			inputs.emplace_back(
-				Transaction::Input(idata, hash, vout, script, sequence)
+				Transaction::Input(hash, vout, script, sequence)
 			);
 		}
 
@@ -118,14 +108,11 @@ private:
 
 		std::vector<Transaction::Output> outputs;
 		for (size_t i = 0; i < nOutputs; ++i) {
-			const auto odataSource = this->data;
 			const auto value = this->data.read<uint64_t>();
-
 			const auto scriptLen = readVI(this->data);
 			const auto script = this->data.readN(scriptLen);
 
-			const auto odata = Slice(odataSource.begin(), this->data.begin());
-			outputs.emplace_back(Transaction::Output(odata, script, value));
+			outputs.emplace_back(Transaction::Output(script, value));
 		}
 
 		const auto locktime = this->data.read<uint32_t>();
