@@ -81,11 +81,13 @@ int main (int argc, char** argv) {
 		memcpy(buffer.begin(), iobuffer.begin(), halfMemoryAlloc);
 
 		auto data = buffer.take(remainder + read);
-		if (invalid > 0) {
-			std::cerr << std::endl << "-- Skipped " << invalid << " bad bytes" << std::endl;
-			invalid = 0;
-		}
-		std::cerr << "-- Parsed " << count << " blocks (read " << read / 1024 << " KiB, " << accum / 1024 / 1024 << " MiB total)" << (eof ? " EOF" : "") << std::endl;
+		std::cerr << "-- Parsed "
+			<< count << " blocks ("
+			<< "read " << read / 1024 << " KiB, "
+			<< accum / 1024 / 1024 << " MiB total, "
+			<< "skipped " << invalid / 1024 << "KiB)"
+			<< (eof ? " EOF" : "")
+			<< std::endl;
 
 		while (data.length() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
@@ -98,15 +100,8 @@ int main (int argc, char** argv) {
 			const auto header = data.drop(8).take(80);
 			if (not Block(header).verify()) {
 				data.popFrontN(1);
-
-				std::cerr << '.';
 				++invalid;
 				continue;
-			}
-
-			if (invalid > 0) {
-				std::cerr << std::endl << "-- Skipped " << invalid << " bad bytes" << std::endl;
-				invalid = 0;
 			}
 
 			// do we have enough data?
@@ -133,13 +128,12 @@ int main (int argc, char** argv) {
 		memcpy(iobuffer.begin(), data.begin(), remainder);
 	}
 
-	if (invalid > 0) {
-		std::cerr << std::endl << "-- Skipped " << invalid << " bad bytes" << std::endl;
-		invalid = 0;
-	}
-
 	time(&end);
-	std::cerr << "Parsed " << count << " blocks in " << difftime(end, start) << " seconds" << std::endl;
+	std::cerr << "Parsed "
+		<< count << " blocks ("
+		<< accum / 1024 / 1024 << " MiB)"
+		<< "in " << difftime(end, start) << " seconds"
+		<< std::endl;
 
 	return 0;
 }
