@@ -97,6 +97,12 @@ struct TypedSlice : public TypedFixedSlice<T> {
 		return value;
 	}
 
+	auto readN (const size_t n) {
+		const auto slice = this->take(n);
+		this->popFrontN(n);
+		return slice;
+	}
+
 	template <typename Y, bool bigEndian = false>
 	void write (const Y value) {
 		static_assert(sizeof(Y) % sizeof(T) == 0);

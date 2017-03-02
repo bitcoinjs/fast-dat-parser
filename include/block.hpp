@@ -10,12 +10,6 @@
 #include "slice.hpp"
 
 namespace {
-	auto readSlice (Slice& data, uint64_t n) {
-		auto slice = data.take(n);
-		data.popFrontN(n);
-		return slice;
-	}
-
 	auto readVI (Slice& data) {
 		const auto i = data.read<uint8_t>();
 
@@ -107,11 +101,11 @@ private:
 		std::vector<Transaction::Input> inputs;
 		for (size_t i = 0; i < nInputs; ++i) {
 			const auto idataSource = this->data;
-			const auto hash = readSlice(this->data, 32);
+			const auto hash = this->data.readN(32);
 			const auto vout = this->data.read<uint32_t>();
 
 			const auto scriptLen = readVI(this->data);
-			const auto script = readSlice(this->data, scriptLen);
+			const auto script = this->data.readN(scriptLen);
 			const auto sequence = this->data.read<uint32_t>();
 
 			const auto idata = Slice(idataSource.begin(), this->data.begin());
@@ -128,7 +122,7 @@ private:
 			const auto value = this->data.read<uint64_t>();
 
 			const auto scriptLen = readVI(this->data);
-			const auto script = readSlice(this->data, scriptLen);
+			const auto script = this->data.readN(scriptLen);
 
 			const auto odata = Slice(odataSource.begin(), this->data.begin());
 			outputs.emplace_back(Transaction::Output(odata, script, value));
