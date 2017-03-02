@@ -141,9 +141,7 @@ public:
 	auto empty () const { return this->n == 0; }
 	auto length () const { return this->n; }
 	auto front () {
-		if (this->lazy) {
-			this->readTransaction();
-		}
+		if (this->lazy) this->readTransaction();
 
 		return this->current;
 	}
@@ -157,9 +155,7 @@ public:
 	void popFront () {
 		this->n--;
 
-		if (this->n > 0) {
-			this->readTransaction();
-		}
+		if (this->n > 0) this->readTransaction();
 	}
 };
 
