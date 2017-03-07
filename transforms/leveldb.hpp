@@ -93,10 +93,7 @@ struct dumpIndexdLevel : public transform_t {
 	leveldb::DB* ldb;
 	std::atomic_ulong maxHeight;
 
-	dumpIndexdLevel () {
-		this->maxHeight = 0;
-	}
-
+	dumpIndexdLevel () : maxHeight(0) {}
 	~dumpIndexdLevel () {
 		if (this->ldb != nullptr) delete this->ldb;
 	}
