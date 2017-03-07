@@ -106,6 +106,7 @@ struct dumpIndexdLevel : public transform_t {
 			leveldb::Options options;
 			options.create_if_missing = true;
 			options.error_if_exists = true;
+			options.compression = leveldb::kNoCompression;
 			options.write_buffer_size = 1 * 1024 * 1024 * 1024; // 1 GiB
 		// 	options.filter_policy = leveldb::NewBloomFilterPolicy(10); // TODO
 
