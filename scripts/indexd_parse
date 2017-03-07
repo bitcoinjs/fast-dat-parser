@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+DATA_DIR=~/.bitcoin
+
+# parse the local-best blockchain
+cat $DATA_DIR/blocks/*.dat | ./parser -t0 > headers.dat
+cat headers.dat | ./bestchain > chain.dat
+
+# (re)parse the blockchain and output a indexd compatible leveldb database to /indexd in the DATA_DIR
+cat $DATA_DIR/blocks/*.dat | ./parser -t8 -l"$DATA_DIR/indexd" -wchain.dat

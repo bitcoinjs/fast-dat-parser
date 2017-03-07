@@ -1,9 +1,0 @@
-#!/bin/bash -e
-
-DATA_DIR=~/.bitcoin
-
-# parse the local-best blockchain
-cat $DATA_DIR/blocks/*.dat | ./parser -t0 | ./bestchain > chain.dat
-
-# output some statistics
-cat $DATA_DIR/blocks/*.dat | ./parser -t6 -wchain.dat
