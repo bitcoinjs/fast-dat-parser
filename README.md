@@ -69,3 +69,6 @@ Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  
 #### External
 * [binsort](https://github.com/dcousens/binsort)
 * [hexxer](https://github.com/dcousens/hexxer)
+
+
+## License [ISC](LICENSE)
