@@ -74,7 +74,7 @@ namespace {
 	}
 
 	// 0x04 | TX_HASH | VOUT \ VALUE
-	void putTxOut (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t vout, uint64_t value) {
+	void putTxo (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t vout, uint64_t value) {
 		StackSlice<1 + 32 + 4 + 8> data;
 		{
 			auto _data = data.dup();
@@ -160,7 +160,7 @@ struct dumpIndexdLevel : public transform_t {
 				hash256(scHash.begin(), output.script);
 
 				putScript(batch, scHash, height, txHash, vout);
-				putTxOut(batch, txHash, vout, output.value);
+				putTxo(batch, txHash, vout, output.value);
 				++vout;
 			}
 
