@@ -43,7 +43,9 @@ void inline Initialize(uint32_t* s)
 
 uint32_t static inline ReadBE32(const unsigned char* ptr)
 {
-    return be32toh(*((const uint32_t*)ptr));
+	uint32_t x;
+	memcpy((char*)&x, ptr, 4);
+	return be32toh(x);
 }
 
 /** Perform one SHA-256 transformation, processing a 64-byte chunk. */

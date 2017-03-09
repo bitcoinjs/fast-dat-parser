@@ -50,7 +50,9 @@ void inline R52(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, ui
 
 uint32_t static inline ReadLE32(const unsigned char* ptr)
 {
-    return le32toh(*((const uint32_t*)ptr));
+	uint32_t x;
+	memcpy((char*)&x, ptr, 4);
+	return le32toh(x);
 }
 
 /** Perform a RIPEMD-160 transformation, processing a 64-byte chunk. */
