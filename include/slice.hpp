@@ -65,12 +65,12 @@ public:
 		return this->_begin[i];
 	}
 
-	const auto operator[] (const size_t i) const {
+	auto operator[] (const size_t i) const {
 		assert(i < this->length());
 		return this->_begin[i];
 	}
 
-	const auto operator< (const TypedFixedSlice<T>& rhs) const {
+	auto operator< (const TypedFixedSlice<T>& rhs) const {
 		return std::lexicographical_compare(this->_begin, this->_end, rhs._begin, rhs._end);
 	}
 };

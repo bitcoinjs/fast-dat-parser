@@ -43,7 +43,7 @@ void inline Initialize(uint32_t* s)
 
 uint32_t static inline ReadBE32(const unsigned char* ptr)
 {
-    return be32toh(*((uint32_t*)ptr));
+    return be32toh(*((const uint32_t*)ptr));
 }
 
 /** Perform one SHA-256 transformation, processing a 64-byte chunk. */
@@ -161,8 +161,9 @@ CSHA256& CSHA256::Write(const unsigned char* data, size_t len)
     }
     if (end > data) {
         // Fill the buffer with what remains.
-        memcpy(buf + bufsize, data, end - data);
-        bytes += end - data;
+		const size_t diff = static_cast<size_t>(end - data);
+        memcpy(buf + bufsize, data, diff);
+        bytes += diff;
     }
     return *this;
 }

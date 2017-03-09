@@ -24,7 +24,7 @@ public:
 			assert(file != nullptr);
 
 			fseek(file, 0, SEEK_END);
-			const auto fileSize = ftell(file);
+			const auto fileSize = static_cast<size_t>(ftell(file));
 			fseek(file, 0, SEEK_SET);
 
 			const auto elementSize = sizeof(this->whitelist.front());

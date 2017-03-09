@@ -6,7 +6,7 @@
 // SHA256(SCRIPT) | HEIGHT | TX_HASH | VOUT > stdout
 struct dumpScriptIndex : transform_t {
 	void operator() (const Block& block) {
-		uint32_t height = -1;
+		uint32_t height = 0;
 		if (this->shouldSkip(block, nullptr, &height)) return;
 
 		uint8_t sbuf[72];
@@ -63,7 +63,7 @@ struct dumpSpentIndex : transform_t {
 // TX_HASH | HEIGHT > stdout
 struct dumpTxIndex : transform_t {
 	void operator() (const Block& block) {
-		uint32_t height = -1;
+		uint32_t height = 0;
 		if (this->shouldSkip(block, nullptr, &height)) return;
 
 		uint8_t sbuf[36];
@@ -81,7 +81,7 @@ struct dumpTxIndex : transform_t {
 };
 
 // TX_HASH | VOUT | VALUE > stdout
-struct dumpTxOutIndex : transform_t {
+struct dumpTxoIndex : transform_t {
 	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 

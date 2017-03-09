@@ -30,7 +30,7 @@ void inline Initialize(uint32_t* s)
 
 uint32_t inline rol(uint32_t x, int i) { return (x << i) | (x >> (32 - i)); }
 
-void inline Round(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, uint32_t f, uint32_t x, uint32_t k, int r)
+void inline Round(uint32_t& a, uint32_t, uint32_t& c, uint32_t, uint32_t e, uint32_t f, uint32_t x, uint32_t k, int r)
 {
     a = rol(a + f + x + k, r) + e;
     c = rol(c, 10);
@@ -50,7 +50,7 @@ void inline R52(uint32_t& a, uint32_t b, uint32_t& c, uint32_t d, uint32_t e, ui
 
 uint32_t static inline ReadLE32(const unsigned char* ptr)
 {
-    return le32toh(*((uint32_t*)ptr));
+    return le32toh(*((const uint32_t*)ptr));
 }
 
 /** Perform a RIPEMD-160 transformation, processing a 64-byte chunk. */
@@ -267,8 +267,9 @@ CRIPEMD160& CRIPEMD160::Write(const unsigned char* data, size_t len)
     }
     if (end > data) {
         // Fill the buffer with what remains.
-        memcpy(buf + bufsize, data, end - data);
-        bytes += end - data;
+		const size_t diff = static_cast<size_t>(end - data);
+        memcpy(buf + bufsize, data, diff);
+        bytes += diff;
     }
     return *this;
 }
