@@ -33,7 +33,6 @@ public:
 	auto begin () const { return this->_begin; }
 	auto end () const { return this->_end; }
 
-	auto dup () const;
 	auto drop (size_t n) const;
 	auto take (size_t n) const;
 
@@ -79,6 +78,7 @@ template <typename T>
 struct TypedSlice : public TypedFixedSlice<T> {
 	TypedSlice () : TypedFixedSlice<T>() {}
 	TypedSlice (T* begin, T* end) : TypedFixedSlice<T>(begin, end) {}
+	TypedSlice (const TypedFixedSlice<T>& copy) : TypedFixedSlice<T>(copy.begin(), copy.end()) {}
 
 	void popFrontN (size_t n) {
 		assert(n <= this->length());
@@ -131,11 +131,6 @@ struct TypedSlice : public TypedFixedSlice<T> {
 };
 
 template <typename T>
-auto TypedFixedSlice<T>::dup () const {
-	return TypedSlice<T>(this->_begin, this->_end);
-}
-
-template <typename T>
 auto TypedFixedSlice<T>::drop (const size_t n) const {
 	assert(n <= this->length());
 	return TypedSlice<T>(this->_begin + n, this->_end);
@@ -154,9 +149,10 @@ private:
 
 public:
 	TypedStackSlice () : TypedFixedSlice<T>(data, data + N) {}
-// 	TypedStackSlice (const TypedStackSlice& copy) {
-// 		memcpy(this->_begin, copy._begin, N);
-// 	}
+	TypedStackSlice (const TypedFixedSlice<T>& copy) {
+		assert(N == copy.length());
+		memcpy(this->_begin, copy._begin, N);
+	}
 };
 
 template <typename T>
@@ -169,6 +165,7 @@ struct TypedHeapSlice : TypedFixedSlice<T> {
 	~TypedHeapSlice () {
 		delete[] this->_begin;
 	}
+	TypedHeapSlice (const TypedHeapSlice&) = delete;
 };
 
 typedef TypedHeapSlice<uint8_t> HeapSlice;
