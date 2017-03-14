@@ -1,11 +1,10 @@
 #pragma once
 
-#include <array>
 #include <atomic>
 #include <condition_variable>
-#include <list>
 #include <mutex>
 #include <thread>
+#include <vector>
 
 template <typename F>
 struct ThreadPool {
@@ -54,7 +53,7 @@ private:
 	}
 
 public:
-	ThreadPool (size_t n) : joined(false), running(0) {
+	ThreadPool (const size_t n) : joined(false), running(0) {
 		this->threads.reserve(n);
 
 		for (size_t i = 0; i < n; ++i) {
