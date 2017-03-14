@@ -142,8 +142,9 @@ auto TypedFixedSlice<T>::take (const size_t n) const {
 	return TypedSlice<T>(this->_begin, this->_begin + n);
 }
 
+// TODO: TypedFixedSlice has fields `begin` and `end`,  which are redundant here
 template <typename T, size_t N>
-struct TypedStackSlice : TypedFixedSlice<T> {
+struct TypedStackSlice : public TypedFixedSlice<T> {
 private:
 	T data[N];
 
@@ -156,7 +157,7 @@ public:
 };
 
 template <typename T>
-struct TypedHeapSlice : TypedFixedSlice<T> {
+struct TypedHeapSlice : public TypedFixedSlice<T> {
 	TypedHeapSlice (const size_t n) : TypedFixedSlice<T>() {
 		this->_begin = new T[n];
 		this->_end = this->_begin + n;
