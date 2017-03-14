@@ -65,14 +65,7 @@ public:
 		if (this->joined) return;
 		this->join();
 	}
-
-	void push (const F f) {
-		assert(not this->joined);
-		std::lock_guard<std::mutex> vector_guard(this->vector_mutex);
-
-		this->vector.push_back(f);
-		this->go_signal.notify_one();
-	}
+	ThreadPool (const ThreadPool&) = delete;
 
 	void join () {
 		assert(not this->joined);
@@ -88,6 +81,14 @@ public:
 
 			x.join();
 		}
+	}
+
+	void push (const F f) {
+		assert(not this->joined);
+		std::lock_guard<std::mutex> vector_guard(this->vector_mutex);
+
+		this->vector.push_back(f);
+		this->go_signal.notify_one();
 	}
 
 	void wait () {
