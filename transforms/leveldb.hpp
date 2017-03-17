@@ -28,9 +28,13 @@ namespace {
 	}
 
 	// 0x01 | SHA256(SCRIPT) | HEIGHT<BE> | TX_HASH | VOUT
-	void putScript (leveldb::WriteBatch& batch, const hash256_t& scHash, uint32_t height, const hash256_t& txHash, uint32_t vout) {
+	void putScript (leveldb::WriteBatch& batch, const Slice& script, uint32_t height, const hash256_t& txHash, uint32_t vout) {
 		StackSlice<1 + 32 + 4 + 32 + 4> data;
+
 		{
+			hash256_t scHash;
+			sha256(scHash.begin(), script);
+
 			Slice _data = data;
 			_data.write<uint8_t>(0x01);
 			_data.writeN(scHash.begin(), 32);
@@ -156,10 +160,7 @@ struct dumpIndexdLevel : public transform_t {
 
 			uint32_t vout = 0;
 			for (const auto& output : transaction.outputs) {
-				hash256_t scHash;
-				hash256(scHash.begin(), output.script);
-
-				putScript(batch, scHash, height, txHash, vout);
+				putScript(batch, output.script, height, txHash, vout);
 				putTxo(batch, txHash, vout, output.value);
 				++vout;
 			}
