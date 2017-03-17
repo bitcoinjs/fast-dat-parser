@@ -15,7 +15,7 @@ namespace {
 	}
 
 	// 0x00 \ BLOCK_HASH
-	void putTip (leveldb::WriteBatch& batch, const hash256_t& id) {
+	void putTip (leveldb::WriteBatch& batch, const uint256_t& id) {
 		StackSlice<1 + 32> data;
 		{
 			Slice _data = data;
@@ -28,11 +28,11 @@ namespace {
 	}
 
 	// 0x01 | SHA256(SCRIPT) | HEIGHT<BE> | TX_HASH | VOUT
-	void putScript (leveldb::WriteBatch& batch, const Slice& script, uint32_t height, const hash256_t& txHash, uint32_t vout) {
+	void putScript (leveldb::WriteBatch& batch, const Slice& script, uint32_t height, const uint256_t& txHash, uint32_t vout) {
 		StackSlice<1 + 32 + 4 + 32 + 4> data;
 
 		{
-			hash256_t scHash;
+			uint256_t scHash;
 			sha256(scHash.begin(), script);
 
 			Slice _data = data;
@@ -48,7 +48,7 @@ namespace {
 	}
 
 	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
-	void putSpent (leveldb::WriteBatch& batch, const Slice& prevTxHash, uint32_t vout, const hash256_t& txHash, uint32_t vin) {
+	void putSpent (leveldb::WriteBatch& batch, const Slice& prevTxHash, uint32_t vout, const uint256_t& txHash, uint32_t vin) {
 		StackSlice<1 + 32 + 4 + 32 + 4> data;
 		{
 			Slice _data = data;
@@ -64,7 +64,7 @@ namespace {
 	}
 
 	// 0x03 | TX_HASH \ HEIGHT
-	void putTx (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t height) {
+	void putTx (leveldb::WriteBatch& batch, const uint256_t& txHash, uint32_t height) {
 		StackSlice<1 + 32 + 4> data;
 		{
 			Slice _data = data;
@@ -78,7 +78,7 @@ namespace {
 	}
 
 	// 0x04 | TX_HASH | VOUT \ VALUE
-	void putTxo (leveldb::WriteBatch& batch, const hash256_t& txHash, uint32_t vout, uint64_t value) {
+	void putTxo (leveldb::WriteBatch& batch, const uint256_t& txHash, uint32_t vout, uint64_t value) {
 		StackSlice<1 + 32 + 4 + 8> data;
 		{
 			Slice _data = data;
@@ -132,7 +132,7 @@ struct dumpIndexdLevel : public transform_t {
 		assert(this->ldb);
 		assert(not this->whitelist.empty());
 
-		hash256_t blockHash;
+		uint256_t blockHash;
 		uint32_t height = 0xffffffff;
 		if (this->shouldSkip(block, &blockHash, &height)) return;
 		assert(height != 0xffffffff);
@@ -147,7 +147,7 @@ struct dumpIndexdLevel : public transform_t {
 		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
-			hash256_t txHash;
+			uint256_t txHash;
 			hash256(txHash.begin(), transaction.data);
 
 			putTx(batch, txHash, height);

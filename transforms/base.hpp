@@ -14,7 +14,7 @@ struct transform_t_base {
 
 struct transform_t : public transform_t_base {
 protected:
-	HMap<hash256_t, uint32_t> whitelist;
+	HMap<uint256_t, uint32_t> whitelist;
 
 public:
 	bool initialize (const char* arg) {
@@ -46,10 +46,10 @@ public:
 		return false;
 	}
 
-	bool shouldSkip (const Block& block, hash256_t* _hash = nullptr, uint32_t* _height = nullptr) const {
+	bool shouldSkip (const Block& block, uint256_t* _hash = nullptr, uint32_t* _height = nullptr) const {
 		if (this->whitelist.empty()) return false;
 
-		hash256_t hash;
+		uint256_t hash;
 		hash256(hash.begin(), block.header);
 		const auto iter = this->whitelist.find(hash);
 		if (iter == this->whitelist.end()) return true;

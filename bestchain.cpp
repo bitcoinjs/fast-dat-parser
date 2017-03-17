@@ -9,16 +9,16 @@
 #include "slice.hpp"
 
 struct Block {
-	hash256_t hash = {};
-	hash256_t prevBlockHash = {};
+	uint256_t hash = {};
+	uint256_t prevBlockHash = {};
 	uint32_t bits;
 	uint64_t cachedChainWork;
 
 	Block () {}
-	Block (const hash256_t& hash, const hash256_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits), cachedChainWork(0) {}
+	Block (const uint256_t& hash, const uint256_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits), cachedChainWork(0) {}
 };
 
-void printerr_hash32 (hash256_t hash) {
+void printerr_hash32 (uint256_t hash) {
 	std::cerr << std::hex;
 	for (size_t i = 31; i < 32; --i) {
 		std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) hash[i];
@@ -27,7 +27,7 @@ void printerr_hash32 (hash256_t hash) {
 }
 
 template <typename F>
-auto walkChain (const HMap<hash256_t, Block>& blocks, Block visitor, F f) {
+auto walkChain (const HMap<uint256_t, Block>& blocks, Block visitor, F f) {
 	// naively walk the chain
 	while (true) {
 		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
@@ -41,8 +41,8 @@ auto walkChain (const HMap<hash256_t, Block>& blocks, Block visitor, F f) {
 }
 
 // find all blocks who have no children (chain tips)
-auto findChainTips (const HMap<hash256_t, Block>& blocks) {
-	std::map<hash256_t, bool> hasChildren;
+auto findChainTips (const HMap<uint256_t, Block>& blocks) {
+	std::map<uint256_t, bool> hasChildren;
 
 	for (const auto& blockIter : blocks) {
 		const auto& block = blockIter.second;
@@ -66,7 +66,7 @@ auto findChainTips (const HMap<hash256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork (const HMap<hash256_t, Block>& blocks, const Block block) {
+auto determineWork (const HMap<uint256_t, Block>& blocks, const Block block) {
 	uint64_t totalWork = block.bits;
 
 	walkChain(blocks, block, [&](const Block& visitor) {
@@ -82,7 +82,7 @@ auto determineWork (const HMap<hash256_t, Block>& blocks, const Block block) {
 	return totalWork;
 }
 
-auto findBestChain (HMap<hash256_t, Block>& blocks) {
+auto findBestChain (HMap<uint256_t, Block>& blocks) {
 	auto bestBlock = Block();
 	uint64_t bestChainWork = 0;
 
@@ -110,7 +110,7 @@ auto findBestChain (HMap<hash256_t, Block>& blocks) {
 }
 
 int main () {
-	HMap<hash256_t, Block> blocks;
+	HMap<uint256_t, Block> blocks;
 
 	// read block headers from stdin until EOF
 	{
@@ -121,7 +121,7 @@ int main () {
 			// EOF?
 			if (read == 0) break;
 
-			hash256_t hash, prevBlockHash;
+			uint256_t hash, prevBlockHash;
 			uint32_t bits;
 
 			hash256(hash.begin(), rbuf, 80);
@@ -162,7 +162,7 @@ int main () {
 
 	// output the best chain [in order]
 	{
-		HMap<hash256_t, uint32_t> blockChainMap;
+		HMap<uint256_t, uint32_t> blockChainMap;
 
 		int32_t height = 0;
 		for (const auto& block : bestBlockChain) {
