@@ -6,14 +6,15 @@ IFLAGS=-Iinclude -I.
 
 all: bestchain parser
 
-bestchain: bestchain.cpp include/hash.hpp include/hvectors.hpp include/slice.hpp
+bestchain: bestchain.cpp include/hash.hpp include/hvectors.hpp include/ranger.hpp
 	$(CXX) $(CFLAGS) $(LFLAGS) $(OFLAGS) $(IFLAGS) $< -o $@
 
-parser: parser.cpp include/block.hpp include/hash.hpp include/hvectors.hpp include/threadpool.hpp include/transforms.hpp transforms/*.hpp include/slice.hpp
+parser: parser.cpp include/block.hpp include/hash.hpp include/hvectors.hpp include/threadpool.hpp include/transforms.hpp transforms/*.hpp include/ranger.hpp
 	$(CXX) $(CFLAGS) $(LFLAGS) $(OFLAGS) $(IFLAGS) -lleveldb -pthread $< -o $@
 
-include/slice.hpp:
-	curl https://raw.githubusercontent.com/dcousens/ranger/master/slice.hpp > include/slice.hpp
+include/ranger.hpp:
+	curl https://raw.githubusercontent.com/dcousens/ranger/master/ranger.hpp > include/ranger.hpp
+	curl https://raw.githubusercontent.com/dcousens/ranger/master/serial.hpp > include/serial.hpp
 
 clean:
 	rm -f bestchain parser

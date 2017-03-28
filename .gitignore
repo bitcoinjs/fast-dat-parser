@@ -1,4 +1,5 @@
 bestchain
 parser
 *.dat
-include/slice.hpp
+include/ranger.hpp
+include/serial.hpp

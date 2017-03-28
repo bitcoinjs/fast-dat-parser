@@ -6,7 +6,8 @@
 
 #include "hash.hpp"
 #include "hvectors.hpp"
-#include "slice.hpp"
+#include "ranger.hpp"
+#include "serial.hpp"
 
 struct Block {
 	uint256_t hash = {};
@@ -115,18 +116,17 @@ int main () {
 	// read block headers from stdin until EOF
 	{
 		while (true) {
-			uint8_t rbuf[80];
-			const auto read = fread(rbuf, sizeof(rbuf), 1, stdin);
+			std::array<uint8_t, 80> rbuf;
+			const auto read = fread(rbuf.begin(), rbuf.size(), 1, stdin);
 
 			// EOF?
 			if (read == 0) break;
 
-			uint256_t hash, prevBlockHash;
-			uint32_t bits;
+			const auto hash = hash256(rbuf);
+			const auto bits = serial::peek<uint32_t>(range(rbuf).drop(72));
 
-			hash256(hash.begin(), rbuf, 80);
-			memcpy(prevBlockHash.begin(), rbuf + 4, 32);
-			memcpy(&bits, rbuf + 72, 4);
+			uint256_t prevBlockHash;
+			memcpy(prevBlockHash.begin(), rbuf.begin() + 4, 32);
 
 			blocks.emplace_back(std::make_pair(hash, Block(hash, prevBlockHash, bits)));
 		}
@@ -171,14 +171,14 @@ int main () {
 		}
 		blockChainMap.sort();
 
-		StackSlice<36> buffer;
+		std::array<uint8_t, 36> buffer;
 		for (auto&& blockIter : blockChainMap) {
-			auto _data = buffer.drop(0);
-			_data.writeN(blockIter.first.begin(), 32);
-			_data.write<uint32_t>(blockIter.second);
-			assert(_data.length() == 0);
+			auto _data = range(buffer);
+			_data.put(range(blockIter.first));
+			serial::write<uint32_t>(_data, blockIter.second);
+			assert(_data.size() == 0);
 
-			fwrite(buffer.begin(), buffer.length(), 1, stdout);
+			fwrite(buffer.begin(), buffer.size(), 1, stdout);
 		}
 	}
 
