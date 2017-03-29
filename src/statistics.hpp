@@ -6,8 +6,8 @@
 template <typename Block>
 struct dumpOutputValuesOverHeight : public TransformBase<Block> {
 	void operator() (const Block& block) {
-		uint32_t height;
-		if (this->shouldSkip(block, nullptr, height)) return;
+		uint32_t height = 0xffffffff;
+		if (this->shouldSkip(block, nullptr, &height)) return;
 
 		std::array<uint8_t, 12> buffer;
 		serial::put<uint32_t>(buffer, height);
@@ -17,7 +17,7 @@ struct dumpOutputValuesOverHeight : public TransformBase<Block> {
 			const auto& transaction = transactions.front();
 
 			for (const auto& output : transaction.outputs) {
-				serial::put<uint64_t>(buffer.begin() + 4, output.value);
+				serial::put<uint64_t>(range(buffer).drop(4), output.value);
 				fwrite(buffer.begin(), buffer.size(), 1, stdout);
 			}
 
@@ -63,7 +63,7 @@ struct dumpStatistics : public TransformBase<Block> {
 		if (this->shouldSkip(block)) return;
 
 		auto transactions = block.transactions();
-		this->transactions += transactions.length();
+		this->transactions += transactions.size();
 
 		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();

@@ -13,7 +13,7 @@
 #include "transforms.hpp"
 
 #include "raw.hpp"
-// #include "statistics.hpp"
+#include "statistics.hpp"
 // #include "leveldb.hpp"
 
 using backing_vector_t = std::vector<uint8_t>;
@@ -40,8 +40,8 @@ int main (int argc, char** argv) {
 			else if (transformIndex == 1) delegate.reset(new dumpScripts<block_t>());
 
 			// statistics
-// 			else if (transformIndex == 2) delegate.reset(new dumpStatistics<block_t>());
-// 			else if (transformIndex == 3) delegate.reset(new dumpOutputValuesOverHeight<block_t>());
+			else if (transformIndex == 2) delegate.reset(new dumpStatistics<block_t>());
+			else if (transformIndex == 3) delegate.reset(new dumpOutputValuesOverHeight<block_t>());
 
 			// indexd
 // 			else if (transformIndex == 4) delegate.reset(new dumpLeveldb<block_t>());
