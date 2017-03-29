@@ -39,18 +39,6 @@ cat ~/.bitcoin/blocks/blk*.dat | ./parser -t0 | ./bestchain > chain.dat
 cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -t1 -wchain.dat > ~/.bitcoin/scripts.dat
 ```
 
-**Output a script index for the local-best blockchain**
-``` bash
-# parse the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -t0 | ./bestchain > chain.dat
-
-# output a transaction output index for the local-best blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -j4 -t5 -wchain.dat > ~/.bitcoin/txos.dat
-
-# dump some statistics for the blockchain
-cat ~/.bitcoin/blocks/blk*.dat | ./parser -t6
-```
-
 
 ### Useful tools
 These tools are for the CLI, but will aid in preparing/using data produced by the above.
