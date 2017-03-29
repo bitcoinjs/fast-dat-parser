@@ -1,0 +1,199 @@
+#pragma once
+
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstdint>
+#include <vector>
+
+#include "hash.hpp"
+#include "ranger.hpp"
+#include "serial.hpp"
+
+template <typename R>
+struct TransactionBase {
+	struct Input {
+		R hash;
+		uint32_t vout;
+		R script;
+		uint32_t sequence;
+
+		Input (R hash, uint32_t vout, R script, uint32_t sequence) :
+			hash(hash), vout(vout), script(script), sequence(sequence) {}
+	};
+
+	struct Output {
+		R script;
+		uint64_t value;
+
+		Output (R script, uint64_t value) : script(script), value(value) {}
+	};
+
+	R data;
+	int32_t version;
+
+	std::vector<Input> inputs;
+	std::vector<Output> outputs;
+
+	uint32_t locktime;
+
+	TransactionBase (
+		R data,
+		int32_t version,
+		std::vector<Input> inputs,
+		std::vector<Output> outputs,
+		uint32_t locktime
+	) :
+		data(data),
+		version(version),
+		inputs(inputs),
+		outputs(outputs),
+		locktime(locktime) {}
+
+	auto hash () const {
+		return hash256(this->data);
+	}
+};
+
+namespace {
+	template <typename R>
+	auto readRange (R& r, size_t n) {
+		auto v = r.take(n);
+		r.popFrontN(n);
+		return v;
+	}
+
+	template <typename R>
+	auto readVI (R& r) {
+		const auto i = serial::read<uint8_t>(r);
+		if (i < 253) return static_cast<uint64_t>(i);
+		if (i < 254) return static_cast<uint64_t>(serial::read<uint16_t>(r));
+		if (i < 255) return static_cast<uint64_t>(serial::read<uint32_t>(r));
+		return serial::read<uint64_t>(r);
+	}
+
+	template <typename R>
+	auto readVI (R&& r) { return readVI<R>(r); }
+
+	template <typename R>
+	auto readTransaction (R& data) {
+		using Transaction = TransactionBase<R>;
+
+		auto save = data;
+		const auto version = serial::read<int32_t>(data);
+
+		const auto nInputs = readVI(data);
+		std::vector<typename Transaction::Input> inputs;
+
+		for (size_t i = 0; i < nInputs; ++i) {
+			const auto hash = readRange(data, 32);
+			const auto vout = serial::read<uint32_t>(data);
+
+			const auto scriptLen = readVI(data);
+			const auto script = readRange(data, scriptLen);
+			const auto sequence = serial::read<uint32_t>(data);
+
+			inputs.emplace_back(typename Transaction::Input(hash, vout, script, sequence));
+		}
+
+		const auto nOutputs = readVI(data);
+		std::vector<typename Transaction::Output> outputs;
+
+		for (size_t i = 0; i < nOutputs; ++i) {
+			const auto value = serial::read<uint64_t>(data);
+			const auto scriptLen = readVI(data);
+			const auto script = readRange(data, scriptLen);
+
+			outputs.emplace_back(typename Transaction::Output(script, value));
+		}
+
+		const auto locktime = serial::read<uint32_t>(data);
+		save.popBackN(data.size());
+
+		return Transaction(save, version, std::move(inputs), std::move(outputs), locktime);
+	}
+
+	template <typename R>
+	auto readTransaction (R&& data) { return readTransaction<R>(data); }
+}
+
+template <typename R>
+struct TransactionRange {
+private:
+	size_t _count;
+	R _data;
+	R _save;
+
+public:
+	TransactionRange(R data, size_t count) : _count(count), _data(data), _save(data.take(0)) {}
+
+	auto empty () const { return this->_count > 0; }
+	auto size () const { return this->_size; }
+	auto front () {
+		this->_save = this->_data;
+		return readTransaction(this->_save);
+	}
+
+	void popFront () {
+		assert(!this->empty());
+		--this->_count;
+
+		if (this->_save.empty()) {
+			readTransaction(this->_data);
+			return;
+		}
+
+		this->_data = this->_save;
+	}
+};
+
+template <typename S>
+struct BlockBase {
+	S header;
+	S data;
+
+	BlockBase(S header, S data) : header(header), data(data) {}
+
+	static void calculateTarget (uint256_t& target, uint32_t bits) {
+		const auto exponent = ((bits & 0xff000000) >> 24) - 3;
+		const auto mantissa = bits & 0x007fffff;
+		const auto i = static_cast<size_t>(28 - exponent);
+		if (i > 28) return;
+
+		serial::put<uint32_t, true>(range(target).drop(i), mantissa);
+	}
+
+	auto bits () const {
+		return serial::peek<uint32_t>(this->header.drop(72));
+	}
+
+	auto hash () const {
+		return hash256(this->header);
+	}
+
+	auto previousBlockHash () const {
+		return this->header.drop(4).take(32);
+	}
+
+	auto transactions () const {
+		auto copy = this->data;
+		const auto count = readVI(copy);
+		return TransactionRange<S>(copy, count);
+	}
+
+	auto utc () const {
+		return serial::peek<uint32_t>(this->header.drop(68));
+	}
+
+	auto verify () const {
+		auto hash = this->hash();
+		std::reverse(hash.begin(), hash.end());
+
+		uint256_t target = {};
+		BlockBase::calculateTarget(target, this->bits());
+
+		return memcmp(hash.data(), target.data(), target.size()) <= 0;
+	}
+};
+
+template <typename R> auto Block(const R& header, const R& data) { return BlockBase<R>(header, data); }

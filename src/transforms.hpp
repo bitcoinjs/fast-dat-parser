@@ -1,18 +1,14 @@
 // XXX: fwrite can be used without sizeof(sbuf) < PIPE_BUF (4096 bytes)
 #pragma once
 
-#include "block.hpp"
+#include "bitcoin.hpp"
 #include "hash.hpp"
 #include "hvectors.hpp"
+#include "ranger.hpp"
+#include "serial.hpp"
 
-struct transform_t_base {
-	virtual ~transform_t_base () {}
-
-	virtual bool initialize (const char*) { return false; }
-	virtual void operator() (const Block&) = 0;
-};
-
-struct transform_t : public transform_t_base {
+template <typename Block>
+struct TransformBase {
 protected:
 	HMap<uint256_t, uint32_t> whitelist;
 
@@ -49,8 +45,7 @@ public:
 	bool shouldSkip (const Block& block, uint256_t* _hash = nullptr, uint32_t* _height = nullptr) const {
 		if (this->whitelist.empty()) return false;
 
-		uint256_t hash;
-		hash256(hash.begin(), block.header);
+		const auto hash = block.hash();
 		const auto iter = this->whitelist.find(hash);
 		if (iter == this->whitelist.end()) return true;
 
@@ -58,4 +53,6 @@ public:
 		if (_height != nullptr) *_height = iter->second;
 		return false;
 	}
+
+	virtual void operator() (const Block&) = 0;
 };

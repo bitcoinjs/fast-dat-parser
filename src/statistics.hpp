@@ -1,24 +1,24 @@
 #pragma once
 
 #include <atomic>
-#include "base.hpp"
 
 // HEIGHT | VALUE > stdout
-struct dumpOutputValuesOverHeight : transform_t {
+template <typename Block>
+struct dumpOutputValuesOverHeight : public TransformBase<Block> {
 	void operator() (const Block& block) {
-		if (this->shouldSkip(block)) return;
+		uint32_t height;
+		if (this->shouldSkip(block, nullptr, height)) return;
 
-		uint8_t sbuf[8] = {};
-// 		Slice(sbuf, sbuf + sizeof(sbuf)).put(block.utc());
+		std::array<uint8_t, 12> buffer;
+		serial::put<uint32_t>(buffer, height);
 
 		auto transactions = block.transactions();
 		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			for (const auto& output : transaction.outputs) {
-				Slice(sbuf, sbuf + sizeof(sbuf)).put(output.value);
-
-				fwrite(sbuf, sizeof(sbuf), 1, stdout);
+				serial::put<uint64_t>(buffer.begin() + 4, output.value);
+				fwrite(buffer.begin(), buffer.size(), 1, stdout);
 			}
 
 			transactions.popFront();
@@ -30,7 +30,8 @@ auto perc (uint64_t a, uint64_t ab) {
 	return static_cast<double>(a) / static_cast<double>(ab);
 }
 
-struct dumpStatistics : transform_t {
+template <typename Block>
+struct dumpStatistics : public TransformBase<Block> {
 	std::atomic_ulong inputs;
 	std::atomic_ulong outputs;
 	std::atomic_ulong transactions;

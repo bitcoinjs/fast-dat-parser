@@ -116,17 +116,17 @@ int main () {
 	// read block headers from stdin until EOF
 	{
 		while (true) {
-			std::array<uint8_t, 80> rbuf;
-			const auto read = fread(rbuf.begin(), rbuf.size(), 1, stdin);
+			std::array<uint8_t, 80> header;
+			const auto read = fread(header.data(), header.size(), 1, stdin);
 
 			// EOF?
 			if (read == 0) break;
 
-			const auto hash = hash256(rbuf);
-			const auto bits = serial::peek<uint32_t>(range(rbuf).drop(72));
+			const auto hash = hash256(header);
+			const auto bits = serial::peek<uint32_t>(range(header).drop(72));
 
 			uint256_t prevBlockHash;
-			memcpy(prevBlockHash.begin(), rbuf.begin() + 4, 32);
+			memcpy(prevBlockHash.begin(), header.begin() + 4, 32);
 
 			blocks.emplace_back(std::make_pair(hash, Block(hash, prevBlockHash, bits)));
 		}

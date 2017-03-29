@@ -3,30 +3,6 @@
 #include <algorithm>
 #include <vector>
 
-// O(log n) contains/find/insort
-template <typename H>
-struct HSet : std::vector<H> {
-	auto contains (const H& key) const {
-		const auto iter = std::lower_bound(this->begin(), this->end(), key);
-
-		return (iter != this->end()) && (*iter == key);
-	}
-
-	void insort (const H& key) {
-		const auto iter = std::lower_bound(this->begin(), this->end(), key);
-
-		this->emplace(iter, key);
-	}
-
-	auto ready () const {
-		return std::is_sorted(this->begin(), this->end());
-	}
-
-	void sort () {
-		std::sort(this->begin(), this->end());
-	}
-};
-
 template <typename K, typename V>
 struct HMap : std::vector<std::pair<K, V>> {
 	auto find (const K& key) const {

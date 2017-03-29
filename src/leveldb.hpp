@@ -1,5 +1,5 @@
 #pragma once
-#include "base.hpp"
+
 #include <iostream>
 #include <iomanip>
 #include "leveldb/db.h"
@@ -7,7 +7,8 @@
 #include "leveldb/write_batch.h"
 
 namespace {
-	void put (leveldb::WriteBatch& batch, const Slice& key, const Slice& value) {
+	template <typename R>
+	void put (leveldb::WriteBatch& batch, const R& key, const R& value) {
 		batch.Put(
 			leveldb::Slice(reinterpret_cast<const char*>(key.begin()), key.length()),
 			leveldb::Slice(reinterpret_cast<const char*>(value.begin()), value.length())
@@ -16,47 +17,44 @@ namespace {
 
 	// 0x00 \ BLOCK_HASH
 	void putTip (leveldb::WriteBatch& batch, const uint256_t& id) {
-		StackSlice<1 + 32> data;
+		std::array<uint8_t, 1 + 32> data;
 		{
-			Slice _data = data;
-			_data.write<uint8_t>(0x00);
-			_data.writeNReverse(id.begin(), 32);
+			auto _data = range(data);
+			serial::write<uint8_t>(_data, 0x00);
+			_data.put(retro(id));
 			assert(_data.length() == 0);
 		}
 
-		put(batch, data.take(1), data.drop(1));
+		put(batch, range(data).take(1), range(data).drop(1));
 	}
 
 	// 0x01 | SHA256(SCRIPT) | HEIGHT<BE> | TX_HASH | VOUT
 	void putScript (leveldb::WriteBatch& batch, const Slice& script, uint32_t height, const uint256_t& txHash, uint32_t vout) {
-		StackSlice<1 + 32 + 4 + 32 + 4> data;
-
+		std::array<uint8_t, 1 + 32 + 4 + 32 + 4> data;
 		{
-			uint256_t scHash;
-			sha256(scHash.begin(), script);
-
-			Slice _data = data;
-			_data.write<uint8_t>(0x01);
-			_data.writeN(scHash.begin(), 32);
-			_data.write<uint32_t, true>(height); // big-endian for indexing
-			_data.writeNReverse(txHash.begin(), 32);
-			_data.write<uint32_t>(vout);
+			const auto scHash = sha256(script);
+			auto _data = range(data);
+			serial::write<uint8_t>(_data, 0x01);
+			_data.put(scHash);
+			serial::write<uint32_t, true>(_data, height); // big-endian for indexing
+			_data.put(retro(txHash));
+			serial::write<uint32_t>(_data, vout);
 			assert(_data.length() == 0);
 		}
 
-		put(batch, Slice(data), data.take(0));
+		put(batch, range(data), data.take(0));
 	}
 
 	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
 	void putSpent (leveldb::WriteBatch& batch, const Slice& prevTxHash, uint32_t vout, const uint256_t& txHash, uint32_t vin) {
-		StackSlice<1 + 32 + 4 + 32 + 4> data;
+		std::array<uint8_t, 1 + 32 + 4 + 32 + 4> data;
 		{
-			Slice _data = data;
-			_data.write<uint8_t>(0x02);
-			_data.writeNReverse(prevTxHash.begin(), 32);
-			_data.write<uint32_t>(vout);
-			_data.writeNReverse(txHash.begin(), 32);
-			_data.write<uint32_t>(vin);
+			auto _data = range(data);
+			serial::write<uint8_t>(0x02);
+			_data.put(retro(prevTxHash));
+			serial::write<uint32_t>(vout);
+			_data.put(retro(txHash));
+			serial::write<uint32_t>(vin);
 			assert(_data.length() == 0);
 		}
 
@@ -65,12 +63,12 @@ namespace {
 
 	// 0x03 | TX_HASH \ HEIGHT
 	void putTx (leveldb::WriteBatch& batch, const uint256_t& txHash, uint32_t height) {
-		StackSlice<1 + 32 + 4> data;
+		std::array<uint8_t, 1 + 32 + 4> data;
 		{
-			Slice _data = data;
-			_data.write<uint8_t>(0x03);
-			_data.writeNReverse(txHash.begin(), 32);
-			_data.write<uint32_t>(height);
+			auto _data = range(data);
+			serial::write<uint8_t>(0x03);
+			_data.put(retro(txHash));
+			serial::write<uint32_t>(height);
 			assert(_data.length() == 0);
 		}
 
@@ -79,13 +77,13 @@ namespace {
 
 	// 0x04 | TX_HASH | VOUT \ VALUE
 	void putTxo (leveldb::WriteBatch& batch, const uint256_t& txHash, uint32_t vout, uint64_t value) {
-		StackSlice<1 + 32 + 4 + 8> data;
+		std::array<uint8_t, 1 + 32 + 4 + 8> data;
 		{
-			Slice _data = data;
-			_data.write<uint8_t>(0x04);
-			_data.writeNReverse(txHash.begin(), 32);
-			_data.write<uint32_t>(vout);
-			_data.write<uint64_t>(value);
+			auto _data = range(data);
+			serial::write<uint8_t>(0x04);
+			_data.put(retro(txHash));
+			serial::write<uint32_t>(vout);
+			serial::write<uint64_t>(value);
 			assert(_data.length() == 0);
 		}
 
@@ -93,7 +91,8 @@ namespace {
 	}
 }
 
-struct dumpIndexdLevel : public transform_t {
+template <typename Block>
+struct dumpIndexdLevel : public TransformBase<Block> {
 	leveldb::DB* ldb;
 	std::atomic_ulong maxHeight;
 
@@ -146,9 +145,7 @@ struct dumpIndexdLevel : public transform_t {
 		auto transactions = block.transactions();
 		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
-
-			uint256_t txHash;
-			hash256(txHash.begin(), transaction.data);
+			const auto txHash = transaction.hash();
 
 			putTx(batch, txHash, height);
 
