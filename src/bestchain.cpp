@@ -175,7 +175,7 @@ int main () {
 		for (auto&& blockIter : blockChainMap) {
 			auto _data = range(buffer);
 			_data.put(range(blockIter.first));
-			serial::write<uint32_t>(_data, blockIter.second);
+			serial::put<uint32_t>(_data, blockIter.second);
 			assert(_data.size() == 0);
 
 			fwrite(buffer.begin(), buffer.size(), 1, stdout);

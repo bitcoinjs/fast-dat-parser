@@ -160,7 +160,7 @@ struct BlockBase {
 		const auto i = static_cast<size_t>(28 - exponent);
 		if (i > 28) return;
 
-		serial::put<uint32_t, true>(range(target).drop(i), mantissa);
+		serial::place<uint32_t, true>(range(target).drop(i), mantissa);
 	}
 
 	auto bits () const {

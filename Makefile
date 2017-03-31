@@ -14,7 +14,7 @@ DEPENDENCIES=$(OBJECTS:.o=.d)
 all: bestchain parser
 
 clean:
-	$(RM) $(DEPENDENCIES) $(OBJECTS) demo1
+	$(RM) $(DEPENDENCIES) $(OBJECTS) bestchain parser
 
 bestchain: $(filter-out src/parser.o, $(OBJECTS))
 	$(CXX) $(filter-out src/parser.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@

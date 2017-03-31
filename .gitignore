@@ -3,5 +3,3 @@ parser
 *.dat
 *.d
 *.o
-include/ranger.hpp
-include/serial.hpp

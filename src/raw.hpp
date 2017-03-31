@@ -27,7 +27,7 @@ struct dumpScripts : public TransformBase<Block> {
 				if (input.script.size() > maxScriptLength) continue;
 
 				auto r = range(buffer);
-				serial::write<uint16_t>(r, static_cast<uint16_t>(input.script.size()));
+				serial::put<uint16_t>(r, static_cast<uint16_t>(input.script.size()));
 				r.put(input.script);
 				fwrite(buffer.begin(), buffer.size() - r.size(), 1, stdout);
 			}
@@ -36,7 +36,7 @@ struct dumpScripts : public TransformBase<Block> {
 				if (output.script.size() > maxScriptLength) continue;
 
 				auto r = range(buffer);
-				serial::write<uint16_t>(r, static_cast<uint16_t>(output.script.size()));
+				serial::put<uint16_t>(r, static_cast<uint16_t>(output.script.size()));
 				r.put(output.script);
 				fwrite(buffer.begin(), buffer.size() - r.size(), 1, stdout);
 			}

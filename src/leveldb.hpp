@@ -20,7 +20,7 @@ namespace {
 		std::array<uint8_t, 1 + 32> data;
 		{
 			auto _data = range(data);
-			serial::write<uint8_t>(_data, 0x00);
+			serial::put<uint8_t>(_data, 0x00);
 			_data.put(retro(id));
 			assert(_data.length() == 0);
 		}
@@ -34,11 +34,11 @@ namespace {
 		{
 			const auto scHash = sha256(script);
 			auto _data = range(data);
-			serial::write<uint8_t>(_data, 0x01);
+			serial::put<uint8_t>(_data, 0x01);
 			_data.put(scHash);
-			serial::write<uint32_t, true>(_data, height); // big-endian for indexing
+			serial::put<uint32_t, true>(_data, height); // big-endian for indexing
 			_data.put(retro(txHash));
-			serial::write<uint32_t>(_data, vout);
+			serial::put<uint32_t>(_data, vout);
 			assert(_data.length() == 0);
 		}
 
@@ -50,11 +50,11 @@ namespace {
 		std::array<uint8_t, 1 + 32 + 4 + 32 + 4> data;
 		{
 			auto _data = range(data);
-			serial::write<uint8_t>(0x02);
+			serial::put<uint8_t>(0x02);
 			_data.put(retro(prevTxHash));
-			serial::write<uint32_t>(vout);
+			serial::put<uint32_t>(vout);
 			_data.put(retro(txHash));
-			serial::write<uint32_t>(vin);
+			serial::put<uint32_t>(vin);
 			assert(_data.length() == 0);
 		}
 
@@ -66,9 +66,9 @@ namespace {
 		std::array<uint8_t, 1 + 32 + 4> data;
 		{
 			auto _data = range(data);
-			serial::write<uint8_t>(0x03);
+			serial::put<uint8_t>(0x03);
 			_data.put(retro(txHash));
-			serial::write<uint32_t>(height);
+			serial::put<uint32_t>(height);
 			assert(_data.length() == 0);
 		}
 
@@ -80,10 +80,10 @@ namespace {
 		std::array<uint8_t, 1 + 32 + 4 + 8> data;
 		{
 			auto _data = range(data);
-			serial::write<uint8_t>(0x04);
+			serial::put<uint8_t>(0x04);
 			_data.put(retro(txHash));
-			serial::write<uint32_t>(vout);
-			serial::write<uint64_t>(value);
+			serial::put<uint32_t>(vout);
+			serial::put<uint64_t>(value);
 			assert(_data.length() == 0);
 		}
 

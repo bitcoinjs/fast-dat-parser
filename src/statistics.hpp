@@ -10,14 +10,14 @@ struct dumpOutputValuesOverHeight : public TransformBase<Block> {
 		if (this->shouldSkip(block, nullptr, &height)) return;
 
 		std::array<uint8_t, 12> buffer;
-		serial::put<uint32_t>(buffer, height);
+		serial::place<uint32_t>(buffer, height);
 
 		auto transactions = block.transactions();
 		while (not transactions.empty()) {
 			const auto& transaction = transactions.front();
 
 			for (const auto& output : transaction.outputs) {
-				serial::put<uint64_t>(range(buffer).drop(4), output.value);
+				serial::place<uint64_t>(range(buffer).drop(4), output.value);
 				fwrite(buffer.begin(), buffer.size(), 1, stdout);
 			}
 
