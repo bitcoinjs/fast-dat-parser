@@ -29,12 +29,18 @@ struct TransactionBase {
 		Output (R script, uint64_t value) : script(script), value(value) {}
 	};
 
-	R data;
-	int32_t version;
+	struct Witness {
+		std::vector<R> stack;
 
+		Witness (std::vector<R> stack) : stack(stack) {}
+	};
+
+	R data;
+
+	int32_t version;
 	std::vector<Input> inputs;
 	std::vector<Output> outputs;
-
+	std::vector<Witness> witnesses;
 	uint32_t locktime;
 
 	TransactionBase (
@@ -42,12 +48,14 @@ struct TransactionBase {
 		int32_t version,
 		std::vector<Input> inputs,
 		std::vector<Output> outputs,
+		std::vector<Witness> witnesses,
 		uint32_t locktime
 	) :
 		data(data),
 		version(version),
 		inputs(inputs),
 		outputs(outputs),
+		witnesses(witnesses),
 		locktime(locktime) {}
 
 	auto hash () const {
@@ -76,11 +84,29 @@ namespace {
 	auto readVI (R&& r) { return readVI<R>(r); }
 
 	template <typename R>
+	auto readStack (R& r) {
+		const auto count = readVI(r);
+
+		std::vector<R> stack;
+		for (uint64_t i = 0; i < count; ++i) {
+			stack.emplace_back(readRange(r, readVI(r)));
+		}
+
+		return std::move(stack);
+	}
+
+	template <typename R>
 	auto readTransaction (R& data) {
 		using Transaction = TransactionBase<R>;
 
 		auto save = data;
 		const auto version = serial::read<int32_t>(data);
+
+		// segregated witness
+		const auto marker = serial::peek<uint8_t>(data);
+		const auto flag = serial::peek<uint8_t>(data.drop(1));
+		const auto hasWitnesses = (marker == 0x00) && (flag == 0x01);
+		if (hasWitnesses) data.popFrontN(2);
 
 		const auto nInputs = readVI(data);
 		std::vector<typename Transaction::Input> inputs;
@@ -107,10 +133,19 @@ namespace {
 			outputs.emplace_back(typename Transaction::Output(script, value));
 		}
 
+		std::vector<typename Transaction::Witness> witnesses;
+		if (hasWitnesses) {
+			for (size_t i = 0; i < nInputs; ++i) {
+				const auto stack = readStack(data);
+
+				witnesses.emplace_back(typename Transaction::Witness(std::move(stack)));
+			}
+		}
+
 		const auto locktime = serial::read<uint32_t>(data);
 		save.popBackN(data.size());
 
-		return Transaction(save, version, std::move(inputs), std::move(outputs), locktime);
+		return Transaction(save, version, std::move(inputs), std::move(outputs), std::move(witnesses), locktime);
 	}
 
 	template <typename R>
