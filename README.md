@@ -21,12 +21,12 @@ Important to note is that the implementation skips bitcoind allocated zero-byte 
 Each of these pre-included functions write their output as raw data (binary, not hex).
 You can easily write your own though!
 
-- `0` - Outputs the *unordered* 80-byte block headers (typically includes orphans)
+- `0` - Outputs the *unordered* 80-byte block headers
 - `1` - Outputs every script prefixed with a `uint16_t` length
 - `2` - Displays the number of transaction inputs, outputs and number of transactions in the blockchain
-- `3` - Outputs `HEIGHT | VALUE` for each output,  typically used for showing output balances over time.
+- `3` - Outputs `HEIGHT | VALUE` for each output,  typically used for showing output balances over time
 
-Use a whitelist (see `-w`) to avoid orphan blocks being included. (see below examples for filtering by best chain)
+Use a whitelist (see `-w`) to stop orphan blocks from being parsed. (see below for filtering by best chain)
 
 
 ## Examples
