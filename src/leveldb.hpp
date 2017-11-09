@@ -9,6 +9,7 @@
 #include "hash.hpp"
 #include "ranger.hpp"
 #include "serial.hpp"
+#include "transforms.hpp"
 
 namespace {
 	template <typename R>

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "transforms.hpp"
+
 // BLOCK_HEADER > stdout
 template <typename Block>
 struct dumpHeaders : public TransformBase<Block> {

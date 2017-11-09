@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include "transforms.hpp"
 
 // HEIGHT | VALUE > stdout
 template <typename Block>

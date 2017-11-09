@@ -1,6 +1,9 @@
 // XXX: fwrite can be used without sizeof(sbuf) < PIPE_BUF (4096 bytes)
 #pragma once
 
+#include <cstring>
+#include <iostream>
+
 #include "bitcoin.hpp"
 #include "hash.hpp"
 #include "hvectors.hpp"
