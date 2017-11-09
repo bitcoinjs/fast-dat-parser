@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <iostream>
 #include <iomanip>
 #include <leveldb/db.h>
@@ -110,7 +111,7 @@ struct dumpIndexdLevel : public TransformBase<Block> {
 	}
 
 	bool initialize (const char* arg) {
-		if (transform_t::initialize(arg)) return true;
+		if (TransformBase<Block>::initialize(arg)) return true;
 		if (strncmp(arg, "-l", 2) == 0) {
 			const auto folderName = std::string(arg + 2);
 
