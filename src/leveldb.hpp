@@ -2,16 +2,20 @@
 
 #include <iostream>
 #include <iomanip>
-#include "leveldb/db.h"
-#include "leveldb/filter_policy.h"
-#include "leveldb/write_batch.h"
+#include <leveldb/db.h>
+#include <leveldb/filter_policy.h>
+#include <leveldb/write_batch.h>
+
+#include "hash.hpp"
+#include "ranger.hpp"
+#include "serial.hpp"
 
 namespace {
 	template <typename R>
 	void put (leveldb::WriteBatch& batch, const R& key, const R& value) {
 		batch.Put(
-			leveldb::Slice(reinterpret_cast<const char*>(key.begin()), key.length()),
-			leveldb::Slice(reinterpret_cast<const char*>(value.begin()), value.length())
+			leveldb::Slice(reinterpret_cast<const char*>(key.begin()), key.size()),
+			leveldb::Slice(reinterpret_cast<const char*>(value.begin()), value.size())
 		);
 	}
 
@@ -22,14 +26,15 @@ namespace {
 			auto _data = range(data);
 			serial::put<uint8_t>(_data, 0x00);
 			_data.put(retro(id));
-			assert(_data.length() == 0);
+			assert(_data.size() == 0);
 		}
 
 		put(batch, range(data).take(1), range(data).drop(1));
 	}
 
 	// 0x01 | SHA256(SCRIPT) | HEIGHT<BE> | TX_HASH | VOUT
-	void putScript (leveldb::WriteBatch& batch, const Slice& script, uint32_t height, const uint256_t& txHash, uint32_t vout) {
+	template <typename S>
+	void putScript (leveldb::WriteBatch& batch, const S& script, const uint32_t height, const uint256_t& txHash, const uint32_t vout) {
 		std::array<uint8_t, 1 + 32 + 4 + 32 + 4> data;
 		{
 			const auto scHash = sha256(script);
@@ -39,55 +44,57 @@ namespace {
 			serial::put<uint32_t, true>(_data, height); // big-endian for indexing
 			_data.put(retro(txHash));
 			serial::put<uint32_t>(_data, vout);
-			assert(_data.length() == 0);
+			assert(_data.size() == 0);
 		}
 
-		put(batch, range(data), data.take(0));
+		put(batch, range(data), range(data).take(0));
 	}
 
 	// 0x02 | PREV_TX_HASH | PREV_TX_VOUT \ TX_HASH | TX_VIN
-	void putSpent (leveldb::WriteBatch& batch, const Slice& prevTxHash, uint32_t vout, const uint256_t& txHash, uint32_t vin) {
+	template <typename S>
+	void putSpent (leveldb::WriteBatch& batch, const S& prevTxHash, const uint32_t vout, const uint256_t& txHash, const uint32_t vin) {
 		std::array<uint8_t, 1 + 32 + 4 + 32 + 4> data;
 		{
 			auto _data = range(data);
-			serial::put<uint8_t>(0x02);
+			serial::put<uint8_t>(_data, 0x02);
 			_data.put(retro(prevTxHash));
-			serial::put<uint32_t>(vout);
+			serial::put<uint32_t>(_data, vout);
 			_data.put(retro(txHash));
-			serial::put<uint32_t>(vin);
-			assert(_data.length() == 0);
+			serial::put<uint32_t>(_data, vin);
+			assert(_data.size() == 0);
 		}
 
-		put(batch, data.take(37), data.drop(37));
+		put(batch, range(data).take(37), range(data).drop(37));
 	}
 
 	// 0x03 | TX_HASH \ HEIGHT
-	void putTx (leveldb::WriteBatch& batch, const uint256_t& txHash, uint32_t height) {
+	void putTx (leveldb::WriteBatch& batch, const uint256_t& txHash, const uint32_t height) {
 		std::array<uint8_t, 1 + 32 + 4> data;
 		{
 			auto _data = range(data);
-			serial::put<uint8_t>(0x03);
+			serial::put<uint8_t>(_data, 0x03);
 			_data.put(retro(txHash));
-			serial::put<uint32_t>(height);
-			assert(_data.length() == 0);
+			serial::put<uint32_t>(_data, height);
+			assert(_data.size() == 0);
 		}
 
-		put(batch, data.take(33), data.drop(33));
+		put(batch, range(data).take(33), range(data).drop(33));
 	}
 
-	// 0x04 | TX_HASH | VOUT \ VALUE
-	void putTxo (leveldb::WriteBatch& batch, const uint256_t& txHash, uint32_t vout, uint64_t value) {
+	// 0x04 | TX_HASH | VOUT \ VALUE | SCRIPT
+	void putTxo (leveldb::WriteBatch& batch, const uint256_t& txHash, const uint32_t vout, const uint64_t value) {
 		std::array<uint8_t, 1 + 32 + 4 + 8> data;
 		{
 			auto _data = range(data);
-			serial::put<uint8_t>(0x04);
+			serial::put<uint8_t>(_data, 0x04);
 			_data.put(retro(txHash));
-			serial::put<uint32_t>(vout);
-			serial::put<uint64_t>(value);
-			assert(_data.length() == 0);
+			serial::put<uint32_t>(_data, vout);
+			serial::put<uint64_t>(_data, value);
+			// TODO: missing script
+			assert(_data.size() == 0); // wont pass
 		}
 
-		put(batch, data.take(37), data.drop(37));
+		put(batch, range(data).take(37), range(data).drop(37));
 	}
 }
 
