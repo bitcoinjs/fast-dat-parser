@@ -139,7 +139,7 @@ int main (int argc, char** argv) {
 	std::cerr << "Parsed "
 		<< count << " blocks ("
 		<< accum / 1024 / 1024 << " MiB)"
-		<< "in " << difftime(end, start) << " seconds"
+		<< " in " << difftime(end, start) << " seconds"
 		<< std::endl;
 
 	return 0;

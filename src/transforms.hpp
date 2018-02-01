@@ -57,5 +57,6 @@ public:
 		return false;
 	}
 
+	virtual ~TransformBase () {}
 	virtual void operator() (const Block&) = 0;
 };

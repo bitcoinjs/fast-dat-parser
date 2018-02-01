@@ -51,7 +51,7 @@ struct dumpStatistics : public TransformBase<Block> {
 		this->nonFinalSequences = 0;
 	}
 
-	~dumpStatistics () {
+	virtual ~dumpStatistics () {
 		std::cout <<
 			"Transactions:\t" << this->transactions << '\n' <<
 			"-- Inputs:\t" << this->inputs << " (ratio " << perc(this->inputs, this->transactions) << ") \n" <<
