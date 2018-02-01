@@ -162,7 +162,7 @@ private:
 public:
 	TransactionRange(R data, size_t count) : _count(count), _data(data), _save(data.take(0)) {}
 
-	auto empty () const { return this->_count > 0; }
+	auto empty () const { return this->_count == 0; }
 	auto size () const { return this->_count; }
 	auto front () {
 		this->_save = this->_data;
