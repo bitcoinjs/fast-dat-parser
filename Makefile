@@ -20,7 +20,7 @@ bestchain: $(filter-out src/parser.o, $(OBJECTS))
 	$(CXX) $(filter-out src/parser.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@
 
 parser: $(filter-out src/bestchain.o, $(OBJECTS))
-	$(CXX) $(filter-out src/bestchain.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -lleveldb -pthread -o $@
+	$(CXX) $(filter-out src/bestchain.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -pthread -o $@
 
 # INFERENCES
 %.o: %.cpp

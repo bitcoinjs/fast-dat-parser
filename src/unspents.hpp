@@ -58,5 +58,7 @@ struct dumpUnspents : public TransformBase<Block> {
 
 			this->unspents.erase(iter); // TODO
 		}
+
+		std::cout << this->unspents.size() << std::endl;
 	}
 };

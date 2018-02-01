@@ -39,6 +39,7 @@ struct dumpStatistics : public TransformBase<Block> {
 	std::atomic_ulong version1;
 	std::atomic_ulong version2;
 	std::atomic_ulong locktimesGt0;
+	std::atomic_ulong nonFinalSequences;
 
 	dumpStatistics () {
 		this->inputs = 0;
@@ -47,6 +48,7 @@ struct dumpStatistics : public TransformBase<Block> {
 		this->version1 = 0;
 		this->version2 = 0;
 		this->locktimesGt0 = 0;
+		this->nonFinalSequences = 0;
 	}
 
 	~dumpStatistics () {
@@ -57,6 +59,7 @@ struct dumpStatistics : public TransformBase<Block> {
 			"-- Version1:\t" << this->version1 << " (" << perc(this->version1, this->transactions) * 100 << "%) \n" <<
 			"-- Version2:\t" << this->version2 << " (" << perc(this->version2, this->transactions) * 100 << "%) \n" <<
 			"-- Locktimes (>0):\t" << this->locktimesGt0 << " (" << perc(this->locktimesGt0, this->transactions) * 100 << "%) \n" <<
+			"-- Sequences (!= FINAL):\t" << this->nonFinalSequences << " (" << perc(this->nonFinalSequences, this->inputs) * 100 << "%) \n" <<
 			std::endl;
 	}
 
@@ -70,6 +73,13 @@ struct dumpStatistics : public TransformBase<Block> {
 			const auto& transaction = transactions.front();
 
 			this->inputs += transaction.inputs.size();
+
+			size_t nfs = 0;
+			for (const auto& input : transaction.inputs) {
+				if (input.sequence != 0xffffffff) nfs++;
+			}
+
+			this->nonFinalSequences += nfs;
 			this->outputs += transaction.outputs.size();
 
 			this->version1 += transaction.version == 1;
