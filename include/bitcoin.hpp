@@ -261,8 +261,11 @@ void putHex (R& output, const R& data) {
 	}
 }
 
+// TODO: output can max-out ...
 template <typename R>
 void putASM (R& output, const R& script) {
+	if (script.size() > 1000) return output.put(zstr_range("<EXCEEDS LIMIT>"));
+
 	auto save = range(script);
 
 	while (not save.empty()) {

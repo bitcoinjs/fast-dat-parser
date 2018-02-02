@@ -99,7 +99,7 @@ struct dumpASM : public TransformBase<Block> {
 	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
-		std::array<uint8_t, 1024> buffer;
+		std::array<uint8_t, 4096> buffer;
 
 		auto transactions = block.transactions();
 		while (not transactions.empty()) {
