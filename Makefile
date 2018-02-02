@@ -9,7 +9,7 @@ OBJECTS=$(addsuffix .o, $(basename $(SOURCES)))
 DEPENDENCIES=$(OBJECTS:.o=.d)
 
 # TARGETS
-.PHONY: all clean
+.PHONY: all clean deps
 
 all: bestchain parser
 
@@ -25,5 +25,9 @@ parser: $(filter-out src/bestchain.o, $(OBJECTS))
 # INFERENCES
 %.o: %.cpp
 	$(CXX) $(CFLAGS) $(OFLAGS) $(IFLAGS) -MMD -MP -c $< -o $@
+
+deps:
+	curl https://raw.githubusercontent.com/dcousens/ranger/4cf823ceec6010881f4a2923358e4151ab54d272/ranger.hpp > include/ranger.hpp
+	curl https://raw.githubusercontent.com/dcousens/ranger/4cf823ceec6010881f4a2923358e4151ab54d272/serial.hpp > include/serial.hpp
 
 -include $(DEPENDENCIES)
