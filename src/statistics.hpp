@@ -1,6 +1,8 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
+#include <vector>
 #include "transforms.hpp"
 
 // HEIGHT | VALUE > stdout
@@ -88,5 +90,136 @@ struct dumpStatistics : public TransformBase<Block> {
 
 			transactions.popFront();
 		}
+	}
+};
+
+// ASM > stdout
+template <typename Block>
+struct dumpASM : public TransformBase<Block> {
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		std::array<uint8_t, 1024> buffer;
+
+		auto transactions = block.transactions();
+		while (not transactions.empty()) {
+			const auto& transaction = transactions.front();
+
+			for (const auto& output : transaction.inputs) {
+				auto tmp = range(buffer);
+				putASM(tmp, output.script);
+				serial::put<char>(tmp, '\n');
+
+				const auto lineLength = buffer.size() - tmp.size();
+				fwrite(buffer.begin(), lineLength, 1, stdout);
+			}
+
+			transactions.popFront();
+		}
+	}
+};
+
+// BLOCK_HEADER > stdout
+template <typename Block>
+struct dumpHeaders : public TransformBase<Block> {
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		fwrite(block.header.begin(), 80, 1, stdout);
+	}
+};
+
+// SCRIPT_LENGTH | SCRIPT > stdout
+template <typename Block>
+struct dumpScripts : public TransformBase<Block> {
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		std::array<uint8_t, 4096> buffer;
+		const auto maxScriptLength = buffer.size() - sizeof(uint16_t);
+
+		auto transactions = block.transactions();
+		while (not transactions.empty()) {
+			const auto& transaction = transactions.front();
+
+			for (const auto& input : transaction.inputs) {
+				if (input.script.size() > maxScriptLength) continue;
+
+				auto r = range(buffer);
+				serial::put<uint16_t>(r, static_cast<uint16_t>(input.script.size()));
+				r.put(input.script);
+				fwrite(buffer.begin(), buffer.size() - r.size(), 1, stdout);
+			}
+
+			for (const auto& output : transaction.outputs) {
+				if (output.script.size() > maxScriptLength) continue;
+
+				auto r = range(buffer);
+				serial::put<uint16_t>(r, static_cast<uint16_t>(output.script.size()));
+				r.put(output.script);
+				fwrite(buffer.begin(), buffer.size() - r.size(), 1, stdout);
+			}
+
+			transactions.popFront();
+		}
+	}
+};
+
+typedef std::pair<uint256_t, uint32_t> UnspentKey;
+typedef std::pair<std::vector<uint8_t>, uint64_t> UnspentValue;
+typedef std::pair<UnspentKey, UnspentValue> Unspent;
+
+// HEIGHT | VALUE > stdout
+template <typename Block>
+struct dumpUnspents : public TransformBase<Block> {
+	std::mutex mutex;
+	HMap<UnspentKey, UnspentValue> unspents;
+
+	void operator() (const Block& block) {
+		if (this->shouldSkip(block)) return;
+
+		std::vector<UnspentKey> spends;
+		std::vector<Unspent> newUnspents;
+
+		auto transactions = block.transactions();
+		while (not transactions.empty()) {
+			const auto& transaction = transactions.front();
+			const auto txHash = transaction.hash();
+
+			for (const auto& input : transaction.inputs) {
+				uint256_t prevTxHash;
+				std::copy(input.hash.begin(), input.hash.end(), prevTxHash.begin());
+
+				spends.emplace_back(UnspentKey{prevTxHash, input.vout});
+			}
+
+			uint32_t vout = 0;
+			for (const auto& output : transaction.outputs) {
+				std::vector<uint8_t> script;
+				script.resize(output.script.size());
+				std::copy(output.script.begin(), output.script.end(), script.begin());
+
+				newUnspents.emplace_back(Unspent({txHash, vout}, {script, output.value}));
+				++vout;
+			}
+
+			transactions.popFront();
+		}
+
+		std::lock_guard<std::mutex>(this->mutex);
+		this->unspents.reserve(this->unspents.size() + newUnspents.size());
+		for (const auto& unspent : newUnspents) {
+			this->unspents.insort(unspent.first, unspent.second); // TODO
+		}
+		this->unspents.sort();
+
+		for (const auto& spend : spends) {
+			const auto iter = this->unspents.find(spend);
+			if (iter == this->unspents.end()) continue;
+
+			this->unspents.erase(iter); // TODO
+		}
+
+		std::cout << this->unspents.size() << std::endl;
 	}
 };

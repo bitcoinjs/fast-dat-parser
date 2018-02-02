@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+DATA_DIR=/mnt/bitcoin
+
+cat $DATA_DIR/blocks/blk*.dat | ./parser -t2 | tee -a results.txt

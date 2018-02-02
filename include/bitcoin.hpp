@@ -7,8 +7,10 @@
 #include <vector>
 
 #include "hash.hpp"
+#include "hexxer.hpp"
 #include "ranger.hpp"
 #include "serial.hpp"
+#include "bitcoin-ops.hpp"
 
 template <typename R>
 struct TransactionBase {
@@ -82,6 +84,18 @@ namespace {
 
 	template <typename R>
 	auto readVI (R&& r) { return readVI<R>(r); }
+
+	template <typename R>
+	uint32_t readPD (const uint8_t opcode, R& range) {
+		if (opcode < OP_PUSHDATA1) return opcode;
+		if (opcode == OP_PUSHDATA1) return serial::read<uint8_t>(range);
+		if (opcode == OP_PUSHDATA2) return serial::read<uint16_t>(range);
+		assert(opcode == OP_PUSHDATA4);
+		return serial::read<uint32_t>(range);
+	}
+
+	template <typename R>
+	auto readPD (const uint8_t opcode, R&& r) { return readPD<R>(opcode, r); }
 
 	template <typename R>
 	auto readStack (R& r) {
@@ -160,7 +174,7 @@ private:
 	R _save;
 
 public:
-	TransactionRange(R data, size_t count) : _count(count), _data(data), _save(data.take(0)) {}
+	TransactionRange (R data, size_t count) : _count(count), _data(data), _save(data.take(0)) {}
 
 	auto empty () const { return this->_count == 0; }
 	auto size () const { return this->_count; }
@@ -187,7 +201,7 @@ struct BlockBase {
 	S header;
 	S data;
 
-	BlockBase(S header, S data) : header(header), data(data) {}
+	BlockBase (S header, S data) : header(header), data(data) {}
 
 	static void calculateTarget (uint256_t& target, uint32_t bits) {
 		const auto exponent = ((bits & 0xff000000) >> 24) - 3;
@@ -231,4 +245,46 @@ struct BlockBase {
 	}
 };
 
-template <typename R> auto Block(const R& header, const R& data) { return BlockBase<R>(header, data); }
+template <typename R>
+auto Block (const R& header, const R& data) {
+	return BlockBase<R>(header, data);
+}
+
+template <typename R>
+void putHex (R& output, const R& data) {
+	auto save = range(data);
+
+	while (not save.empty()) {
+		hex_encode(reinterpret_cast<char*>(output.begin()), save.begin(), 1);
+		output.popFrontN(2);
+		save.popFrontN(1);
+	}
+}
+
+template <typename R>
+void putASM (R& output, const R& script) {
+	auto save = range(script);
+
+	while (not save.empty()) {
+		const auto opcode = serial::read<uint8_t>(save);
+
+		// data
+		if ((opcode > OP_0) && (opcode <= OP_PUSHDATA4)) {
+			const auto dataLength = readPD(opcode, save);
+			if (dataLength > save.size()) {
+				return output.put(zstr_range("<ERROR>"));
+			}
+
+			const auto data = save.take(dataLength);
+			save.popFrontN(dataLength);
+
+			putHex(output, data);
+			serial::put<char>(output, ' ');
+
+		// opcode
+		} else {
+			output.put(zstr_range(getOpString(opcode)));
+			serial::put<char>(output, ' ');
+		}
+	}
+}
