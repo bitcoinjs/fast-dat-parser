@@ -1,5 +1,6 @@
 CXX=g++
 CFLAGS=-pedantic -std=c++1z -W -Wall -Wcast-qual -Wconversion -Werror -Wextra -Wwrite-strings
+#OFLAGS=-O3 -ggdb3
 OFLAGS=-O3
 LFLAGS=-lcrypto
 IFLAGS=-Iinclude
