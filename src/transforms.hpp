@@ -13,7 +13,7 @@
 template <typename Block>
 struct TransformBase {
 protected:
-	HMap<uint256_t, uint32_t> whitelist;
+	HVector<uint256_t, uint32_t> whitelist;
 
 public:
 	bool initialize (const char* arg) {

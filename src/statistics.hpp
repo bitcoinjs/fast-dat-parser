@@ -165,21 +165,23 @@ struct dumpScripts : public TransformBase<Block> {
 	}
 };
 
-typedef std::pair<uint256_t, uint32_t> UnspentKey;
-typedef std::pair<std::vector<uint8_t>, uint64_t> UnspentValue;
-typedef std::pair<UnspentKey, UnspentValue> Unspent;
+typedef std::pair<std::vector<uint8_t>, uint64_t> TxoDetail;
+typedef std::pair<uint256_t, uint32_t> Txin;
+typedef std::pair<Txin, TxoDetail> Txo;
 
 // HEIGHT | VALUE > stdout
 template <typename Block>
 struct dumpUnspents : public TransformBase<Block> {
+	static constexpr auto BLANK_TXIN = Txin{ {}, 0 };
+
 	std::mutex mutex;
-	HMap<UnspentKey, UnspentValue> unspents;
+	HList<Txin, TxoDetail> unspents;
 
 	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
-		std::vector<UnspentKey> spends;
-		std::vector<Unspent> newUnspents;
+		std::vector<Txin> txins;
+		std::vector<Txo> txos;
 
 		auto transactions = block.transactions();
 		while (not transactions.empty()) {
@@ -190,7 +192,7 @@ struct dumpUnspents : public TransformBase<Block> {
 				uint256_t prevTxHash;
 				std::copy(input.hash.begin(), input.hash.end(), prevTxHash.begin());
 
-				spends.emplace_back(UnspentKey{prevTxHash, input.vout});
+				txins.emplace_back(Txin{prevTxHash, input.vout});
 			}
 
 			uint32_t vout = 0;
@@ -199,7 +201,7 @@ struct dumpUnspents : public TransformBase<Block> {
 				script.resize(output.script.size());
 				std::copy(output.script.begin(), output.script.end(), script.begin());
 
-				newUnspents.emplace_back(Unspent({txHash, vout}, {script, output.value}));
+				txos.emplace_back(Txo({txHash, vout}, {script, output.value}));
 				++vout;
 			}
 
@@ -207,18 +209,24 @@ struct dumpUnspents : public TransformBase<Block> {
 		}
 
 		std::lock_guard<std::mutex>(this->mutex);
-		this->unspents.reserve(this->unspents.size() + newUnspents.size());
-		for (const auto& unspent : newUnspents) {
-			this->unspents.insort(unspent.first, unspent.second); // TODO
+		for (const auto& txo : txos) {
+			this->unspents.insort(txo.first, txo.second);
 		}
-		this->unspents.sort();
 
-		for (const auto& spend : spends) {
-			const auto iter = this->unspents.find(spend);
-			if (iter == this->unspents.end()) continue;
+		for (const auto& txin : txins) {
+			const auto iter = this->unspents.find(txin);
+			if (iter == this->unspents.end()) continue; // uh, maybe you are only doing part of the blockchain!
 
-			this->unspents.erase(iter); // TODO
+			iter->first = BLANK_TXIN;
 		}
+
+		this->unspents.erase(std::remove_if(
+			this->unspents.begin(),
+			this->unspents.end(),
+			[](const auto& x) {
+				return x.first == BLANK_TXIN;
+			}
+		), this->unspents.end());
 
 		std::cout << this->unspents.size() << std::endl;
 	}

@@ -28,7 +28,7 @@ void printerr_hash32 (uint256_t hash) {
 }
 
 template <typename F>
-auto walkChain (const HMap<uint256_t, Block>& blocks, Block visitor, F f) {
+auto walkChain (const HVector<uint256_t, Block>& blocks, Block visitor, F f) {
 	// naively walk the chain
 	while (true) {
 		const auto prevBlockIter = blocks.find(visitor.prevBlockHash);
@@ -42,7 +42,7 @@ auto walkChain (const HMap<uint256_t, Block>& blocks, Block visitor, F f) {
 }
 
 // find all blocks who have no children (chain tips)
-auto findChainTips (const HMap<uint256_t, Block>& blocks) {
+auto findChainTips (const HVector<uint256_t, Block>& blocks) {
 	std::map<uint256_t, bool> hasChildren;
 
 	for (const auto& blockIter : blocks) {
@@ -67,7 +67,7 @@ auto findChainTips (const HMap<uint256_t, Block>& blocks) {
 	return tips;
 }
 
-auto determineWork (const HMap<uint256_t, Block>& blocks, const Block block) {
+auto determineWork (const HVector<uint256_t, Block>& blocks, const Block block) {
 	uint64_t totalWork = block.bits;
 
 	walkChain(blocks, block, [&](const Block& visitor) {
@@ -83,7 +83,7 @@ auto determineWork (const HMap<uint256_t, Block>& blocks, const Block block) {
 	return totalWork;
 }
 
-auto findBestChain (HMap<uint256_t, Block>& blocks) {
+auto findBestChain (HVector<uint256_t, Block>& blocks) {
 	auto bestBlock = Block();
 	uint64_t bestChainWork = 0;
 
@@ -111,7 +111,7 @@ auto findBestChain (HMap<uint256_t, Block>& blocks) {
 }
 
 int main () {
-	HMap<uint256_t, Block> blocks;
+	HVector<uint256_t, Block> blocks;
 
 	// read block headers from stdin until EOF
 	{
@@ -162,7 +162,7 @@ int main () {
 
 	// output the best chain [in order]
 	{
-		HMap<uint256_t, uint32_t> blockChainMap;
+		HVector<uint256_t, uint32_t> blockChainMap;
 
 		int32_t height = 0;
 		for (const auto& block : bestBlockChain) {
