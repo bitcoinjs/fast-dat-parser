@@ -144,8 +144,8 @@ int main () {
 		// output
 		std::cerr << "Best chain" << std::endl;
 		std::cerr << "- Height: " << bestBlockChain.size() - 1 << std::endl;
-		std::cerr << "- Genesis: " << toHex64(genesis.hash) << std::endl;
-		std::cerr << "- Tip: " << toHex64(tip.hash) << std::endl;
+		std::cerr << "- Genesis: " << toHexBE(genesis.hash) << std::endl;
+		std::cerr << "- Tip: " << toHexBE(tip.hash) << std::endl;
 	}
 
 	// output the best chain [in order]

@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <openssl/sha.h>
 #include <sstream>
+#include "hexxer.hpp"
 #include "ranger.hpp"
 
 typedef std::array<uint8_t, 32> uint256_t;
@@ -25,13 +26,36 @@ auto hash256 (const R& r) {
 }
 
 namespace {
-	auto toHex64 (const uint256_t& hash) {
-		std::stringstream ss;
-		ss << std::hex;
-		for (size_t i = 31; i < 32; --i) {
-			ss << std::setw(2) << std::setfill('0') << (uint32_t) hash[i];
+	template <typename R>
+	void putHex (R& output, const R& data) {
+		auto save = range(data);
+
+		while (not save.empty()) {
+			hex_encode(reinterpret_cast<char*>(output.begin()), save.begin(), 1);
+			output.popFrontN(2);
+			save.popFrontN(1);
 		}
-		ss << std::dec;
-		return ss.str();
+	}
+
+	template <typename R>
+	auto toHex (const R& data) {
+		auto save = range(data);
+		std::array<char, 2> buffer;
+		std::string str;
+		str.reserve(save.size() * 2);
+
+		while (not save.empty()) {
+			const auto byte = save.front();
+			hex_encode(reinterpret_cast<char*>(buffer.begin()), &byte, 1);
+			save.popFront();
+			str.push_back(buffer[0]);
+			str.push_back(buffer[1]);
+		}
+
+		return str;
+	}
+
+	auto toHexBE (const uint256_t& hash) {
+		return toHex(retro(hash));
 	}
 }

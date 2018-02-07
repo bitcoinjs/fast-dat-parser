@@ -236,34 +236,6 @@ auto Block (const R& header, const R& data) {
 	return BlockBase<R>(header, data);
 }
 
-template <typename R>
-void putHex (R& output, const R& data) {
-	auto save = range(data);
-
-	while (not save.empty()) {
-		hex_encode(reinterpret_cast<char*>(output.begin()), save.begin(), 1);
-		output.popFrontN(2);
-		save.popFrontN(1);
-	}
-}
-
-template <typename R>
-auto dumpHex (const R& data) {
-	auto save = range(data);
-	std::array<char, 2> buffer;
-	std::string str;
-	str.reserve(save.size() * 2);
-
-	while (not save.empty()) {
-		hex_encode(reinterpret_cast<char*>(buffer.begin()), save.begin(), 1);
-		save.popFrontN(1);
-		str.push_back(buffer[0]);
-		str.push_back(buffer[1]);
-	}
-
-	return str;
-}
-
 // TODO: output can max-out ...
 template <typename R>
 void putASM (R& output, const R& script) {
