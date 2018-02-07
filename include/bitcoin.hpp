@@ -15,50 +15,30 @@
 template <typename R>
 struct TransactionBase {
 	struct Input {
+		R data;
 		R hash;
 		uint32_t vout;
 		R script;
 		uint32_t sequence;
-
-		Input (R hash, uint32_t vout, R script, uint32_t sequence) :
-			hash(hash), vout(vout), script(script), sequence(sequence) {}
 	};
 
 	struct Output {
+		R data;
 		R script;
 		uint64_t value;
-
-		Output (R script, uint64_t value) : script(script), value(value) {}
 	};
 
 	struct Witness {
+		R data;
 		std::vector<R> stack;
-
-		Witness (std::vector<R> stack) : stack(stack) {}
 	};
 
 	R data;
-
 	int32_t version;
 	std::vector<Input> inputs;
 	std::vector<Output> outputs;
 	std::vector<Witness> witnesses;
 	uint32_t locktime;
-
-	TransactionBase (
-		R data,
-		int32_t version,
-		std::vector<Input> inputs,
-		std::vector<Output> outputs,
-		std::vector<Witness> witnesses,
-		uint32_t locktime
-	) :
-		data(data),
-		version(version),
-		inputs(inputs),
-		outputs(outputs),
-		witnesses(witnesses),
-		locktime(locktime) {}
 
 	auto hash () const {
 		return hash256(this->data);
@@ -126,40 +106,46 @@ namespace {
 		std::vector<typename Transaction::Input> inputs;
 
 		for (size_t i = 0; i < nInputs; ++i) {
+			auto isave = data;
 			const auto hash = readRange(data, 32);
 			const auto vout = serial::read<uint32_t>(data);
 
 			const auto scriptLen = readVI(data);
 			const auto script = readRange(data, scriptLen);
 			const auto sequence = serial::read<uint32_t>(data);
+			isave.popBackN(data.size());
 
-			inputs.emplace_back(typename Transaction::Input(hash, vout, script, sequence));
+			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, sequence});
 		}
 
 		const auto nOutputs = readVI(data);
 		std::vector<typename Transaction::Output> outputs;
 
 		for (size_t i = 0; i < nOutputs; ++i) {
+			auto osave = data;
 			const auto value = serial::read<uint64_t>(data);
 			const auto scriptLen = readVI(data);
 			const auto script = readRange(data, scriptLen);
+			osave.popBackN(data.size());
 
-			outputs.emplace_back(typename Transaction::Output(script, value));
+			outputs.emplace_back(typename Transaction::Output{osave, script, value});
 		}
 
 		std::vector<typename Transaction::Witness> witnesses;
 		if (hasWitnesses) {
 			for (size_t i = 0; i < nInputs; ++i) {
+				auto wsave = data;
 				const auto stack = readStack(data);
+				wsave.popBackN(data.size());
 
-				witnesses.emplace_back(typename Transaction::Witness(std::move(stack)));
+				witnesses.emplace_back(typename Transaction::Witness{wsave, std::move(stack)});
 			}
 		}
 
 		const auto locktime = serial::read<uint32_t>(data);
 		save.popBackN(data.size());
 
-		return Transaction(save, version, std::move(inputs), std::move(outputs), std::move(witnesses), locktime);
+		return Transaction{save, version, std::move(inputs), std::move(outputs), std::move(witnesses), locktime};
 	}
 
 	template <typename R>
@@ -261,11 +247,26 @@ void putHex (R& output, const R& data) {
 	}
 }
 
+template <typename R>
+auto dumpHex (const R& data) {
+	auto save = range(data);
+	std::array<char, 2> buffer;
+	std::string str;
+	str.reserve(save.size() * 2);
+
+	while (not save.empty()) {
+		hex_encode(reinterpret_cast<char*>(buffer.begin()), save.begin(), 1);
+		save.popFrontN(1);
+		str.push_back(buffer[0]);
+		str.push_back(buffer[1]);
+	}
+
+	return str;
+}
+
 // TODO: output can max-out ...
 template <typename R>
 void putASM (R& output, const R& script) {
-	if (script.size() > 1000) return output.put(zstr_range("<EXCEEDS LIMIT>"));
-
 	auto save = range(script);
 
 	while (not save.empty()) {

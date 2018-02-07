@@ -99,7 +99,7 @@ struct dumpASM : public TransformBase<Block> {
 	void operator() (const Block& block) {
 		if (this->shouldSkip(block)) return;
 
-		std::array<uint8_t, 4096> buffer;
+		std::array<uint8_t, 1024*1024> buffer;
 
 		auto transactions = block.transactions();
 		while (not transactions.empty()) {
@@ -109,8 +109,11 @@ struct dumpASM : public TransformBase<Block> {
 				auto tmp = range(buffer);
 				putASM(tmp, output.script);
 				serial::put<char>(tmp, '\n');
-
 				const auto lineLength = buffer.size() - tmp.size();
+
+				// FIXME: stdout is non-atomic past 4096
+				if (lineLength > 4096) continue;
+
 				fwrite(buffer.begin(), lineLength, 1, stdout);
 			}
 

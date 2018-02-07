@@ -1,5 +1,4 @@
 #include <cstring>
-#include <iomanip>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -18,14 +17,6 @@ struct Block {
 	Block () {}
 	Block (const uint256_t& hash, const uint256_t& prevBlockHash, const uint32_t bits) : hash(hash), prevBlockHash(prevBlockHash), bits(bits), cachedChainWork(0) {}
 };
-
-void printerr_hash32 (uint256_t hash) {
-	std::cerr << std::hex;
-	for (size_t i = 31; i < 32; --i) {
-		std::cerr << std::setw(2) << std::setfill('0') << (uint32_t) hash[i];
-	}
-	std::cerr << std::dec;
-}
 
 template <typename F>
 auto walkChain (const HVector<uint256_t, Block>& blocks, Block visitor, F f) {
@@ -153,11 +144,8 @@ int main () {
 		// output
 		std::cerr << "Best chain" << std::endl;
 		std::cerr << "- Height: " << bestBlockChain.size() - 1 << std::endl;
-		std::cerr << "- Genesis: ";
-		printerr_hash32(genesis.hash);
-		std::cerr << std::endl << "- Tip: ";
-		printerr_hash32(tip.hash);
-		std::cerr << std::endl;
+		std::cerr << "- Genesis: " << toHex64(genesis.hash) << std::endl;
+		std::cerr << "- Tip: " << toHex64(tip.hash) << std::endl;
 	}
 
 	// output the best chain [in order]
