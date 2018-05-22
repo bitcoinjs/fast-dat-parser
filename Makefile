@@ -29,7 +29,7 @@ parser: $(filter-out src/bestchain.o, $(OBJECTS))
 
 deps:
 	curl 'https://raw.githubusercontent.com/dcousens/hexxer/d76f9e526676535fd4c2584a8f84582994c35996/hexxer.h' > include/hexxer.hpp
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/4cf823ceec6010881f4a2923358e4151ab54d272/ranger.hpp' > include/ranger.hpp
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/4cf823ceec6010881f4a2923358e4151ab54d272/serial.hpp' > include/serial.hpp
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/aa3b7712b4d080df420e342eef416a65de3d5eaf/ranger.hpp' > include/ranger.hpp
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/aa3b7712b4d080df420e342eef416a65de3d5eaf/serial.hpp' > include/serial.hpp
 
 -include $(DEPENDENCIES)

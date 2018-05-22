@@ -1,4 +1,3 @@
-// TODO: probaby unrelated to ranges, but
 #pragma once
 
 #include <algorithm>
@@ -14,8 +13,8 @@ namespace serial {
 	auto peek (const R& r) {
 		using T = typename R::value_type;
 
-		static_assert(std::is_same<T, uint8_t>::value);
-		static_assert(sizeof(E) % sizeof(T) == 0);
+		static_assert(std::is_same<T, uint8_t>::value, "Expected uint8_t elements");
+		static_assert(sizeof(E) % sizeof(T) == 0, "Padding is unsupported");
 
 		constexpr auto count = sizeof(E) / sizeof(T);
 		assert(count <= r.size());
@@ -37,8 +36,8 @@ namespace serial {
 	void place (R& r, const E e) {
 		using T = typename R::value_type;
 
-		static_assert(std::is_same<T, uint8_t>::value);
-		static_assert(sizeof(E) % sizeof(T) == 0);
+		static_assert(std::is_same<T, uint8_t>::value, "Expected uint8_t elements");
+		static_assert(sizeof(E) % sizeof(T) == 0, "Padding is unsupported");
 
 		constexpr auto count = sizeof(E) / sizeof(T);
 		assert(count <= r.size());

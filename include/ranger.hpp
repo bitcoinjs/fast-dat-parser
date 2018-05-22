@@ -19,14 +19,20 @@ auto take (R r, const size_t n) {
 	return std::move(r);
 }
 
-// TODO:
-// template <typename R>
-// void put (R& r, typename R::value_type e) {
-// 	r.front() = e;
-// 	r.popFront();
-// }
+template <typename R>
+void put (R& r, typename R::value_type e) {
+	r.front() = e;
+	r.popFront();
+}
 
-template <typename R, typename E>
+template <
+	typename R,
+	typename E,
+	typename V = typename std::enable_if<
+		std::is_same<typename R::value_type, typename E::value_type>::value,
+		E
+	>::type
+>
 void put (R& r, E e) {
 	while (!e.empty()) {
 		r.front() = e.front();
@@ -42,7 +48,9 @@ private:
 	I _end;
 
 public:
-	using value_type = typename std::remove_reference<decltype(*I())>::type;
+	using value_type = typename std::remove_const<
+		typename std::remove_reference<decltype(*I())>::type
+	>::type;
 
 	Range (I begin, I end) : _begin(begin), _end(end) {}
 
@@ -69,17 +77,26 @@ public:
 		std::advance(this->_begin, n);
 	}
 
+	template <typename U=I>
+	typename std::enable_if<std::is_pointer<U>::value, I>::type data () {
+		return this->_begin;
+	}
+
 	template <typename E>
-	void put (E e) { return __ranger::put(*this, e); }
+	void put (E e) { __ranger::put(*this, e); }
 
 	auto& operator[] (const size_t i) {
 		assert(i < this->size());
-		return *std::next(this->_begin, i);
+		auto it = this->_begin;
+		std::advance(it, i);
+		return *it;
 	}
 
 	auto operator[] (const size_t i) const {
 		assert(i < this->size());
-		return *std::next(this->_begin, i);
+		auto it = this->_begin;
+		std::advance(it, i);
+		return *it;
 	}
 
 	template <typename E>
@@ -132,7 +149,7 @@ auto ptr_range (R& r) {
 	return __ranger::Range<pointer>(r.data(), r.data() + r.size());
 }
 
-auto zstr_range (const char* z) {
+inline auto zstr_range (const char* z) {
 	using pointer = decltype(z);
 
 	auto r = z;
@@ -151,7 +168,7 @@ auto retro (R& r) {
 template <typename R, typename F>
 auto assumeSorted (R& r, const F& f) {
 	using iterator = decltype(r.begin());
-	assert(std::is_sorted(r.begin(), r.end(), f));
+	assert(std::is_sorted(r.begin(), r.end(), f)); // TODO: for debugging purposes only
 
 	return __ranger::SortedRange<iterator, F>(r.begin(), r.end(), f);
 }
@@ -167,4 +184,4 @@ template <typename R> auto range (R&& r) { return range<R>(r); }
 template <typename R> auto ptr_range (R&& r) { return ptr_range<R>(r); }
 template <typename R> auto retro (R&& r) { return retro<R>(r); }
 template <typename R> auto assumeSorted (R&& r) { return assumeSorted<R>(r); }
-template <typename R, typename F> auto assumeSorted (R&& r, const F& f) { return assumeSorted<R, F>(r); }
+template <typename R, typename F> auto assumeSorted (R&& r, const F& f) { return assumeSorted<R, F>(r, f); }
