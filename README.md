@@ -56,4 +56,4 @@ Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  
 * [ranger](https://github.com/dcousens/ranger)
 
 
-## License [ISC](LICENSE)
+## License [MIT](LICENSE)
