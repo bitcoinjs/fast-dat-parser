@@ -10,26 +10,33 @@ OBJECTS=$(addsuffix .o, $(basename $(SOURCES)))
 DEPENDENCIES=$(OBJECTS:.o=.d)
 
 # TARGETS
-.PHONY: all clean deps
+.PHONY: all clean includes
 
 all: bestchain parser
 
 clean:
 	$(RM) $(DEPENDENCIES) $(OBJECTS) bestchain parser
 
-bestchain: $(filter-out src/parser.o, $(OBJECTS))
+bestchain: $(filter-out src/parser.o, $(OBJECTS)) includes
 	$(CXX) $(filter-out src/parser.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@
 
-parser: $(filter-out src/bestchain.o, $(OBJECTS))
+parser: $(filter-out src/bestchain.o, $(OBJECTS)) includes
 	$(CXX) $(filter-out src/bestchain.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -pthread -o $@
 
 # INFERENCES
 %.o: %.cpp
 	$(CXX) $(CFLAGS) $(OFLAGS) $(IFLAGS) -MMD -MP -c $< -o $@
 
-deps:
-	curl 'https://raw.githubusercontent.com/dcousens/hexxer/d76f9e526676535fd4c2584a8f84582994c35996/hexxer.h' > include/hexxer.hpp
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/ranger.hpp' > include/ranger.hpp
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/serial.hpp' > include/serial.hpp
+include/hexxer.hpp:
+	curl 'https://raw.githubusercontent.com/dcousens/hexxer/d76f9e526676535fd4c2584a8f84582994c35996/hexxer.h' > $@
+
+include/ranger.hpp:
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/ranger.hpp' > $@
+
+include/serial.hpp:
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/serial.hpp' > $@
+
+include/threadpool.hpp:
+	curl 'https://raw.githubusercontent.com/dcousens/threadpool/b6f29f27b4b658f4b0df976c9151a0f76aa86335/threadpool.hpp' > $@
 
 -include $(DEPENDENCIES)
