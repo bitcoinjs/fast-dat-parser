@@ -248,7 +248,10 @@ void putASM (R& output, const R& script) {
 		if ((opcode > OP_0) && (opcode <= OP_PUSHDATA4)) {
 			const auto dataLength = readPD(opcode, save);
 			if (dataLength > save.size()) {
-				return output.put(zstr_range("<ERROR>"));
+				for (auto x : zstr_range("<ERROR>")) {
+					serial::put<char>(output, x);
+				}
+				return;
 			}
 
 			const auto data = save.take(dataLength);
@@ -259,7 +262,9 @@ void putASM (R& output, const R& script) {
 
 		// opcode
 		} else {
-			output.put(zstr_range(getOpString(opcode)));
+			for (auto x : zstr_range(getOpString(opcode))) {
+				serial::put<char>(output, x);
+			}
 			serial::put<char>(output, ' ');
 		}
 	}

@@ -1,5 +1,5 @@
 CXX=g++
-CFLAGS=-pedantic -std=c++1z -W -Wall -Wcast-qual -Wconversion -Werror -Wextra -Wwrite-strings
+CFLAGS=-pedantic -std=c++1z -W -Wall -Wcast-qual -Wconversion -Werror -Wextra -Wwrite-strings -Wno-unused-function
 #OFLAGS=-O3 -ggdb3
 OFLAGS=-O3
 LFLAGS=-lcrypto
@@ -29,7 +29,7 @@ parser: $(filter-out src/bestchain.o, $(OBJECTS))
 
 deps:
 	curl 'https://raw.githubusercontent.com/dcousens/hexxer/d76f9e526676535fd4c2584a8f84582994c35996/hexxer.h' > include/hexxer.hpp
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/aa3b7712b4d080df420e342eef416a65de3d5eaf/ranger.hpp' > include/ranger.hpp
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/aa3b7712b4d080df420e342eef416a65de3d5eaf/serial.hpp' > include/serial.hpp
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/ranger.hpp' > include/ranger.hpp
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/serial.hpp' > include/serial.hpp
 
 -include $(DEPENDENCIES)

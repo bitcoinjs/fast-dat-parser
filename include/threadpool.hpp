@@ -48,7 +48,6 @@ private:
 				this->vector.pop_back();
 			}
 
-			// execute
 			job();
 		}
 	}

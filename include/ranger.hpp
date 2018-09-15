@@ -65,7 +65,9 @@ public:
 	}
 	auto take (size_t n) const { return __ranger::take(*this, n); }
 	auto& back () { return *(this->_end - 1); }
+	auto& back () const { return *(this->_end - 1); }
 	auto& front () { return *this->_begin; }
+	auto& front () const { return *this->_begin; }
 	void popBack () { this->popBackN(1); }
 	void popBackN (size_t n) {
 		assert(n <= this->size());
