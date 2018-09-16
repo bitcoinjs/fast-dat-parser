@@ -8,19 +8,20 @@ IFLAGS=-Iinclude
 SOURCES=$(shell find src/ -name '*.c' -o -name '*.cpp')
 OBJECTS=$(addsuffix .o, $(basename $(SOURCES)))
 DEPENDENCIES=$(OBJECTS:.o=.d)
+INCLUDES=include/hexxer.hpp include/ranger.hpp include/serial.hpp include/threadpool.hpp
 
 # TARGETS
 .PHONY: all clean includes
 
-all: bestchain parser
+all: $(INCLUDES) bestchain parser
 
 clean:
 	$(RM) $(DEPENDENCIES) $(OBJECTS) bestchain parser
 
-bestchain: $(filter-out src/parser.o, $(OBJECTS)) includes
+bestchain: $(filter-out src/parser.o, $(OBJECTS))
 	$(CXX) $(filter-out src/parser.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@
 
-parser: $(filter-out src/bestchain.o, $(OBJECTS)) includes
+parser: $(filter-out src/bestchain.o, $(OBJECTS))
 	$(CXX) $(filter-out src/bestchain.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -pthread -o $@
 
 # INFERENCES
