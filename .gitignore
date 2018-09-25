@@ -5,5 +5,4 @@ parser
 *.o
 include/hexxer.hpp
 include/ranger.hpp
-include/serial.hpp
 include/threadpool.hpp
