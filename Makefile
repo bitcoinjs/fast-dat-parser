@@ -34,9 +34,6 @@ include/hexxer.hpp:
 include/ranger.hpp:
 	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/ranger.hpp' > $@
 
-include/serial.hpp:
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/568e116e931aefa437019d846fa1d36f79098679/serial.hpp' > $@
-
 include/threadpool.hpp:
 	curl 'https://raw.githubusercontent.com/dcousens/threadpool/b6f29f27b4b658f4b0df976c9151a0f76aa86335/threadpool.hpp' > $@
 
