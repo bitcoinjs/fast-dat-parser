@@ -5,7 +5,7 @@ OFLAGS=-O3
 LFLAGS=-lcrypto
 IFLAGS=-Iinclude
 
-SOURCES=$(shell find src/ -name '*.c' -o -name '*.cpp')
+SOURCES=$(shell find src -name '*.c' -o -name '*.cpp')
 OBJECTS=$(addsuffix .o, $(basename $(SOURCES)))
 DEPENDENCIES=$(OBJECTS:.o=.d)
 INCLUDES=include/hexxer.hpp include/ranger.hpp include/serial.hpp include/threadpool.hpp
