@@ -16,7 +16,7 @@ INCLUDES=include/hexxer.hpp include/ranger.hpp include/serial.hpp include/thread
 all: $(INCLUDES) bestchain parser
 
 clean:
-	$(RM) $(DEPENDENCIES) $(OBJECTS) bestchain parser
+	$(RM) $(INCLUDES) $(DEPENDENCIES) $(OBJECTS) bestchain parser
 
 bestchain: $(filter-out src/parser.o, $(OBJECTS))
 	$(CXX) $(filter-out src/parser.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@
