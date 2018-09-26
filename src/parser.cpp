@@ -31,7 +31,7 @@ int main (int argc, char** argv) {
 		const auto arg = argv[i];
 		size_t transformIndex = 0;
 
-		if (sscanf(arg, "-t%lu", &transformIndex) == 1) {
+		if (sscanf(arg, "-t%zu", &transformIndex) == 1) {
 			assert(delegate == nullptr);
 
 			// raw
@@ -49,8 +49,8 @@ int main (int argc, char** argv) {
 
 			continue;
 		}
-		if (sscanf(arg, "-j%lu", &nThreads) == 1) continue;
-		if (sscanf(arg, "-m%lu", &memoryAlloc) == 1) continue;
+		if (sscanf(arg, "-j%zu", &nThreads) == 1) continue;
+		if (sscanf(arg, "-m%zu", &memoryAlloc) == 1) continue;
 
 		if (delegate && delegate->initialize(arg)) continue;
 		assert(false);
