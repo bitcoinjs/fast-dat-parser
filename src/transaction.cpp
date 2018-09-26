@@ -82,19 +82,74 @@ int main (int argc, char** argv) {
         
         std::cout << "\tV-out: " << input.vout << "\n";
         
-        std::cout << "\tScript: ";
-        streamScript(std::cout, input.script.data(), input.script.size());
-        std::cout << "\n";
+        std::cout << "\tWitness flag: " << getOpString(input.witnessFlag) << "\n";
+        
+        if(input.script.size()) {
+            
+            std::cout << "\tScript: ";
+            streamScript(std::cout, input.script.data(), input.script.size());
+            std::cout << "\n";
+        }
         
         std::cout << "\tSequence: " << input.sequence << "\n";
         
-        if(transaction.witnesses.size() > counter - 1) {
+        if(counter - 1 < transaction.witnesses.size()) {
             
-            for(auto data : transaction.witnesses[counter - 1].stack) {
+            auto witness = transaction.witnesses[counter - 1];
+            
+            if(input.witnessFlag == OP_P2WPKH) {
                 
-                std::cout << "\tWitness item: ";
-                streamHex(std::cout, data.data(), data.size());
-                std::cout << "\n";
+                if(witness.stack.size() != 2) {
+                    
+                    std::cerr << "\tOP_P2WPKH script has incorrect number of witness elements!\n";
+                }
+                else {
+                    
+                    std::cout << "\tWitness signature: ";
+                    streamHex(std::cout, witness.stack[0].data(), witness.stack[0].size());
+                    std::cout << "\n";
+                    
+                    std::cout << "\tWitness pubkey: ";
+                    streamHex(std::cout, witness.stack[1].data(), witness.stack[1].size());
+                    std::cout << "\n";
+                }
+            }
+            else if(input.witnessFlag == OP_P2WSH) {
+                
+                if(transaction.witnesses.size() == 0) {
+                    
+                    std::cerr << "\tOP_P2WSH script has no witness elements!\n";
+                }
+                else {
+                    
+                    std::cout << "\tWitness script input stack:";
+                    
+                    size_t i = 0;
+                    
+                    for(; i < witness.stack.size() - 1; i++) {
+                        
+                        std::cout << " [";
+                        streamHex(std::cout, witness.stack[i].data(), witness.stack[i].size());
+                        std::cout << "]";
+                    }
+                    
+                    std::cout << "\n";
+                    
+                    std::cout << "\tWitness script: ";
+                    streamHex(std::cout, witness.stack[i].data(), witness.stack[i].size());
+                    std::cout << "\n";
+                }
+            }
+            else if(input.witnessFlag != OP_NOWITNESS) {
+                
+                std::cout << "\tUnknown witness type. Dumping all witness data:\n";
+                
+                for(auto data : transaction.witnesses[counter - 1].stack) {
+                    
+                    std::cout << "\tWitness item: ";
+                    streamHex(std::cout, data.data(), data.size());
+                    std::cout << "\n";
+                }
             }
         }
     }

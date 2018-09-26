@@ -20,6 +20,7 @@ struct TransactionBase {
 		uint32_t vout;
 		R script;
 		uint32_t sequence;
+        uint8_t witnessFlag; // OP_NOWITNESS means not a witness program
 	};
 
 	struct Output {
@@ -114,8 +115,30 @@ namespace {
 			const auto script = readRange(data, scriptLen);
 			const auto sequence = serial::read<uint32_t>(data);
 			isave.popBackN(data.size());
-
-			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, sequence});
+            
+            uint8_t witnessFlag = OP_NOWITNESS;
+            
+            if(hasWitnesses) {
+                
+                if(script.size() == 0) {
+                    
+                    witnessFlag = OP_WITNESS;
+                }
+                else if(script.size() >= 3) {
+                    
+                    if(script[0] > 2 && script[0] < 40 && script[1] == 0) {
+                        
+                        if(script[2] == 0x14)
+                            witnessFlag |= OP_P2WPKH;
+                        else if(script[2] == 0x20)
+                            witnessFlag |= OP_P2WSH;
+                        else
+                            witnessFlag = OP_ERROR;
+                    }
+                }
+            }
+            
+			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, sequence, witnessFlag});
 		}
 
 		const auto nOutputs = readVI(data);
