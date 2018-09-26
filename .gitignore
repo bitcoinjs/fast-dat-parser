@@ -1,5 +1,6 @@
 bestchain
 parser
+transaction
 *.dat
 *.d
 *.o
