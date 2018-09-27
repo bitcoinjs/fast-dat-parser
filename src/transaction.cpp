@@ -14,10 +14,14 @@
 
 #include "statistics.hpp"
 
+// returns 0xff on failure
 static uint8_t parseHex(uint8_t character);
+
 static uint8_t getHex(uint8_t character);
+
 static void streamHex(std::ostream &out, uint8_t *ptr, size_t len);
-static void streamScript(std::ostream &out, uint8_t *ptr, size_t len);
+
+static bool streamScript(std::ostream &out, uint8_t *ptr, size_t len);
 
 #define MAX_TRANSACTION_SIZE 1024 * 1024 * 30
 
@@ -39,13 +43,7 @@ int main (int argc, char** argv) {
         return 1;
     }
     
-    if(*(uint32_t*)buffer.data() != 0x01000000 && *(uint32_t*)buffer.data() != 0x02000000) {
-        
-        if(strncmp((char*)buffer.data(), "01000000", 8) && strncmp((char*)buffer.data(), "02000000", 8)) {
-            
-            std::cerr << "Transaction does not have needed 'version 1 or 2' flag.\n";
-            return 1;
-        }
+    if(parseHex(buffer[0]) != 0xff && parseHex(buffer[1]) != 0xff) {
         
         // ASCII hex data has been provided -- let's parse it into binary form.
         
@@ -55,16 +53,24 @@ int main (int argc, char** argv) {
         bufSize /= 2;
     }
     
+    if(*(uint32_t*)buffer.data() != 0x00000001 && *(uint32_t*)buffer.data() != 0x00000002) {
+        
+        std::cerr << "Transaction does not have needed 'version 1 or 2' flag.\n";
+        std::cerr << "We will attempt to read it as if it were a script and then abort.\n";
+        
+        streamScript(std::cout, buffer.data(), bufSize);
+        std::cout << "\n";
+        
+        return 1;
+    }
+    
     auto data = ptr_range(buffer).take(bufSize);
     
     auto transaction = readTransaction(data);
     
     std::cout << "\n";
     
-    std::cout << "Transaction version: " << transaction.version << "\n";
-    std::cout << "Transaction inputs: " << transaction.inputs.size() << "\n";
-    std::cout << "Transaction outputs: " << transaction.outputs.size() << "\n";
-    std::cout << "Transaction locktime: " << transaction.locktime << "\n";
+    std::cout << "Transaction version: " << transaction.version << ", locktime: " << transaction.locktime << "\n";
     
     std::cout << "\n";
     
@@ -82,16 +88,39 @@ int main (int argc, char** argv) {
         
         std::cout << "\tV-out: " << input.vout << "\n";
         
-        std::cout << "\tWitness flag: " << getOpString(input.witnessFlag) << "\n";
+        bool outputScript = false;
         
-        if(input.script.size()) {
+        if(input.scriptStack.size()) {
             
             std::cout << "\tScript: ";
-            streamScript(std::cout, input.script.data(), input.script.size());
+            outputScript = streamScript(std::cout, input.scriptStack.back().begin(), input.scriptStack.back().size());
+            std::cout << "\n";
+            
+            if(outputScript && input.scriptStack.size() > 1) {
+                
+                std::cout << "\tScript inputs:\n";
+                
+                for(size_t i = 0; i < input.scriptStack.size() - 1; i++) {
+                    
+                    std::cout << "\t[";
+                    streamHex(std::cout, input.scriptStack[i].begin(), input.scriptStack[i].size());
+                    std::cout << "]\n";
+                }
+            }
+        }
+        
+        if(!outputScript && input.script.size()) {
+            
+            std::cout << "\tRaw script: ";
+            streamScript(std::cout, input.script.begin(), input.script.size());
             std::cout << "\n";
         }
         
-        std::cout << "\tSequence: " << input.sequence << "\n";
+        std::cout << "\tSequence: " << input.sequence << " aka. 0x";
+        streamHex(std::cout, (uint8_t*)&input.sequence, sizeof(input.sequence));
+        std::cout << "\n";
+        
+        std::cout << "\tWitness flag: " << getOpString(input.witnessFlag) << "\n";
         
         if(counter - 1 < transaction.witnesses.size()) {
             
@@ -105,39 +134,39 @@ int main (int argc, char** argv) {
                 }
                 else {
                     
-                    std::cout << "\tWitness signature: ";
-                    streamHex(std::cout, witness.stack[0].data(), witness.stack[0].size());
-                    std::cout << "\n";
+                    std::cout << "\tWitness pubkey: [";
+                    streamHex(std::cout, witness.stack[1].begin(), witness.stack[1].size());
+                    std::cout << "]\n";
                     
-                    std::cout << "\tWitness pubkey: ";
-                    streamHex(std::cout, witness.stack[1].data(), witness.stack[1].size());
-                    std::cout << "\n";
+                    std::cout << "\tWitness signature: [";
+                    streamHex(std::cout, witness.stack[0].begin(), witness.stack[0].size());
+                    std::cout << "]\n";
                 }
             }
             else if(input.witnessFlag == OP_P2WSH) {
                 
-                if(transaction.witnesses.size() == 0) {
+                if(witness.stack.size() == 0) {
                     
                     std::cerr << "\tOP_P2WSH script has no witness elements!\n";
                 }
                 else {
                     
-                    std::cout << "\tWitness script input stack:";
+                    auto stack = witness.stack;
+                    
+                    std::cout << "\tWitness script: ";
+                    streamScript(std::cout, stack.back().begin(), stack.back().size());
+                    std::cout << "\n";
                     
                     size_t i = 0;
                     
+                    std::cout << "\tWitness script inputs: ";
+                    
                     for(; i < witness.stack.size() - 1; i++) {
                         
-                        std::cout << " [";
-                        streamHex(std::cout, witness.stack[i].data(), witness.stack[i].size());
-                        std::cout << "]";
+                        std::cout << (i ? "\t[" : "[");
+                        streamHex(std::cout, stack[i].begin(), stack[i].size());
+                        std::cout << "]\n";
                     }
-                    
-                    std::cout << "\n";
-                    
-                    std::cout << "\tWitness script: ";
-                    streamHex(std::cout, witness.stack[i].data(), witness.stack[i].size());
-                    std::cout << "\n";
                 }
             }
             else if(input.witnessFlag != OP_NOWITNESS) {
@@ -147,7 +176,7 @@ int main (int argc, char** argv) {
                 for(auto data : transaction.witnesses[counter - 1].stack) {
                     
                     std::cout << "\tWitness item: ";
-                    streamHex(std::cout, data.data(), data.size());
+                    streamHex(std::cout, data.begin(), data.size());
                     std::cout << "\n";
                 }
             }
@@ -166,7 +195,9 @@ int main (int argc, char** argv) {
         streamScript(std::cout, output.script.data(), output.script.size());
         std::cout << "\n";
         
-        std::cout << "\tValue: " << double(output.value) / 100000000 << "\n";
+        std::cout << "\tValue: " << output.value / 100000000 << ".";
+        
+        printf("%08llu\n", output.value % 100000000);
     }
     
     std::cout << "\n";
@@ -185,7 +216,7 @@ static uint8_t parseHex(uint8_t character)
     if(character >= 'A' && character <= 'F')
         return uint8_t(character - 'A' + 10);
     
-    return 0;
+    return 0xff;
 }
 
 static uint8_t getHex(uint8_t character)
@@ -205,7 +236,7 @@ static void streamHex(std::ostream &out, uint8_t *ptr, size_t len)
         out << getHex(uint8_t(ptr[i] >> 4)) << getHex(ptr[i] & 0x0f);
 }
 
-static void streamScript(std::ostream &out, uint8_t *ptr, size_t len)
+static bool streamScript(std::ostream &out, uint8_t *ptr, size_t len)
 {
     for(size_t i = 0; i < len; i++) {
         
@@ -237,16 +268,16 @@ static void streamScript(std::ostream &out, uint8_t *ptr, size_t len)
             if(dataSize == OP_PUSHDATA1 || dataSize == OP_PUSHDATA2 || dataSize == OP_PUSHDATA4) {
                 
                 out << "Script encountered invalid OP_PUSHDATA -- aborting parse.";
-                return;
+                return false;
             }
             
             if(dataSize + i > len) {
                 
                 out << "Script encountered push data larger than script -- aborting parse.";
-                return;
+                return false;
             }
             
-            out << "PUSH [";
+            out << "PUSH(" << dataSize << ") [";
             streamHex(out, ptr + i, dataSize);
             out << "] ";
             
@@ -257,4 +288,6 @@ static void streamScript(std::ostream &out, uint8_t *ptr, size_t len)
             out << getOpString(ptr[i]) << " ";
         }
     }
+    
+    return true;
 }

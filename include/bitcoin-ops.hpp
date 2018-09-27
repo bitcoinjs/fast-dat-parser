@@ -139,7 +139,6 @@ enum OP {
     
     // Magic operators
     OP_NOWITNESS = 0xe0,
-    OP_WITNESS = 0xe1, // This means we must lookup the witness type from the previous transaction
     OP_P2WPKH = 0xe2,
     OP_P2WSH = 0xe3,
     
@@ -272,7 +271,6 @@ auto getOpString (const uint8_t opcode) {
             
     // magic operators
     case OP_NOWITNESS              : return "OP_NOWITNESS";
-    case OP_WITNESS                : return "OP_WITNESS";
     case OP_P2WPKH                 : return "OP_P2WPKH";
     case OP_P2WSH                  : return "OP_P2WSH";
         

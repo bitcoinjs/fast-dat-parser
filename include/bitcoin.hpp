@@ -5,6 +5,7 @@
 #include <cassert>
 #include <cstdint>
 #include <vector>
+#include <iostream>
 
 #include "hash.hpp"
 #include "hexxer.hpp"
@@ -18,7 +19,8 @@ struct TransactionBase {
 		R data;
 		R hash;
 		uint32_t vout;
-		R script;
+        R script;
+        std::vector<R> scriptStack;
 		uint32_t sequence;
         uint8_t witnessFlag; // OP_NOWITNESS means not a witness program
 	};
@@ -30,8 +32,8 @@ struct TransactionBase {
 	};
 
 	struct Witness {
-		R data;
-		std::vector<R> stack;
+        R data;
+        std::vector<R> stack;
 	};
 
 	R data;
@@ -111,10 +113,49 @@ namespace {
 			const auto hash = readRange(data, 32);
 			const auto vout = serial::read<uint32_t>(data);
 
-			const auto scriptLen = readVI(data);
-			const auto script = readRange(data, scriptLen);
-			const auto sequence = serial::read<uint32_t>(data);
-			isave.popBackN(data.size());
+            const auto scriptLen = readVI(data);
+            
+            __ranger::Range scriptRanger(data.begin(), data.begin() + scriptLen);
+            
+            std::vector<R> scriptStack;
+            
+            std::cerr << "Script bytes: " << scriptRanger.size() << "\n";
+            
+            while(scriptRanger.size()) {
+                
+                auto opcode = serial::read<uint8_t>(scriptRanger);
+                
+                if(!opcode || opcode > OP_PUSHDATA4)
+                    continue;
+                
+                auto size = readPD(opcode, scriptRanger);
+                
+                std::cerr << "Read size: " << size << "\n";
+                
+                scriptStack.push_back(readRange(scriptRanger, size));
+                
+                std::cerr << "Remaining script bytes: " << scriptRanger.size() << "\n";
+            }
+            
+            const auto script = readRange(data, scriptLen);
+            
+            const auto sequence = serial::read<uint32_t>(data);
+            isave.popBackN(data.size());
+            
+            
+//            std::vector<uint8_t> scriptData(script.begin(), script.end());
+//            auto scriptItr = range(scriptData);
+//            
+//            while(scriptData.size()) {
+//                
+//                auto size = readVI(scriptItr);
+//                
+//                auto item = readRange(scriptItr, size);
+//                
+//                std::vector<uint8_t> item2(item.begin(), item.end());
+//                
+//                scriptStack.push_back(item2);
+//            }
             
             uint8_t witnessFlag = OP_NOWITNESS;
             
@@ -122,7 +163,7 @@ namespace {
                 
                 if(script.size() == 0) {
                     
-                    witnessFlag = OP_WITNESS;
+                    witnessFlag = OP_ERROR;
                 }
                 else if(script.size() >= 3) {
                     
@@ -138,7 +179,7 @@ namespace {
                 }
             }
             
-			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, sequence, witnessFlag});
+			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, scriptStack, sequence, witnessFlag});
 		}
 
 		const auto nOutputs = readVI(data);
@@ -162,6 +203,14 @@ namespace {
 				wsave.popBackN(data.size());
 
 				witnesses.emplace_back(typename Transaction::Witness{wsave, std::move(stack)});
+                
+                if(inputs[i].witnessFlag == OP_ERROR) {
+                    
+                    if(witnesses.back().stack.size() == 2)
+                        inputs[i].witnessFlag = OP_P2WPKH;
+                    else if(witnesses.back().stack.size() > 2)
+                        inputs[i].witnessFlag = OP_P2WSH;
+                }
 			}
 		}
 
