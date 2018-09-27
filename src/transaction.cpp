@@ -92,19 +92,30 @@ int main (int argc, char** argv) {
         
         if(input.scriptStack.size()) {
             
-            std::cout << "\tScript: ";
-            outputScript = streamScript(std::cout, input.scriptStack.back().begin(), input.scriptStack.back().size());
-            std::cout << "\n";
-            
-            if(outputScript && input.scriptStack.size() > 1) {
+            if(input.scriptStack.size() == 1) {
                 
-                std::cout << "\tScript inputs:\n";
+                std::cout << "\tScript input: [";
+                streamHex(std::cout, input.scriptStack[0].begin(), input.scriptStack[0].size());
+                std::cout << "]\n";
                 
-                for(size_t i = 0; i < input.scriptStack.size() - 1; i++) {
+                outputScript = true;
+            }
+            else {
+                
+                std::cout << "\tScript: ";
+                outputScript = streamScript(std::cout, input.scriptStack.back().begin(), input.scriptStack.back().size());
+                std::cout << "\n";
+                
+                if(outputScript && input.scriptStack.size() > 1) {
                     
-                    std::cout << "\t[";
-                    streamHex(std::cout, input.scriptStack[i].begin(), input.scriptStack[i].size());
-                    std::cout << "]\n";
+                    std::cout << "\tScript inputs:\n";
+                    
+                    for(size_t i = 0; i < input.scriptStack.size() - 1; i++) {
+                        
+                        std::cout << "\t[";
+                        streamHex(std::cout, input.scriptStack[i].begin(), input.scriptStack[i].size());
+                        std::cout << "]\n";
+                    }
                 }
             }
         }
@@ -191,10 +202,17 @@ int main (int argc, char** argv) {
         
         std::cout << "[Output " << ++counter << "]\n";
         
-        std::cout << "\tScript: ";
-        streamScript(std::cout, output.script.data(), output.script.size());
-        std::cout << "\n";
-        
+        if(!output.script.size()) {
+            
+            std::cout << "\tScript: EMPTY SCRIPT\n";
+        }
+        else {
+            
+            std::cout << "\tScript: ";
+            streamScript(std::cout, output.script.data(), output.script.size());
+            std::cout << "\n";
+        }
+            
         std::cout << "\tValue: " << output.value / 100000000 << ".";
         
         printf("%08llu\n", output.value % 100000000);
