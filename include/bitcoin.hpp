@@ -5,7 +5,6 @@
 #include <cassert>
 #include <cstdint>
 #include <vector>
-#include <iostream>
 
 #include "hash.hpp"
 #include "hexxer.hpp"
@@ -19,10 +18,10 @@ struct TransactionBase {
 		R data;
 		R hash;
 		uint32_t vout;
-        R script;
-        std::vector<R> scriptStack;
+		R script;
+		std::vector<R> scriptStack;
 		uint32_t sequence;
-        uint8_t witnessFlag; // OP_NOWITNESS means not a witness program
+		uint8_t witnessFlag; // OP_NOWITNESS means not a witness program
 	};
 
 	struct Output {
@@ -32,8 +31,8 @@ struct TransactionBase {
 	};
 
 	struct Witness {
-        R data;
-        std::vector<R> stack;
+		R data;
+		std::vector<R> stack;
 	};
 
 	R data;
@@ -113,72 +112,55 @@ namespace {
 			const auto hash = readRange(data, 32);
 			const auto vout = serial::read<uint32_t>(data);
 
-            const auto scriptLen = readVI(data);
-            
-            __ranger::Range scriptRanger(data.begin(), data.begin() + scriptLen);
-            
-            std::vector<R> scriptStack;
-            
-            std::cerr << "Script bytes: " << scriptRanger.size() << "\n";
-            
-            while(scriptRanger.size()) {
-                
-                auto opcode = serial::read<uint8_t>(scriptRanger);
-                
-                if(!opcode || opcode > OP_PUSHDATA4)
-                    continue;
-                
-                auto size = readPD(opcode, scriptRanger);
-                
-                std::cerr << "Read size: " << size << "\n";
-                
-                scriptStack.push_back(readRange(scriptRanger, size));
-                
-                std::cerr << "Remaining script bytes: " << scriptRanger.size() << "\n";
-            }
-            
-            const auto script = readRange(data, scriptLen);
-            
-            const auto sequence = serial::read<uint32_t>(data);
-            isave.popBackN(data.size());
-            
-            
-//            std::vector<uint8_t> scriptData(script.begin(), script.end());
-//            auto scriptItr = range(scriptData);
-//            
-//            while(scriptData.size()) {
-//                
-//                auto size = readVI(scriptItr);
-//                
-//                auto item = readRange(scriptItr, size);
-//                
-//                std::vector<uint8_t> item2(item.begin(), item.end());
-//                
-//                scriptStack.push_back(item2);
-//            }
-            
-            uint8_t witnessFlag = OP_NOWITNESS;
-            
-            if(hasWitnesses) {
-                
-                if(script.size() == 0) {
-                    
-                    witnessFlag = OP_ERROR;
-                }
-                else if(script.size() >= 3) {
-                    
-                    if(script[0] > 2 && script[0] < 40 && script[1] == 0) {
-                        
-                        if(script[2] == 0x14)
-                            witnessFlag |= OP_P2WPKH;
-                        else if(script[2] == 0x20)
-                            witnessFlag |= OP_P2WSH;
-                        else
-                            witnessFlag = OP_ERROR;
-                    }
-                }
-            }
-            
+			const auto scriptLen = readVI(data);
+
+			__ranger::Range scriptRanger(data.begin(), data.begin() + scriptLen);
+
+			std::vector<R> scriptStack;
+
+			while(scriptRanger.size()) {
+
+				auto opcode = serial::read<uint8_t>(scriptRanger);
+
+				if(!opcode || opcode > OP_PUSHDATA4)
+					continue;
+
+				auto size = readPD(opcode, scriptRanger);
+
+				scriptStack.push_back(readRange(scriptRanger, size));
+			}
+
+			const auto script = readRange(data, scriptLen);
+			const auto sequence = serial::read<uint32_t>(data);
+			isave.popBackN(data.size());
+
+			uint8_t witnessFlag = OP_NOWITNESS;
+
+			if(hasWitnesses) {
+
+				if(script.size() == 0) {
+
+					// In this case we must analyze witness data to determine the witness type.
+					// We'll check for OP_ERROR during witness data processing and set the type there.
+
+					witnessFlag = OP_ERROR;
+				}
+				else if(script.size() >= 3) {
+
+					// As per https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
+
+					if(script[0] > 2 && script[0] < 40 && script[1] == 0) {
+
+						if(script[2] == 0x14)
+							witnessFlag |= OP_P2WPKH;
+						else if(script[2] == 0x20)
+							witnessFlag |= OP_P2WSH;
+						else
+							witnessFlag = OP_ERROR;
+					}
+				}
+			}
+			
 			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, scriptStack, sequence, witnessFlag});
 		}
 
@@ -203,14 +185,22 @@ namespace {
 				wsave.popBackN(data.size());
 
 				witnesses.emplace_back(typename Transaction::Witness{wsave, std::move(stack)});
-                
-                if(inputs[i].witnessFlag == OP_ERROR) {
-                    
-                    if(witnesses.back().stack.size() == 2)
-                        inputs[i].witnessFlag = OP_P2WPKH;
-                    else if(witnesses.back().stack.size() > 2)
-                        inputs[i].witnessFlag = OP_P2WSH;
-                }
+
+				if(inputs[i].witnessFlag == OP_ERROR && !inputs[i].script.size()) {
+
+					// As stated in https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
+					//
+					// If the version byte is 0, and the witness program is 20 bytes:
+					// It is interpreted as a pay-to-witness-public-key-hash (P2WPKH) program.
+					// The witness must consist of exactly 2 items (≤ 520 bytes each). The first one a signature, and the second one a public key.
+
+					// We will check for exactly 2 items in witness stack to conform to above
+
+					if(witnesses.back().stack.size() == 2)
+						inputs[i].witnessFlag = OP_P2WPKH;
+					else if(witnesses.back().stack.size() > 2)
+						inputs[i].witnessFlag = OP_P2WSH;
+				}
 			}
 		}
 
