@@ -127,6 +127,11 @@ namespace {
 
 				auto size = readPD(opcode, scriptRanger);
 
+				assert(size <= scriptRanger.size());
+
+				if(size > scriptRanger.size())
+					size = scriptRanger.size();
+
 				scriptStack.push_back(readRange(scriptRanger, size));
 			}
 
