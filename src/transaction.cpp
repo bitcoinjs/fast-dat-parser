@@ -5,6 +5,8 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <openssl/sha.h>
+#include <openssl/ripemd.h>
 
 #include "bitcoin.hpp"
 #include "hash.hpp"
@@ -22,6 +24,10 @@ static uint8_t getHex(uint8_t character);
 static void streamHex(std::ostream &out, uint8_t *ptr, size_t len);
 
 static bool streamScript(std::ostream &out, uint8_t *ptr, size_t len);
+
+static std::vector<uint8_t> doSha256(std::vector<uint8_t> data);
+
+static std::vector<uint8_t> doRipemd160(std::vector<uint8_t> data);
 
 #define MAX_TRANSACTION_SIZE 1024 * 1024 * 30
 
@@ -87,36 +93,76 @@ int main (int argc, char** argv) {
 
         std::cout << "\tV-out: " << input.vout << "\n";
 
-        bool outputScript = false;
+        bool outputSuccess = false;
 
         if(input.scriptStack.size() == 1) {
 
-            std::cout << "\tScript input: [";
-            streamHex(std::cout, input.scriptStack[0].begin(), input.scriptStack[0].size());
+            std::vector<uint8_t> script(input.scriptStack[0].begin(), input.scriptStack[0].end());
+
+            std::cout << "\tHASH160(Script): [";
+            streamHex(std::cout, doRipemd160(doSha256(script)).data(), 20);
             std::cout << "]\n";
 
-            outputScript = true;
+            std::cout << "\tScript input: [";
+            streamHex(std::cout, script.data(), script.size());
+            std::cout << "]\n";
+
+            outputSuccess = true;
         }
         else if(input.scriptStack.size() > 1) {
 
-            std::cout << "\tScript: ";
-            outputScript = streamScript(std::cout, input.scriptStack.back().begin(), input.scriptStack.back().size());
-            std::cout << "\n";
+            std::vector<uint8_t> script(input.scriptStack.back().begin(), input.scriptStack.back().end());
 
-            if(outputScript && input.scriptStack.size() > 1) {
+            // Is this [probably] a public key?
+            if(script.size() && script[0] > 2 && script[0] < 6) {
 
-                std::cout << "\tScript inputs:\n";
+                std::cout << "\tHASH160(Public Key): [";
+                streamHex(std::cout, doRipemd160(doSha256(script)).data(), 20);
+                std::cout << "]\n";
 
-                for(size_t i = 0; i < input.scriptStack.size() - 1; i++) {
+                std::cout << "\tPublic Key: ";
+                streamHex(std::cout, script.data(), script.size());
+                std::cout << "\n";
 
-                    std::cout << "\t[";
-                    streamHex(std::cout, input.scriptStack[i].begin(), input.scriptStack[i].size());
-                    std::cout << "]\n";
+                if(input.scriptStack.size() > 1) {
+
+                    std::cout << "\tSignatures:\n";
+
+                    for(size_t i = 0; i < input.scriptStack.size() - 1; i++) {
+
+                        std::cout << "\t[";
+                        streamHex(std::cout, input.scriptStack[i].begin(), input.scriptStack[i].size());
+                        std::cout << "]\n";
+                    }
+                }
+
+                outputSuccess = true;
+            }
+            else { // Otherwise, it's [probably] a script
+
+                std::cout << "\tHASH160(Script): [";
+                streamHex(std::cout, doRipemd160(doSha256(script)).data(), 20);
+                std::cout << "]\n";
+
+                std::cout << "\tScript: ";
+                outputSuccess = streamScript(std::cout, script.data(), script.size());
+                std::cout << "\n";
+
+                if(outputSuccess && input.scriptStack.size() > 1) {
+
+                    std::cout << "\tScript inputs:\n";
+
+                    for(size_t i = 0; i < input.scriptStack.size() - 1; i++) {
+
+                        std::cout << "\t[";
+                        streamHex(std::cout, input.scriptStack[i].begin(), input.scriptStack[i].size());
+                        std::cout << "]\n";
+                    }
                 }
             }
         }
 
-        if(!outputScript && input.script.size()) {
+        if(!outputSuccess && input.script.size()) {
 
             std::cout << "\tRaw script: ";
             streamScript(std::cout, input.script.begin(), input.script.size());
@@ -141,8 +187,14 @@ int main (int argc, char** argv) {
                 }
                 else {
 
+                    std::vector<uint8_t> pubkey(stack[1].begin(), stack[1].end());
+
+                    std::cout << "\tHASH160(Witness pubkey): [";
+                    streamHex(std::cout, doRipemd160(doSha256(pubkey)).data(), 20);
+                    std::cout << "]\n";
+
                     std::cout << "\tWitness pubkey: [";
-                    streamHex(std::cout, stack[1].begin(), stack[1].size());
+                    streamHex(std::cout, pubkey.data(), pubkey.size());
                     std::cout << "]\n";
 
                     std::cout << "\tWitness signature: [";
@@ -158,8 +210,14 @@ int main (int argc, char** argv) {
                 }
                 else {
 
+                    std::vector<uint8_t> script(stack.back().begin(), stack.back().end());
+
+                    std::cout << "\tSHA256(Witness script): [";
+                    streamHex(std::cout, doSha256(script).data(), 20);
+                    std::cout << "]\n";
+
                     std::cout << "\tWitness script: ";
-                    streamScript(std::cout, stack.back().begin(), stack.back().size());
+                    streamScript(std::cout, script.data(), script.size());
                     std::cout << "\n";
 
                     size_t i = 0;
@@ -302,4 +360,30 @@ static bool streamScript(std::ostream &out, uint8_t *ptr, size_t len)
     }
 
     return true;
+}
+
+static std::vector<uint8_t> doSha256(std::vector<uint8_t> data)
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+
+    SHA256_CTX ctx;
+
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, data.data(), data.size());
+    SHA256_Final(hash, &ctx);
+
+    return std::vector<uint8_t>(hash, hash + SHA256_DIGEST_LENGTH);
+}
+
+static std::vector<uint8_t> doRipemd160(std::vector<uint8_t> data)
+{
+    unsigned char hash[RIPEMD160_DIGEST_LENGTH];
+
+    RIPEMD160_CTX ctx;
+
+    RIPEMD160_Init(&ctx);
+    RIPEMD160_Update(&ctx, data.data(), data.size());
+    RIPEMD160_Final(hash, &ctx);
+
+    return std::vector<uint8_t>(hash, hash + RIPEMD160_DIGEST_LENGTH);
 }
