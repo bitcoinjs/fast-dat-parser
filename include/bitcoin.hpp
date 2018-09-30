@@ -130,7 +130,7 @@ namespace {
 				assert(size <= scriptRanger.size());
 
 				if(size > scriptRanger.size())
-					size = scriptRanger.size();
+					size = (uint32_t)scriptRanger.size();
 
 				scriptStack.push_back(readRange(scriptRanger, size));
 			}
