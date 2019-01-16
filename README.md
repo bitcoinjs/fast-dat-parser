@@ -56,4 +56,5 @@ Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  
 * [ranger](https://github.com/dcousens/ranger)
 
 
-## License [MIT](LICENSE)
+## LICENSE [MIT](LICENSE)
+The constants and `getOpString` function in `include/bitcoin-ops.hpp` is copied from https://github.com/bitcoin/bitcoin/.
