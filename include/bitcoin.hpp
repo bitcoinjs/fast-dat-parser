@@ -49,7 +49,7 @@ namespace {
 	template <typename R>
 	auto readRange (R& r, size_t n) {
 		auto v = r.take(n);
-		r.popFrontN(n);
+		r.pop_front(n);
 		return v;
 	}
 
@@ -100,7 +100,7 @@ namespace {
 		const auto marker = serial::peek<uint8_t>(data);
 		const auto flag = serial::peek<uint8_t>(data.drop(1));
 		const auto hasWitnesses = (marker == 0x00) && (flag == 0x01);
-		if (hasWitnesses) data.popFrontN(2);
+		if (hasWitnesses) data.pop_front(2);
 
 		const auto nInputs = readVI(data);
 		std::vector<typename Transaction::Input> inputs;
@@ -113,7 +113,7 @@ namespace {
 			const auto scriptLen = readVI(data);
 			const auto script = readRange(data, scriptLen);
 			const auto sequence = serial::read<uint32_t>(data);
-			isave.popBackN(data.size());
+			isave.pop_back(data.size());
 
 			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, sequence});
 		}
@@ -126,7 +126,7 @@ namespace {
 			const auto value = serial::read<uint64_t>(data);
 			const auto scriptLen = readVI(data);
 			const auto script = readRange(data, scriptLen);
-			osave.popBackN(data.size());
+			osave.pop_back(data.size());
 
 			outputs.emplace_back(typename Transaction::Output{osave, script, value});
 		}
@@ -136,14 +136,14 @@ namespace {
 			for (size_t i = 0; i < nInputs; ++i) {
 				auto wsave = data;
 				const auto stack = readStack(data);
-				wsave.popBackN(data.size());
+				wsave.pop_back(data.size());
 
 				witnesses.emplace_back(typename Transaction::Witness{wsave, std::move(stack)});
 			}
 		}
 
 		const auto locktime = serial::read<uint32_t>(data);
-		save.popBackN(data.size());
+		save.pop_back(data.size());
 
 		return Transaction{save, version, std::move(inputs), std::move(outputs), std::move(witnesses), locktime};
 	}
@@ -169,7 +169,7 @@ public:
 		return readTransaction(this->_save);
 	}
 
-	void popFront () {
+	void pop_front () {
 		assert(!this->empty());
 		--this->_count;
 
@@ -255,7 +255,7 @@ void putASM (R& output, const R& script) {
 			}
 
 			const auto data = save.take(dataLength);
-			save.popFrontN(dataLength);
+			save.pop_front(dataLength);
 
 			putHex(output, data);
 			serial::put<char>(output, ' ');

@@ -11,6 +11,7 @@
 #include "ranger.hpp"
 #include "serial.hpp"
 #include "threadpool.hpp"
+using namespace ranger;
 
 #include "statistics.hpp"
 // #include "leveldb.hpp"
@@ -98,14 +99,14 @@ int main (int argc, char** argv) {
 		while (data.size() >= 88) {
 			// skip bad data (e.g bitcoind zero pre-allocations)
 			if (serial::peek<uint32_t>(data) != 0xd9b4bef9) {
-				data.popFrontN(1);
+				data.pop_front(1);
 				continue;
 			}
 
 			// skip bad data cont.
 			const auto header = data.drop(8).take(80);
 			if (not Block(header, header.drop(80)).verify()) {
-				data.popFrontN(1);
+				data.pop_front(1);
 				++invalid;
 				continue;
 			}
@@ -114,7 +115,7 @@ int main (int argc, char** argv) {
 			const auto length = serial::peek<uint32_t>(data.drop(4));
 			const auto total = 8 + length;
 			if (total > data.size()) break;
-			data.popFrontN(8);
+			data.pop_front(8);
 
 			// send the block data to the threadpool
 			const auto block = Block(header, data.drop(80));
@@ -124,7 +125,7 @@ int main (int argc, char** argv) {
 
 			count++;
 
-			data.popFrontN(length);
+			data.pop_front(length);
 		}
 
 		if (eof) break;

@@ -7,6 +7,7 @@
 #include "hvectors.hpp"
 #include "ranger.hpp"
 #include "serial.hpp"
+using namespace ranger;
 
 struct Block {
 	uint256_t hash = {};

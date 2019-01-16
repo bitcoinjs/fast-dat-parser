@@ -6,6 +6,7 @@
 #include <sstream>
 #include "hexxer.hpp"
 #include "ranger.hpp"
+using namespace ranger;
 
 typedef std::array<uint8_t, 32> uint256_t;
 
@@ -32,8 +33,8 @@ namespace {
 
 		while (not save.empty()) {
 			hex_encode(reinterpret_cast<char*>(output.begin()), save.begin(), 1);
-			output.popFrontN(2);
-			save.popFrontN(1);
+			output.pop_front(2);
+			save.pop_front(1);
 		}
 	}
 
@@ -47,7 +48,7 @@ namespace {
 		while (not save.empty()) {
 			const auto byte = save.front();
 			hex_encode(reinterpret_cast<char*>(buffer.begin()), &byte, 1);
-			save.popFront();
+			save.pop_front();
 			str.push_back(buffer[0]);
 			str.push_back(buffer[1]);
 		}

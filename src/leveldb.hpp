@@ -11,6 +11,7 @@
 #include "ranger.hpp"
 #include "serial.hpp"
 #include "transforms.hpp"
+using namespace ranger;
 
 namespace {
 	template <typename R>
