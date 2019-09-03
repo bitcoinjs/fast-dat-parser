@@ -5,6 +5,8 @@ All memory is allocated up front.
 
 Output goes to `stdout`, `stderr` is used for logging.
 
+**WARNING:** Not actively maintained,  use with caution.
+
 
 ## Usage
 A fast `blk*.dat` parser for bitcoin blockchain analysis.
@@ -48,12 +50,6 @@ These tools are for the CLI, but will aid in preparing/using data produced by th
 A best-chain filter for block headers.
 
 Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  and outputs the best-chain in the form of a sorted hash map [(see HMap<K, V>)](https://github.com/dcousens/fast-dat-parser/blob/master/include/hvectors.hpp).
-
-
-#### External
-* [binsort](https://github.com/dcousens/binsort)
-* [hexxer](https://github.com/dcousens/hexxer)
-* [ranger](https://github.com/dcousens/ranger)
 
 
 ## LICENSE [MIT](LICENSE)

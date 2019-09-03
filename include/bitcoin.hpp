@@ -85,8 +85,7 @@ namespace {
 		for (uint64_t i = 0; i < count; ++i) {
 			stack.emplace_back(readRange(r, readVI(r)));
 		}
-
-		return std::move(stack);
+		return stack;
 	}
 
 	template <typename R>
@@ -113,7 +112,7 @@ namespace {
 			const auto scriptLen = readVI(data);
 			const auto script = readRange(data, scriptLen);
 			const auto sequence = serial::read<uint32_t>(data);
-			isave.pop_back(data.size());
+			isave = isave.drop(data.size());
 
 			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, sequence});
 		}
@@ -126,7 +125,7 @@ namespace {
 			const auto value = serial::read<uint64_t>(data);
 			const auto scriptLen = readVI(data);
 			const auto script = readRange(data, scriptLen);
-			osave.pop_back(data.size());
+			osave = osave.drop(data.size());
 
 			outputs.emplace_back(typename Transaction::Output{osave, script, value});
 		}
@@ -136,14 +135,14 @@ namespace {
 			for (size_t i = 0; i < nInputs; ++i) {
 				auto wsave = data;
 				const auto stack = readStack(data);
-				wsave.pop_back(data.size());
+				wsave = wsave.drop(data.size());
 
 				witnesses.emplace_back(typename Transaction::Witness{wsave, std::move(stack)});
 			}
 		}
 
 		const auto locktime = serial::read<uint32_t>(data);
-		save.pop_back(data.size());
+		save = save.drop(data.size());
 
 		return Transaction{save, version, std::move(inputs), std::move(outputs), std::move(witnesses), locktime};
 	}

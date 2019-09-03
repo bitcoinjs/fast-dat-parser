@@ -6,8 +6,8 @@
 #include <sstream>
 #include "hexxer.hpp"
 #include "ranger.hpp"
-using namespace ranger;
 
+using namespace ranger;
 typedef std::array<uint8_t, 32> uint256_t;
 
 template <typename R>
@@ -47,8 +47,9 @@ namespace {
 
 		while (not save.empty()) {
 			const auto byte = save.front();
+			save.pop_front();
+
 			hex_encode(reinterpret_cast<char*>(buffer.begin()), &byte, 1);
-			save = save.drop();
 			str.push_back(buffer[0]);
 			str.push_back(buffer[1]);
 		}
@@ -57,6 +58,6 @@ namespace {
 	}
 
 	auto toHexBE (const uint256_t& hash) {
-		return toHex(retro(hash));
+		return toHex(reverse(hash));
 	}
 }
