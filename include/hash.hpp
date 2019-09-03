@@ -33,8 +33,8 @@ namespace {
 
 		while (not save.empty()) {
 			hex_encode(reinterpret_cast<char*>(output.begin()), save.begin(), 1);
-			output.pop_front(2);
-			save.pop_front(1);
+			output = output.drop(2);
+			save = save.drop(1);
 		}
 	}
 
@@ -48,7 +48,7 @@ namespace {
 		while (not save.empty()) {
 			const auto byte = save.front();
 			hex_encode(reinterpret_cast<char*>(buffer.begin()), &byte, 1);
-			save.pop_front();
+			save = save.drop();
 			str.push_back(buffer[0]);
 			str.push_back(buffer[1]);
 		}
