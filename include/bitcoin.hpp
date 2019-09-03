@@ -49,7 +49,7 @@ namespace {
 	template <typename R>
 	auto readRange (R& r, size_t n) {
 		auto v = r.take(n);
-		r.pop_front(n);
+		r = r.drop(n);
 		return v;
 	}
 
@@ -100,7 +100,7 @@ namespace {
 		const auto marker = serial::peek<uint8_t>(data);
 		const auto flag = serial::peek<uint8_t>(data.drop(1));
 		const auto hasWitnesses = (marker == 0x00) && (flag == 0x01);
-		if (hasWitnesses) data.pop_front(2);
+		if (hasWitnesses) data = data.drop(2);
 
 		const auto nInputs = readVI(data);
 		std::vector<typename Transaction::Input> inputs;
@@ -255,7 +255,7 @@ void putASM (R& output, const R& script) {
 			}
 
 			const auto data = save.take(dataLength);
-			save.pop_front(dataLength);
+			save = save.drop(dataLength);
 
 			putHex(output, data);
 			serial::put<char>(output, ' ');

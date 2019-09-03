@@ -32,10 +32,10 @@ include/hexxer.hpp:
 	curl 'https://raw.githubusercontent.com/dcousens/hexxer/d76f9e526676535fd4c2584a8f84582994c35996/hexxer.h' > $@
 
 include/ranger.hpp:
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/e5b156dd0d8d3de14c2c807a2d7874af0e9cd3e3/ranger.hpp' > $@
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/44d9037b29a91be0dfce178a8a67314530919e45/ranger.hpp' > $@
 
 include/serial.hpp:
-	curl 'https://raw.githubusercontent.com/dcousens/ranger/e5b156dd0d8d3de14c2c807a2d7874af0e9cd3e3/serial.hpp' > $@
+	curl 'https://raw.githubusercontent.com/dcousens/ranger/44d9037b29a91be0dfce178a8a67314530919e45/serial.hpp' > $@
 
 include/threadpool.hpp:
 	curl 'https://raw.githubusercontent.com/dcousens/threadpool/b6f29f27b4b658f4b0df976c9151a0f76aa86335/threadpool.hpp' > $@
