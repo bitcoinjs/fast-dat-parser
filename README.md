@@ -50,11 +50,5 @@ A best-chain filter for block headers.
 Accepts 80-byte block headers until EOF, then finds the best-chain in the set,  and outputs the best-chain in the form of a sorted hash map [(see HMap<K, V>)](https://github.com/dcousens/fast-dat-parser/blob/master/include/hvectors.hpp).
 
 
-#### External
-* [binsort](https://github.com/dcousens/binsort)
-* [hexxer](https://github.com/dcousens/hexxer)
-* [ranger](https://github.com/dcousens/ranger)
-
-
 ## LICENSE [MIT](LICENSE)
 The constants and `getOpString` function in `include/bitcoin-ops.hpp` is copied from https://github.com/bitcoin/bitcoin/.
