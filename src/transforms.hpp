@@ -7,9 +7,6 @@
 #include "bitcoin.hpp"
 #include "hash.hpp"
 #include "hvectors.hpp"
-#include "ranger.hpp"
-#include "serial.hpp"
-using namespace ranger;
 
 template <typename Block>
 struct TransformBase {
