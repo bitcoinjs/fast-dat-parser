@@ -25,7 +25,7 @@ struct dumpOutputValuesOverHeight : public TransformBase<Block> {
 				fwrite(buffer.begin(), buffer.size(), 1, stdout);
 			}
 
-			transactions.pop_front();
+			transactions = transactions.drop();
 		}
 	}
 };
@@ -89,7 +89,7 @@ struct dumpStatistics : public TransformBase<Block> {
 			this->version2 += transaction.version == 2;
 			this->locktimesGt0 += transaction.locktime > 0;
 
-			transactions.pop_front();
+			transactions = transactions.drop();
 		}
 	}
 };
@@ -118,7 +118,7 @@ struct dumpASM : public TransformBase<Block> {
 				fwrite(buffer.begin(), lineLength, 1, stdout);
 			}
 
-			transactions.pop_front();
+			transactions = transactions.drop();
 		}
 	}
 };
@@ -164,7 +164,7 @@ struct dumpScripts : public TransformBase<Block> {
 				fwrite(buffer.begin(), buffer.size() - r.size(), 1, stdout);
 			}
 
-			transactions.pop_front();
+			transactions = transactions.drop();
 		}
 	}
 };
@@ -209,7 +209,7 @@ struct dumpUnspents : public TransformBase<Block> {
 				++vout;
 			}
 
-			transactions.pop_front();
+			transactions = transactions.drop();
 		}
 
 		std::lock_guard<std::mutex>(this->mutex);
