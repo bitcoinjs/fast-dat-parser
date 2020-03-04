@@ -212,7 +212,7 @@ struct dumpUnspents : public TransformBase<Block> {
 			transactions.pop_front();
 		}
 
-		std::lock_guard<std::mutex>(this->mutex);
+		std::lock_guard<std::mutex> lock(this->mutex);
 		for (const auto& txo : txos) {
 			this->unspents.insort(txo.first, txo.second);
 		}
