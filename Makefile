@@ -9,20 +9,24 @@ SOURCES=$(shell find src -name '*.c' -o -name '*.cpp')
 OBJECTS=$(addsuffix .o, $(basename $(SOURCES)))
 DEPENDENCIES=$(OBJECTS:.o=.d)
 INCLUDES=include/hexxer.hpp include/ranger.hpp include/serial.hpp include/threadpool.hpp
+PROGRAMS=bestchain parser transaction
 
 # TARGETS
 .PHONY: all clean includes
 
-all: $(INCLUDES) bestchain parser
+all: $(INCLUDES) bestchain parser transaction
 
 clean:
 	$(RM) $(INCLUDES) $(DEPENDENCIES) $(OBJECTS) bestchain parser
 
-bestchain: $(filter-out src/parser.o, $(OBJECTS))
-	$(CXX) $(filter-out src/parser.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@
+bestchain: $(filter-out src/parser.o src/transaction.o, $(OBJECTS))
+	$(CXX) $(filter-out src/parser.o src/transaction.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@
 
-parser: $(filter-out src/bestchain.o, $(OBJECTS))
-	$(CXX) $(filter-out src/bestchain.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -pthread -o $@
+parser: $(filter-out src/bestchain.o src/transaction.o, $(OBJECTS))
+	$(CXX) $(filter-out src/bestchain.o src/transaction.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -pthread -o $@
+
+transaction: $(filter-out src/bestchain.o src/parser.o, $(OBJECTS))
+	$(CXX) $(filter-out src/bestchain.o src/parser.o, $(OBJECTS)) $(LFLAGS) $(OFLAGS) -o $@
 
 # INFERENCES
 %.o: %.cpp

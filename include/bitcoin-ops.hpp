@@ -144,6 +144,13 @@ enum OP {
     OP_NOP9 = 0xb8,
     OP_NOP10 = 0xb9,
 
+    // magic operators
+    OP_NOWITNESS = 0xe0,
+    OP_P2WPKH = 0xe2,
+    OP_P2WSH = 0xe3,
+
+    OP_ERROR = 0xf0,
+
     // template matching params
     OP_SMALLINTEGER = 0xfa,
     OP_PUBKEYS = 0xfb,
@@ -269,6 +276,13 @@ auto getOpString (const uint8_t opcode) {
     case OP_CHECKSIGVERIFY         : return "OP_CHECKSIGVERIFY";
     case OP_CHECKMULTISIG          : return "OP_CHECKMULTISIG";
     case OP_CHECKMULTISIGVERIFY    : return "OP_CHECKMULTISIGVERIFY";
+
+    // magic operators
+    case OP_NOWITNESS              : return "OP_NOWITNESS";
+    case OP_P2WPKH                 : return "OP_P2WPKH";
+    case OP_P2WSH                  : return "OP_P2WSH";
+
+    case OP_ERROR                   : return "OP_ERROR";
 
     // expansion
     case OP_NOP1                   : return "OP_NOP1";

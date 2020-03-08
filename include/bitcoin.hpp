@@ -19,7 +19,9 @@ struct TransactionBase {
 		R hash;
 		uint32_t vout;
 		R script;
+		std::vector<R> scriptStack;
 		uint32_t sequence;
+		uint8_t witnessFlag; // OP_NOWITNESS means not a witness program
 	};
 
 	struct Output {
@@ -110,11 +112,60 @@ namespace {
 			const auto vout = serial::read<uint32_t>(data);
 
 			const auto scriptLen = readVI(data);
+
+			__ranger::Range scriptRanger(data.begin(), data.begin() + scriptLen);
+
+			std::vector<R> scriptStack;
+
+			while(scriptRanger.size()) {
+
+				auto opcode = serial::read<uint8_t>(scriptRanger);
+
+				if(!opcode || opcode > OP_PUSHDATA4)
+					continue;
+
+				auto size = readPD(opcode, scriptRanger);
+
+				assert(size <= scriptRanger.size());
+
+				if(size > scriptRanger.size())
+					size = (uint32_t)scriptRanger.size();
+
+				scriptStack.push_back(readRange(scriptRanger, size));
+			}
+
 			const auto script = readRange(data, scriptLen);
 			const auto sequence = serial::read<uint32_t>(data);
 			isave = isave.drop(data.size());
 
-			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, sequence});
+			uint8_t witnessFlag = OP_NOWITNESS;
+
+			if(hasWitnesses) {
+
+				if(script.size() == 0) {
+
+					// In this case we must analyze witness data to determine the witness type.
+					// We'll check for OP_ERROR during witness data processing and set the type there.
+
+					witnessFlag = OP_ERROR;
+				}
+				else if(script.size() >= 3) {
+
+					// As per https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
+
+					if(script[0] > 2 && script[0] < 40 && script[1] == 0) {
+
+						if(script[2] == 0x14)
+							witnessFlag |= OP_P2WPKH;
+						else if(script[2] == 0x20)
+							witnessFlag |= OP_P2WSH;
+						else
+							witnessFlag = OP_ERROR;
+					}
+				}
+			}
+			
+			inputs.emplace_back(typename Transaction::Input{isave, hash, vout, script, scriptStack, sequence, witnessFlag});
 		}
 
 		const auto nOutputs = readVI(data);
@@ -138,6 +189,22 @@ namespace {
 				wsave = wsave.drop(data.size());
 
 				witnesses.emplace_back(typename Transaction::Witness{wsave, std::move(stack)});
+
+				if(inputs[i].witnessFlag == OP_ERROR && !inputs[i].script.size()) {
+
+					// As stated in https://github.com/bitcoin/bips/blob/master/bip-0141.mediawiki#witness-program
+					//
+					// If the version byte is 0, and the witness program is 20 bytes:
+					// It is interpreted as a pay-to-witness-public-key-hash (P2WPKH) program.
+					// The witness must consist of exactly 2 items (≤ 520 bytes each). The first one a signature, and the second one a public key.
+
+					// We will check for exactly 2 items in witness stack to conform to above
+
+					if(witnesses.back().stack.size() == 2)
+						inputs[i].witnessFlag = OP_P2WPKH;
+					else if(witnesses.back().stack.size() > 2)
+						inputs[i].witnessFlag = OP_P2WSH;
+				}
 			}
 		}
 

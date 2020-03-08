@@ -1,8 +1,10 @@
 bestchain
 parser
+transaction
 *.dat
 *.d
 *.o
+*.dSYM
 include/hexxer.hpp
 include/ranger.hpp
 include/serial.hpp
